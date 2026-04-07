@@ -223,15 +223,7 @@ EMAIL_FROM="Warsaw Ethiopian Christian Fellowship <noreply@wecf.org>"
 
 ---
 
-## 👤 Default Accounts (after seeding)
 
-| Role | Email | Password |
-|------|-------|---------|
-| **Guardian (Admin)** | admin@wecf.org | Guardian@2024 |
-| **BUS Leader** | leader@wecf.org | Leader@2024 |
-| **Member** | member@wecf.org | Member@2024 |
-
-> ⚠️ Change all passwords immediately after first login in production!
 
 ---
 
