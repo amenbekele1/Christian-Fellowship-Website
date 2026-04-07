@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MEMBER
+  BUS_LEADER
+  GUARDIAN
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+}
+
+enum RentalStatus {
+  ACTIVE
+  RETURNED
+  OVERDUE
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  password      String
+  image         String?
+  phone         String?
+  role          Role      @default(MEMBER)
+  isActive      Boolean   @default(true)
+  joinedAt      DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // BUS Group relationships
+  busGroupId     String?
+  busGroup       BUSGroup?  @relation("GroupMembers", fields: [busGroupId], references: [id])
+  ledBusGroup    BUSGroup?  @relation("GroupLeader")
+
+  // Other relationships
+  attendances    Attendance[]
+  bookRentals    BookRental[]
+  accounts       Account[]
+  sessions       Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model BUSGroup {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  leaderId    String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  leader      User         @relation("GroupLeader", fields: [leaderId], references: [id])
+  members     User[]       @relation("GroupMembers")
+  attendances Attendance[]
+
+  @@map("bus_groups")
+}
+
+model Attendance {
+  id         String           @id @default(cuid())
+  userId     String
+  busGroupId String
+  date       DateTime
+  status     AttendanceStatus @default(PRESENT)
+  notes      String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  busGroup BUSGroup @relation(fields: [busGroupId], references: [id])
+
+  @@unique([userId, date])
+  @@map("attendances")
+}
+
+model Book {
+  id              String   @id @default(cuid())
+  title           String
+  author          String
+  description     String?  @db.Text
+  coverImage      String?
+  totalQuantity   Int      @default(1)
+  availableQty    Int      @default(1)
+  category        String?
+  publishedYear   Int?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  rentals         BookRental[]
+
+  @@map("books")
+}
+
+model BookRental {
+  id           String       @id @default(cuid())
+  userId       String
+  bookId       String
+  status       RentalStatus @default(ACTIVE)
+  reservedAt   DateTime     @default(now())
+  borrowedAt   DateTime?
+  dueDate      DateTime?
+  returnedAt   DateTime?
+  reminderSent Boolean      @default(false)
+  notes        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book  Book  @relation(fields: [bookId], references: [id])
+
+  @@map("book_rentals")
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  type        String?
+  imageUrl    String?
+  isPublic    Boolean  @default(true)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("events")
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  isPublic  Boolean  @default(false)
+  isPinned  Boolean  @default(false)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("announcements")
+}
