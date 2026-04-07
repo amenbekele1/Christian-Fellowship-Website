@@ -10,6 +10,7 @@ interface Member {
   id: string; name: string; email: string; phone: string | null;
   role: string; isActive: boolean; joinedAt: string;
   busGroup: { id: string; name: string } | null;
+  busGroupId?: string | null;
 }
 interface BUSGroup { id: string; name: string; }
 
