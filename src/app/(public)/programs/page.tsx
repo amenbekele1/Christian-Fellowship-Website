@@ -1,51 +1,32 @@
-import { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = { title: "Programs" };
+import { useEffect, useState } from "next";
 
-const programs = [
+interface Program {
+  id: string;
+  title: string;
+  description: string;
+  icon: string | null;
+  color: string | null;
+  isActive: boolean;
+  order: number;
+}
+
+// Default programs if database is empty
+const DEFAULT_PROGRAMS = [
   {
     icon: "📖",
-    title: "Bible Study",
-    schedule: "Every Wednesday · 7:00 PM",
-    description:
-      "Our weekly Bible Study is the heartbeat of our spiritual formation. We journey through Scripture book by book, verse by verse, discovering timeless truths for modern life. Come with your Bible, a notebook, and an open heart.",
-    details: ["Led by trained teachers and elders", "Open discussion and Q&A format", "Available to all members and visitors", "Study materials provided"],
-    color: "from-green-600 to-green-800",
-    accent: "bg-green-100 text-green-700",
-  },
-  {
-    icon: "🎵",
-    title: "Worship Night",
-    schedule: "Monthly · Friday 7:00 PM",
-    description:
-      "A dedicated evening of praise and worship where we encounter God through music, prayer, and the Holy Spirit. Worship Night is one of the most anticipated gatherings of the month — leave refreshed and renewed.",
-    details: ["Live worship team", "Spirit-led prayer time", "Open to all — members and guests welcome", "Childcare available"],
-    color: "from-amber-500 to-amber-700",
-    accent: "bg-amber-100 text-amber-700",
-  },
-  {
-    icon: "🎤",
-    title: "Sunday Sermon",
+    title: "Sunday Worship",
     schedule: "Every Sunday · 10:00 AM",
     description:
       "The centerpiece of our weekly gathering. Anointed, Spirit-filled preaching from the Word of God that challenges, encourages, and equips believers to live victoriously in Christ.",
     details: ["Expository preaching style", "Translated into Amharic when needed", "Combined with worship and prayer", "Sermon notes available online"],
-    color: "from-purple-600 to-purple-800",
-    accent: "bg-purple-100 text-purple-700",
-  },
-  {
-    icon: "📚",
-    title: "Literature Night",
-    schedule: "Monthly · Saturday 5:00 PM",
-    description:
-      "We believe Christian reading transforms the mind. Each month we select a great Christian book — from classics like C.S. Lewis and A.W. Tozer to modern theologians — and gather to discuss, debate, and be shaped by ideas that have shaped the church.",
-    details: ["Monthly book selection voted by members", "Library books available for borrowing", "Lively group discussion", "Snacks and fellowship included"],
-    color: "from-blue-600 to-blue-800",
-    accent: "bg-blue-100 text-blue-700",
+    color: "from-green-600 to-green-800",
+    accent: "bg-green-100 text-green-700",
   },
   {
     icon: "👥",
-    title: "BUS Meetings",
+    title: "BUS Ministry",
     schedule: "Monthly · Saturday 3:00 PM",
     description:
       "BUS (Brotherhood & Unity in the Spirit) groups are our small-group system. Each group is led by a trained BUS leader and meets regularly for prayer, accountability, fellowship, and care. Every member belongs to a BUS group.",
@@ -53,9 +34,90 @@ const programs = [
     color: "from-rose-600 to-rose-800",
     accent: "bg-rose-100 text-rose-700",
   },
+  {
+    icon: "🎤",
+    title: "Youth Ministry",
+    schedule: "Weekly · Saturday 5:00 PM",
+    description:
+      "A dynamic program focused on developing young believers in Christ. Through worship, teaching, and community service, we equip the next generation to be leaders and witnesses for Christ.",
+    details: ["Ages 13–25", "Youth-led worship and discussion", "Service and outreach projects", "Social events and fellowship"],
+    color: "from-purple-600 to-purple-800",
+    accent: "bg-purple-100 text-purple-700",
+  },
+  {
+    icon: "👩‍👩‍👧‍👦",
+    title: "Women's Fellowship",
+    schedule: "Monthly · Saturday 2:00 PM",
+    description:
+      "A community of women growing together in faith, encouraged to become mighty women of God. Through Bible study, prayer, and practical service, we support one another in all seasons of life.",
+    details: ["Safe space for women of all ages", "Led by experienced mentors", "Study, prayer, and fellowship", "Childcare provided"],
+    color: "from-amber-600 to-amber-800",
+    accent: "bg-amber-100 text-amber-700",
+  },
+  {
+    icon: "⛪",
+    title: "Prayer & Fasting",
+    schedule: "Monthly · First Friday 6:00 AM",
+    description:
+      "Dedicated times of corporate prayer and fasting to seek God's face, intercede for our community, and deepen our dependence on the Holy Spirit. A transformative spiritual practice.",
+    details: ["Early morning prayer time", "Guided intercession", "Fasting support resources", "Prayer journals available"],
+    color: "from-blue-600 to-blue-800",
+    accent: "bg-blue-100 text-blue-700",
+  },
 ];
 
-export default function ProgramsPage() {
+function ProgramsContent() {
+  const [programs, setPrograms] = useState<(Program & { schedule?: string; details?: string[] })[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPrograms = async () => {
+      try {
+        const res = await fetch("/api/programs");
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        if (data.length > 0) {
+          setPrograms(data);
+        } else {
+          setPrograms(DEFAULT_PROGRAMS);
+        }
+      } catch (error) {
+        setPrograms(DEFAULT_PROGRAMS);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPrograms();
+  }, []);
+
+  const colorMap: { [key: string]: string } = {
+    "bg-green-100": "from-green-600 to-green-800",
+    "bg-blue-100": "from-blue-600 to-blue-800",
+    "bg-purple-100": "from-purple-600 to-purple-800",
+    "bg-amber-100": "from-amber-600 to-amber-800",
+    "bg-crimson-100": "from-crimson-600 to-crimson-800",
+  };
+
+  const accentMap: { [key: string]: string } = {
+    "bg-green-100": "bg-green-100 text-green-700",
+    "bg-blue-100": "bg-blue-100 text-blue-700",
+    "bg-purple-100": "bg-purple-100 text-purple-700",
+    "bg-amber-100": "bg-amber-100 text-amber-700",
+    "bg-crimson-100": "bg-crimson-100 text-crimson-700",
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <svg className="animate-spin w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+      </div>
+    );
+  }
+
   return (
     <>
       <section className="hero-gradient py-20 relative overflow-hidden">
@@ -72,32 +134,40 @@ export default function ProgramsPage() {
 
       <section className="py-20 bg-white">
         <div className="max-w-5xl mx-auto px-6 space-y-10">
-          {programs.map((prog, i) => (
-            <div
-              key={prog.title}
-              className={`rounded-2xl overflow-hidden border border-gray-100 shadow-sm card-hover flex flex-col lg:flex-row ${i % 2 === 1 ? "lg:flex-row-reverse" : ""}`}
-            >
-              {/* Color panel */}
-              <div className={`bg-gradient-to-br ${prog.color} p-10 lg:w-72 flex flex-col items-center justify-center text-center shrink-0`}>
-                <div className="text-6xl mb-4">{prog.icon}</div>
-                <h2 className="font-display font-bold text-white text-2xl mb-2">{prog.title}</h2>
-                <p className="text-white/70 text-sm">{prog.schedule}</p>
-              </div>
+          {programs.map((prog, i) => {
+            const gradientColor = prog.color || colorMap[prog.color || "bg-green-100"] || "from-green-600 to-green-800";
+            const accentClass = accentMap[prog.color || "bg-green-100"] || "bg-green-100 text-green-700";
+            const details = prog.details || [];
 
-              {/* Content */}
-              <div className="p-8 flex-1">
-                <p className="text-gray-600 leading-relaxed mb-6 text-base">{prog.description}</p>
-                <ul className="space-y-2">
-                  {prog.details.map((d) => (
-                    <li key={d} className="flex items-start gap-2.5 text-sm text-gray-600">
-                      <span className={`mt-0.5 rounded-full px-1.5 py-0.5 text-xs font-bold ${prog.accent}`}>✓</span>
-                      {d}
-                    </li>
-                  ))}
-                </ul>
+            return (
+              <div
+                key={prog.id || prog.title}
+                className={`rounded-2xl overflow-hidden border border-gray-100 shadow-sm card-hover flex flex-col lg:flex-row ${i % 2 === 1 ? "lg:flex-row-reverse" : ""}`}
+              >
+                {/* Color panel */}
+                <div className={`bg-gradient-to-br ${gradientColor} p-10 lg:w-72 flex flex-col items-center justify-center text-center shrink-0`}>
+                  <div className="text-6xl mb-4">{prog.icon || "📋"}</div>
+                  <h2 className="font-display font-bold text-white text-2xl mb-2">{prog.title}</h2>
+                  {prog.schedule && <p className="text-white/70 text-sm">{prog.schedule}</p>}
+                </div>
+
+                {/* Content */}
+                <div className="p-8 flex-1">
+                  <p className="text-gray-600 leading-relaxed mb-6 text-base">{prog.description}</p>
+                  {details.length > 0 && (
+                    <ul className="space-y-2">
+                      {details.map((d) => (
+                        <li key={d} className="flex items-start gap-2.5 text-sm text-gray-600">
+                          <span className={`mt-0.5 rounded-full px-1.5 py-0.5 text-xs font-bold ${accentClass}`}>✓</span>
+                          {d}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -121,3 +191,5 @@ export default function ProgramsPage() {
     </>
   );
 }
+
+export default ProgramsContent;

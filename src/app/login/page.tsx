@@ -114,6 +114,11 @@ function LoginForm() {
               )}
               {loading ? "Signing in..." : "Sign In"}
             </button>
+            <div className="text-right mt-3">
+              <Link href="/forgot-password" className="text-sm text-green-600 hover:text-green-700 font-medium">
+                Forgot password?
+              </Link>
+            </div>
           </form>
 
           {/* Demo credentials */}
