@@ -37,10 +37,10 @@ const values = [
   },
 ];
 
-const DEFAULT_LEADERSHIP = [
-  { name: "Ato Bekele Tadesse", title: "Senior Pastor", initials: "BT" },
-  { name: "Woizero Selamawit Girma", title: "Women's Ministry Leader", initials: "SG" },
-  { name: "Ato Yohannes Alemu", title: "BUS Director", initials: "YA" },
+const DEFAULT_LEADERSHIP: Leader[] = [
+  { id: "default-1", name: "Ato Bekele Tadesse", title: "Senior Pastor", bio: null, imageUrl: null, order: 0, isActive: true },
+  { id: "default-2", name: "Woizero Selamawit Girma", title: "Women's Ministry Leader", bio: null, imageUrl: null, order: 1, isActive: true },
+  { id: "default-3", name: "Ato Yohannes Alemu", title: "BUS Director", bio: null, imageUrl: null, order: 2, isActive: true },
 ];
 
 export default function AboutContent() {
@@ -170,7 +170,7 @@ export default function AboutContent() {
                   : "??";
 
                 return (
-                  <div key={leader.id || leader.name} className="text-center">
+                  <div key={leader.id} className="text-center">
                     {leader.imageUrl ? (
                       <img
                         src={leader.imageUrl}
