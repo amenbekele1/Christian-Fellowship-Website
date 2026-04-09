@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "next";
+import { useEffect, useState } from "react";
 
 interface Program {
   id: string;
