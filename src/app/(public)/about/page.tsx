@@ -1,7 +1,18 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Metadata } from "next";
 import { Heart, BookOpen, Users, Star } from "lucide-react";
 
-export const metadata: Metadata = { title: "About Us" };
+interface Leader {
+  id: string;
+  name: string;
+  title: string;
+  bio: string | null;
+  imageUrl: string | null;
+  order: number;
+  isActive: boolean;
+}
 
 const values = [
   {
@@ -26,13 +37,35 @@ const values = [
   },
 ];
 
-const leadership = [
+const DEFAULT_LEADERSHIP = [
   { name: "Ato Bekele Tadesse", title: "Senior Pastor", initials: "BT" },
   { name: "Woizero Selamawit Girma", title: "Women's Ministry Leader", initials: "SG" },
   { name: "Ato Yohannes Alemu", title: "BUS Director", initials: "YA" },
 ];
 
-export default function AboutPage() {
+export default function AboutContent() {
+  const [leaders, setLeaders] = useState<Leader[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLeaders = async () => {
+      try {
+        const res = await fetch("/api/leaders");
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setLeaders(data.length > 0 ? data : []);
+      } catch (error) {
+        setLeaders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaders();
+  }, []);
+
+  const displayLeaders = leaders.length > 0 ? leaders : DEFAULT_LEADERSHIP;
+
   return (
     <>
       {/* Header */}
@@ -117,17 +150,46 @@ export default function AboutPage() {
         <div className="max-w-4xl mx-auto px-6 text-center">
           <p className="text-green-600 text-sm font-semibold uppercase tracking-widest mb-3">Those Who Serve</p>
           <h2 className="font-display text-4xl font-bold text-gray-800 mb-12">Our Leadership</h2>
-          <div className="grid sm:grid-cols-3 gap-8">
-            {leadership.map((leader) => (
-              <div key={leader.name} className="text-center">
-                <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-2xl mx-auto mb-4 font-display">
-                  {leader.initials}
-                </div>
-                <h3 className="font-display font-semibold text-gray-800 mb-1">{leader.name}</h3>
-                <p className="text-sm text-green-600">{leader.title}</p>
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center py-10">
+              <svg className="animate-spin w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-3 gap-8">
+              {displayLeaders.map((leader) => {
+                const initials = leader.name
+                  ? leader.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)
+                  : "??";
+
+                return (
+                  <div key={leader.id || leader.name} className="text-center">
+                    {leader.imageUrl ? (
+                      <img
+                        src={leader.imageUrl}
+                        alt={leader.name}
+                        className="w-20 h-20 rounded-full object-cover mx-auto mb-4"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-2xl mx-auto mb-4 font-display">
+                        {initials}
+                      </div>
+                    )}
+                    <h3 className="font-display font-semibold text-gray-800 mb-1">{leader.name}</h3>
+                    <p className="text-sm text-green-600">{leader.title}</p>
+                    {leader.bio && <p className="text-xs text-gray-500 mt-2">{leader.bio}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
     </>

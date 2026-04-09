@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Bell, Trash2, X, Pin } from "lucide-react";
+import { Plus, Bell, Trash2, X, Pin, Edit2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 interface Announcement {
@@ -12,6 +12,7 @@ interface Announcement {
 export default function AdminAnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ title: "", content: "", isPublic: false, isPinned: false, expiresAt: "" });
@@ -28,15 +29,46 @@ export default function AdminAnnouncementsPage() {
   const createAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await fetch("/api/announcements", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, expiresAt: form.expiresAt || undefined }),
-    });
+
+    if (editingId) {
+      // Update existing announcement
+      await fetch(`/api/announcements?id=${editingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, expiresAt: form.expiresAt || undefined }),
+      });
+    } else {
+      // Create new announcement
+      await fetch("/api/announcements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, expiresAt: form.expiresAt || undefined }),
+      });
+    }
+
     setShowForm(false);
+    setEditingId(null);
     setForm({ title: "", content: "", isPublic: false, isPinned: false, expiresAt: "" });
     fetchAnnouncements();
     setSaving(false);
+  };
+
+  const editAnnouncement = (ann: Announcement) => {
+    setForm({
+      title: ann.title,
+      content: ann.content,
+      isPublic: ann.isPublic,
+      isPinned: ann.isPinned,
+      expiresAt: ann.expiresAt ? ann.expiresAt.slice(0, 10) : "",
+    });
+    setEditingId(ann.id);
+    setShowForm(true);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm({ title: "", content: "", isPublic: false, isPinned: false, expiresAt: "" });
   };
 
   const deleteAnnouncement = async (id: string) => {
@@ -61,7 +93,7 @@ export default function AdminAnnouncementsPage() {
           <h1 className="font-display text-3xl font-bold text-gray-800">Announcements</h1>
           <p className="text-gray-500 mt-1">Manage fellowship announcements</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="flex items-center gap-2 bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 shadow-sm">
+        <button onClick={() => { setEditingId(null); setForm({ title: "", content: "", isPublic: false, isPinned: false, expiresAt: "" }); setShowForm(true); }} className="flex items-center gap-2 bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 shadow-sm">
           <Plus className="w-4 h-4"/> New Announcement
         </button>
       </div>
@@ -71,8 +103,8 @@ export default function AdminAnnouncementsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="font-display font-bold text-gray-800 text-xl">New Announcement</h2>
-              <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-gray-400"/></button>
+              <h2 className="font-display font-bold text-gray-800 text-xl">{editingId ? "Edit Announcement" : "New Announcement"}</h2>
+              <button onClick={closeForm}><X className="w-5 h-5 text-gray-400"/></button>
             </div>
             <form onSubmit={createAnnouncement} className="space-y-4">
               <div>
@@ -104,9 +136,9 @@ export default function AdminAnnouncementsPage() {
                 </label>
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">Cancel</button>
+                <button type="button" onClick={closeForm} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">Cancel</button>
                 <button type="submit" disabled={saving} className="flex-1 bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50">
-                  {saving ? "Publishing..." : "Publish Announcement"}
+                  {saving ? (editingId ? "Updating..." : "Publishing...") : (editingId ? "Update Announcement" : "Publish Announcement")}
                 </button>
               </div>
             </form>
@@ -135,6 +167,9 @@ export default function AdminAnnouncementsPage() {
                 <div className="flex items-center gap-1 shrink-0">
                   <button onClick={() => togglePin(ann)} className={`p-1.5 rounded-lg transition-colors ${ann.isPinned ? "text-amber-500 hover:bg-amber-50" : "text-gray-300 hover:text-amber-400 hover:bg-amber-50"}`}>
                     <Pin className="w-4 h-4"/>
+                  </button>
+                  <button onClick={() => editAnnouncement(ann)} className="p-1.5 text-gray-300 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                    <Edit2 className="w-4 h-4"/>
                   </button>
                   <button onClick={() => deleteAnnouncement(ann.id)} className="p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors">
                     <Trash2 className="w-4 h-4"/>

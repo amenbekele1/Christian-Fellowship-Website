@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Calendar, Trash2, X, Globe, Lock } from "lucide-react";
+import { Plus, Calendar, Trash2, X, Globe, Lock, Edit2 } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 
 interface Event {
@@ -14,6 +14,7 @@ const eventTypes = ["Worship", "Worship Night", "Bible Study", "Sermon", "Litera
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -32,15 +33,48 @@ export default function AdminEventsPage() {
   const createEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await fetch("/api/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+
+    if (editingId) {
+      // Update existing event
+      await fetch(`/api/events?id=${editingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+    } else {
+      // Create new event
+      await fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+    }
+
     setShowForm(false);
+    setEditingId(null);
     setForm({ title: "", description: "", location: "", startDate: "", endDate: "", type: "Worship", isPublic: true });
     fetchEvents();
     setSaving(false);
+  };
+
+  const editEvent = (event: Event) => {
+    setForm({
+      title: event.title,
+      description: event.description || "",
+      location: event.location || "",
+      startDate: event.startDate.slice(0, 16),
+      endDate: event.endDate ? event.endDate.slice(0, 16) : "",
+      type: event.type || "Worship",
+      isPublic: event.isPublic,
+    });
+    setEditingId(event.id);
+    setShowForm(true);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm({ title: "", description: "", location: "", startDate: "", endDate: "", type: "Worship", isPublic: true });
   };
 
   const deleteEvent = async (id: string) => {
@@ -64,13 +98,13 @@ export default function AdminEventsPage() {
         </button>
       </div>
 
-      {/* Create modal */}
+      {/* Create/Edit modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="font-display font-bold text-gray-800 text-xl">Create Event</h2>
-              <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-gray-400"/></button>
+              <h2 className="font-display font-bold text-gray-800 text-xl">{editingId ? "Edit Event" : "Create Event"}</h2>
+              <button onClick={closeForm}><X className="w-5 h-5 text-gray-400"/></button>
             </div>
             <form onSubmit={createEvent} className="space-y-4">
               <div>
@@ -119,9 +153,9 @@ export default function AdminEventsPage() {
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"/>
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">Cancel</button>
+                <button type="button" onClick={closeForm} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">Cancel</button>
                 <button type="submit" disabled={saving} className="flex-1 bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50">
-                  {saving ? "Creating..." : "Create Event"}
+                  {saving ? (editingId ? "Updating..." : "Creating...") : (editingId ? "Update Event" : "Create Event")}
                 </button>
               </div>
             </form>
@@ -149,9 +183,14 @@ export default function AdminEventsPage() {
                 <p className="text-xs text-gray-500 mt-0.5">{formatDateTime(event.startDate)}{event.location && ` · ${event.location}`}</p>
                 {event.description && <p className="text-sm text-gray-400 mt-1.5 line-clamp-2">{event.description}</p>}
               </div>
-              <button onClick={() => deleteEvent(event.id)} className="text-gray-300 hover:text-red-400 transition-colors p-1 shrink-0">
-                <Trash2 className="w-4 h-4"/>
-              </button>
+              <div className="flex gap-1 shrink-0">
+                <button onClick={() => editEvent(event)} className="text-gray-300 hover:text-green-600 transition-colors p-1">
+                  <Edit2 className="w-4 h-4"/>
+                </button>
+                <button onClick={() => deleteEvent(event.id)} className="text-gray-300 hover:text-red-400 transition-colors p-1">
+                  <Trash2 className="w-4 h-4"/>
+                </button>
+              </div>
             </div>
           ))}
 

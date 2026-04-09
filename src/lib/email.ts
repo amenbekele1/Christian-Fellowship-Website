@@ -148,6 +148,60 @@ export function bookReminderEmail(
   `;
 }
 
+export function passwordResetEmail(
+  name: string,
+  resetUrl: string
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #14532d, #166534); padding: 40px; text-align: center; }
+        .header h1 { color: #fde047; margin: 0; font-size: 22px; letter-spacing: 0.5px; }
+        .header p { color: #bbf7d0; margin: 8px 0 0; font-size: 14px; }
+        .cross { font-size: 40px; margin-bottom: 12px; display: block; }
+        .body { padding: 40px; }
+        .body h2 { color: #166534; font-size: 20px; margin-top: 0; }
+        .body p { color: #374151; line-height: 1.7; }
+        .cta { text-align: center; margin: 30px 0; }
+        .cta a { background: #166534; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; display: inline-block; }
+        .warning { background: #fefce8; border: 1px solid #fde047; padding: 16px 20px; border-radius: 8px; margin: 20px 0; color: #713f12; font-size: 13px; line-height: 1.6; }
+        .footer { background: #f0fdf4; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <span class="cross">✝</span>
+          <h1>Warsaw Ethiopian Christian Fellowship</h1>
+          <p>Password Reset Request</p>
+        </div>
+        <div class="body">
+          <h2>Dear ${name},</h2>
+          <p>We received a request to reset your password. If you didn't make this request, you can safely ignore this email.</p>
+          <div class="cta">
+            <a href="${resetUrl}">Reset Your Password</a>
+          </div>
+          <div class="warning">
+            <strong>Security Note:</strong> This link will expire in 1 hour. If the link has expired, you can request a new password reset from the login page.
+          </div>
+          <p>If you have any questions or concerns, please contact a fellowship guardian.</p>
+          <p>In His service,<br><strong>Warsaw Ethiopian Christian Fellowship</strong></p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+          <p><strong>Warsaw Ethiopian Christian Fellowship</strong> · Warsaw, Poland</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
 export function welcomeEmail(name: string): string {
   return `
     <!DOCTYPE html>

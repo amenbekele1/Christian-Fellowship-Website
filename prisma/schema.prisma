@@ -187,6 +187,7 @@ model Announcement {
   id        String   @id @default(cuid())
   title     String
   content   String   @db.Text
+  priority  String?  @default("normal")
   isPublic  Boolean  @default(false)
   isPinned  Boolean  @default(false)
   expiresAt DateTime?
@@ -194,4 +195,43 @@ model Announcement {
   updatedAt DateTime @updatedAt
 
   @@map("announcements")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+model Program {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  icon        String?
+  color       String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("programs")
+}
+
+model Leader {
+  id          String   @id @default(cuid())
+  name        String
+  title       String
+  bio         String?
+  imageUrl    String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("leaders")
 }

@@ -4,7 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, bookReminderEmail } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
-import { addDays } from "date-fns";
+import { addDays, nextSaturday } from "date-fns";
+
+// Helper to calculate due date: next Saturday + 14 days
+function calculateDueDate(): Date {
+  const today = new Date();
+  const nextSat = nextSaturday(today);
+  return addDays(nextSat, 14);
+}
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -53,8 +60,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "You already have this book reserved" }, { status: 400 });
   }
 
-  // Create rental — due date is 2 weeks from collection (Saturday service)
-  const dueDate = addDays(new Date(), 14);
+  // Create rental — due date is next Saturday + 14 days
+  const dueDate = calculateDueDate();
 
   const rental = await prisma.bookRental.create({
     data: {
@@ -114,8 +121,13 @@ export async function PATCH(req: NextRequest) {
 
 // Cron-style endpoint to send reminders (call via cron job or Vercel cron)
 export async function PUT(req: NextRequest) {
+  const cronSecret = req.headers.get("x-vercel-cron-secret");
   const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.NEXTAUTH_SECRET}`) {
+
+  const isValidCron = cronSecret === process.env.CRON_SECRET;
+  const isValidBearer = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+
+  if (!isValidCron && !isValidBearer) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
