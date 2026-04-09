@@ -12,9 +12,12 @@ interface Program {
   order: number;
 }
 
+type DisplayProgram = Program & { schedule?: string; details?: string[]; accent?: string };
+
 // Default programs if database is empty
-const DEFAULT_PROGRAMS = [
+const DEFAULT_PROGRAMS: DisplayProgram[] = [
   {
+    id: "default-1",
     icon: "📖",
     title: "Sunday Worship",
     schedule: "Every Sunday · 10:00 AM",
@@ -23,8 +26,11 @@ const DEFAULT_PROGRAMS = [
     details: ["Expository preaching style", "Translated into Amharic when needed", "Combined with worship and prayer", "Sermon notes available online"],
     color: "from-green-600 to-green-800",
     accent: "bg-green-100 text-green-700",
+    isActive: true,
+    order: 0,
   },
   {
+    id: "default-2",
     icon: "👥",
     title: "BUS Ministry",
     schedule: "Monthly · Saturday 3:00 PM",
@@ -33,8 +39,11 @@ const DEFAULT_PROGRAMS = [
     details: ["Small groups of 8–15 members", "Led by appointed BUS leaders", "Personal pastoral care", "Attendance tracked to support members"],
     color: "from-rose-600 to-rose-800",
     accent: "bg-rose-100 text-rose-700",
+    isActive: true,
+    order: 1,
   },
   {
+    id: "default-3",
     icon: "🎤",
     title: "Youth Ministry",
     schedule: "Weekly · Saturday 5:00 PM",
@@ -43,8 +52,11 @@ const DEFAULT_PROGRAMS = [
     details: ["Ages 13–25", "Youth-led worship and discussion", "Service and outreach projects", "Social events and fellowship"],
     color: "from-purple-600 to-purple-800",
     accent: "bg-purple-100 text-purple-700",
+    isActive: true,
+    order: 2,
   },
   {
+    id: "default-4",
     icon: "👩‍👩‍👧‍👦",
     title: "Women's Fellowship",
     schedule: "Monthly · Saturday 2:00 PM",
@@ -53,8 +65,11 @@ const DEFAULT_PROGRAMS = [
     details: ["Safe space for women of all ages", "Led by experienced mentors", "Study, prayer, and fellowship", "Childcare provided"],
     color: "from-amber-600 to-amber-800",
     accent: "bg-amber-100 text-amber-700",
+    isActive: true,
+    order: 3,
   },
   {
+    id: "default-5",
     icon: "⛪",
     title: "Prayer & Fasting",
     schedule: "Monthly · First Friday 6:00 AM",
@@ -63,11 +78,13 @@ const DEFAULT_PROGRAMS = [
     details: ["Early morning prayer time", "Guided intercession", "Fasting support resources", "Prayer journals available"],
     color: "from-blue-600 to-blue-800",
     accent: "bg-blue-100 text-blue-700",
+    isActive: true,
+    order: 4,
   },
 ];
 
 function ProgramsContent() {
-  const [programs, setPrograms] = useState<(Program & { schedule?: string; details?: string[] })[]>([]);
+  const [programs, setPrograms] = useState<DisplayProgram[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -141,7 +158,7 @@ function ProgramsContent() {
 
             return (
               <div
-                key={prog.id || prog.title}
+                key={prog.id}
                 className={`rounded-2xl overflow-hidden border border-gray-100 shadow-sm card-hover flex flex-col lg:flex-row ${i % 2 === 1 ? "lg:flex-row-reverse" : ""}`}
               >
                 {/* Color panel */}
