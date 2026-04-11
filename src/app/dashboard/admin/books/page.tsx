@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, BookMarked, Trash2, X, BookOpen } from "lucide-react";
+import { Plus, BookMarked, Trash2, X, BookOpen, Pencil } from "lucide-react";
 
 interface Book {
   id: string; title: string; author: string; description: string | null;
@@ -14,18 +14,21 @@ interface Rental {
   book: { title: string };
 }
 
+const EMPTY_FORM = {
+  title: "", author: "", description: "", category: "", publishedYear: "",
+  totalQuantity: "1", imageUrl: "",
+};
+
 export default function AdminBooksPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [activeTab, setActiveTab] = useState<"books" | "rentals">("books");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [form, setForm] = useState({
-    title: "", author: "", description: "", category: "", publishedYear: "",
-    totalQuantity: "1", imageUrl: "",
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -38,42 +41,69 @@ export default function AdminBooksPage() {
     setLoading(false);
   };
 
+  const openCreate = () => {
+    setEditingBook(null);
+    setForm(EMPTY_FORM);
+    setShowForm(true);
+  };
+
+  const openEdit = (book: Book) => {
+    setEditingBook(book);
+    setForm({
+      title: book.title,
+      author: book.author,
+      description: book.description || "",
+      category: book.category || "",
+      publishedYear: book.publishedYear?.toString() || "",
+      totalQuantity: book.totalQuantity.toString(),
+      imageUrl: book.imageUrl || "",
+    });
+    setShowForm(true);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setEditingBook(null);
+    setForm(EMPTY_FORM);
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploading(true);
     const formData = new FormData();
     formData.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json();
-      if (res.ok) {
-        setForm({ ...form, imageUrl: data.url });
-      }
+      if (res.ok) setForm(f => ({ ...f, imageUrl: data.url }));
     } finally {
       setUploading(false);
     }
   };
 
-  const createBook = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await fetch("/api/books", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        totalQuantity: parseInt(form.totalQuantity),
-        publishedYear: form.publishedYear ? parseInt(form.publishedYear) : undefined,
-      }),
-    });
-    setShowForm(false);
-    setForm({ title: "", author: "", description: "", category: "", publishedYear: "", totalQuantity: "1", imageUrl: "" });
+    const payload = {
+      ...form,
+      totalQuantity: parseInt(form.totalQuantity),
+      publishedYear: form.publishedYear ? parseInt(form.publishedYear) : undefined,
+    };
+    if (editingBook) {
+      await fetch("/api/books", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingBook.id, ...payload }),
+      });
+    } else {
+      await fetch("/api/books", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    }
+    closeForm();
     fetchData();
     setSaving(false);
   };
@@ -102,7 +132,7 @@ export default function AdminBooksPage() {
           <h1 className="font-display text-3xl font-bold text-gray-800">Library Management</h1>
           <p className="text-gray-500 mt-1">{books.length} books · {activeRentals.length} active rentals</p>
         </div>
-        <button onClick={() => setShowForm(true)} className="flex items-center gap-2 bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 shadow-sm">
+        <button onClick={openCreate} className="flex items-center gap-2 bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 shadow-sm">
           <Plus className="w-4 h-4"/> Add Book
         </button>
       </div>
@@ -117,15 +147,17 @@ export default function AdminBooksPage() {
         </button>
       </div>
 
-      {/* Modal */}
+      {/* Create / Edit Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="font-display font-bold text-gray-800 text-xl">Add Book to Library</h2>
-              <button onClick={() => setShowForm(false)}><X className="w-5 h-5 text-gray-400"/></button>
+              <h2 className="font-display font-bold text-gray-800 text-xl">
+                {editingBook ? "Edit Book" : "Add Book to Library"}
+              </h2>
+              <button onClick={closeForm}><X className="w-5 h-5 text-gray-400"/></button>
             </div>
-            <form onSubmit={createBook} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Title *</label>
                 <input type="text" required value={form.title} onChange={e => setForm({...form, title: e.target.value})}
@@ -159,7 +191,7 @@ export default function AdminBooksPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Published Year</label>
-                <input type="number" min="1800" max="2024" value={form.publishedYear} onChange={e => setForm({...form, publishedYear: e.target.value})}
+                <input type="number" min="1800" max="2030" value={form.publishedYear} onChange={e => setForm({...form, publishedYear: e.target.value})}
                   placeholder="e.g. 1952" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"/>
               </div>
               <div>
@@ -168,29 +200,19 @@ export default function AdminBooksPage() {
                   {form.imageUrl && (
                     <div className="relative w-24 h-32 rounded-lg overflow-hidden border border-green-100">
                       <img src={form.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setForm({...form, imageUrl: ""})}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 text-xs"
-                      >
-                        ✕
-                      </button>
+                      <button type="button" onClick={() => setForm({...form, imageUrl: ""})}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 text-xs">✕</button>
                     </div>
                   )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={uploading}
-                    className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-green-100 file:text-green-700 hover:file:bg-green-200"
-                  />
+                  <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading}
+                    className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-green-100 file:text-green-700 hover:file:bg-green-200"/>
                   {uploading && <p className="text-xs text-green-600">Uploading...</p>}
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">Cancel</button>
+                <button type="button" onClick={closeForm} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">Cancel</button>
                 <button type="submit" disabled={saving} className="flex-1 bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50">
-                  {saving ? "Adding..." : "Add to Library"}
+                  {saving ? (editingBook ? "Saving..." : "Adding...") : (editingBook ? "Save Changes" : "Add to Library")}
                 </button>
               </div>
             </form>
@@ -214,14 +236,20 @@ export default function AdminBooksPage() {
               <div className="p-4">
                 <h3 className="font-semibold text-gray-800 text-sm leading-tight">{book.title}</h3>
                 <p className="text-xs text-green-600 mt-0.5">{book.author}</p>
+                {book.category && <p className="text-xs text-gray-400 mt-0.5">{book.category}</p>}
                 <div className="flex items-center justify-between mt-3">
                   <div className="flex items-center gap-1.5">
                     <div className={`w-2 h-2 rounded-full ${book.availableQty > 0 ? "bg-green-500" : "bg-red-400"}`}/>
                     <span className="text-xs text-gray-500">{book.availableQty}/{book.totalQuantity} available</span>
                   </div>
-                  <button onClick={() => deleteBook(book.id)} className="text-gray-300 hover:text-red-400 transition-colors p-1">
-                    <Trash2 className="w-3.5 h-3.5"/>
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => openEdit(book)} className="text-gray-300 hover:text-green-600 transition-colors p-1" title="Edit book">
+                      <Pencil className="w-3.5 h-3.5"/>
+                    </button>
+                    <button onClick={() => deleteBook(book.id)} className="text-gray-300 hover:text-red-400 transition-colors p-1" title="Delete book">
+                      <Trash2 className="w-3.5 h-3.5"/>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
