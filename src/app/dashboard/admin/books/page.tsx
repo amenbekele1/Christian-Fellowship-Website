@@ -91,10 +91,10 @@ export default function AdminBooksPage() {
       publishedYear: form.publishedYear ? parseInt(form.publishedYear) : undefined,
     };
     if (editingBook) {
-      await fetch("/api/books", {
+      await fetch(`/api/books?id=${editingBook.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editingBook.id, ...payload }),
+        body: JSON.stringify(payload),
       });
     } else {
       await fetch("/api/books", {
