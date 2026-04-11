@@ -3,7 +3,67 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, UserPlus, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, UserPlus, CheckCircle } from "lucide-react";
+
+function ContactInterestForm() {
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSending(true);
+    try {
+      await fetch("/api/contact-interest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      setSent(true);
+    } catch {
+      setSent(true); // show success regardless to avoid email enumeration
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (sent) {
+    return (
+      <div className="text-center py-4">
+        <CheckCircle className="w-10 h-10 text-green-600 mx-auto mb-3" />
+        <p className="font-semibold text-gray-800">Message sent!</p>
+        <p className="text-gray-500 text-sm mt-1">A fellowship leader will reach out to you soon.</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSend} className="space-y-3">
+      <p className="text-sm font-medium text-gray-700 mb-2">Or send us a message and we'll reach out:</p>
+      <input
+        type="text" required placeholder="Your name"
+        value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+        className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+      />
+      <input
+        type="email" required placeholder="Your email"
+        value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
+        className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+      />
+      <textarea
+        placeholder="Tell us a little about yourself (optional)" rows={2}
+        value={form.message} onChange={e => setForm({ ...form, message: e.target.value })}
+        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+      />
+      <button
+        type="submit" disabled={sending}
+        className="w-full bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50 transition-colors"
+      >
+        {sending ? "Sending..." : "Send Message"}
+      </button>
+    </form>
+  );
+}
 
 function RegisterContent() {
   const router = useRouter();
@@ -104,19 +164,32 @@ function RegisterContent() {
 
   if (!inviteValid) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl p-10 max-w-md w-full text-center shadow-sm border border-red-200">
-          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h2 className="font-display text-2xl font-bold text-gray-800 mb-3">Registration Closed</h2>
-          <p className="text-gray-600 mb-6">
-            Registration is by invitation only. Please contact a fellowship leader to receive your invite link.
+      <div className="min-h-screen bg-green-50 flex items-center justify-center px-4 py-12">
+        <div className="bg-white rounded-2xl p-10 max-w-lg w-full shadow-sm border border-green-100">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="w-14 h-14 rounded-full bg-green-700 flex items-center justify-center text-amber-300 text-2xl font-bold mx-auto mb-4">✝</div>
+            <h1 className="font-display text-3xl font-bold text-gray-800 mb-2">Join the Fellowship</h1>
+            <p className="text-gray-500 text-sm">Membership is by invitation. Come meet us first!</p>
+          </div>
+
+          {/* Visit invitation */}
+          <div className="bg-green-50 border border-green-100 rounded-2xl p-6 mb-6">
+            <p className="font-semibold text-green-800 mb-1">📍 Join us this Saturday</p>
+            <p className="text-gray-700 font-medium">Naddnieprzańska 7, 04-205 Warszawa</p>
+            <p className="text-green-700 font-bold text-lg mt-1">18:00</p>
+            <p className="text-gray-500 text-sm mt-2">Come to our Saturday service, meet the fellowship, and a leader will send you an invite link to register.</p>
+          </div>
+
+          {/* Contact form */}
+          <ContactInterestForm />
+
+          <p className="text-center text-sm text-gray-400 mt-6">
+            Already have an invite?{" "}
+            <Link href="/register?invite=" className="text-green-700 font-medium hover:underline">Use your link</Link>
+            {" · "}
+            <Link href="/login" className="text-green-700 font-medium hover:underline">Sign in</Link>
           </p>
-          <Link
-            href="/"
-            className="inline-block bg-green-700 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-green-800 transition-colors"
-          >
-            Back to Home
-          </Link>
         </div>
       </div>
     );
