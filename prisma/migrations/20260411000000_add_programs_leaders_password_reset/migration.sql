@@ -1,3 +1,6 @@
+-- AlterTable: add priority column to announcements
+ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "priority" TEXT DEFAULT 'normal';
+
 -- CreateTable
 CREATE TABLE "PasswordResetToken" (
     "id" TEXT NOT NULL,
