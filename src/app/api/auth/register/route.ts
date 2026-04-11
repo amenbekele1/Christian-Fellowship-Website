@@ -2,19 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { sendEmail, welcomeEmail } from "@/lib/email";
+import { sendEmail, welcomeEmail, newMemberNotificationEmail } from "@/lib/email";
+import { formatDate } from "@/lib/utils";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   phone: z.string().optional(),
+  inviteToken: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, password, phone } = registerSchema.parse(body);
+    const { name, email, password, phone, inviteToken } = registerSchema.parse(body);
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -38,6 +40,28 @@ export async function POST(req: NextRequest) {
       subject: "Welcome to Warsaw Ethiopian Christian Fellowship!",
       html: welcomeEmail(name),
     }).catch(console.error);
+
+    // Send notification to all Guardians (non-blocking)
+    try {
+      const guardians = await prisma.user.findMany({
+        where: { role: "GUARDIAN" },
+        select: { id: true, name: true, email: true },
+      });
+
+      if (guardians.length > 0) {
+        const registrationDate = formatDate(new Date());
+
+        for (const guardian of guardians) {
+          sendEmail({
+            to: guardian.email,
+            subject: `New Member Registration — ${name}`,
+            html: newMemberNotificationEmail(guardian.name, name, email, registrationDate),
+          }).catch(console.error);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to send guardian notifications:", err);
+    }
 
     return NextResponse.json({
       message: "Account created successfully",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BookOpen, Search, Book, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { BookOpen, Search, Book, CheckCircle, Clock, AlertCircle, X } from "lucide-react";
 
 interface Book {
   id: string;
@@ -9,6 +9,7 @@ interface Book {
   author: string;
   description: string;
   coverImage: string | null;
+  imageUrl: string | null;
   totalQuantity: number;
   availableQty: number;
   category: string | null;
@@ -40,6 +41,9 @@ export default function LibraryPage() {
   const [reserving, setReserving] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [activeTab, setActiveTab] = useState<"browse" | "my-books">("browse");
+  const [showDatePicker, setShowDatePicker] = useState<string | null>(null);
+  const [pickupDate, setPickupDate] = useState<string>("");
+  const [returnDate, setReturnDate] = useState<string>("");
 
   useEffect(() => {
     fetchBooks();
@@ -69,18 +73,57 @@ export default function LibraryPage() {
     fetchBooks(search);
   };
 
-  const reserveBook = async (bookId: string) => {
-    setReserving(bookId);
+  // Get next Saturday
+  const getNextSaturday = (): string => {
+    const today = new Date();
+    const day = today.getDay();
+    const daysUntilSaturday = day === 0 ? 6 : (6 - day + 7) % 7 || 7;
+    const nextSat = new Date(today);
+    nextSat.setDate(nextSat.getDate() + daysUntilSaturday);
+    return nextSat.toISOString().split("T")[0];
+  };
+
+  // Check if date is Saturday
+  const isSaturday = (dateStr: string): boolean => {
+    const date = new Date(dateStr + "T00:00:00Z");
+    return date.getUTCDay() === 6;
+  };
+
+  const openDatePicker = (bookId: string) => {
+    setShowDatePicker(bookId);
+    setPickupDate(getNextSaturday());
+    setReturnDate("");
+  };
+
+  const closeDatePicker = () => {
+    setShowDatePicker(null);
+    setPickupDate("");
+    setReturnDate("");
+  };
+
+  const reserveBook = async () => {
+    if (!showDatePicker) return;
+    if (!pickupDate || !returnDate) {
+      setMessage({ type: "error", text: "Please select both pickup and return dates" });
+      return;
+    }
+    if (!isSaturday(pickupDate)) {
+      setMessage({ type: "error", text: "Pickup date must be a Saturday" });
+      return;
+    }
+
+    setReserving(showDatePicker);
     setMessage(null);
     try {
       const res = await fetch("/api/books/rentals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId }),
+        body: JSON.stringify({ bookId: showDatePicker, pickupDate, returnDate }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setMessage({ type: "success", text: "Book reserved! Collect it during Saturday service." });
+      setMessage({ type: "success", text: "Book reserved! Collect it on the selected date." });
+      closeDatePicker();
       fetchBooks(search);
       fetchMyRentals();
     } catch (err: any) {
@@ -156,12 +199,16 @@ export default function LibraryPage() {
                 const alreadyReserved = activeRentalIds.includes(book.id);
                 return (
                   <div key={book.id} className="bg-white rounded-2xl border border-green-100 shadow-sm overflow-hidden flex flex-col card-hover">
-                    {/* Book cover placeholder */}
-                    <div className="h-36 bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center">
-                      <div className="text-center">
-                        <BookOpen className="w-10 h-10 text-white/30 mx-auto mb-1" />
-                        <p className="text-white/50 text-xs">📖</p>
-                      </div>
+                    {/* Book cover image or placeholder */}
+                    <div className="h-48 bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center overflow-hidden">
+                      {book.imageUrl ? (
+                        <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-center">
+                          <BookOpen className="w-10 h-10 text-white/30 mx-auto mb-1" />
+                          <p className="text-white/50 text-xs">📖</p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="p-5 flex flex-col flex-1">
@@ -191,7 +238,7 @@ export default function LibraryPage() {
                           </span>
                         </div>
                         <button
-                          onClick={() => reserveBook(book.id)}
+                          onClick={() => openDatePicker(book.id)}
                           disabled={book.availableQty === 0 || alreadyReserved || reserving === book.id}
                           className="text-xs bg-green-700 text-white px-3 py-1.5 rounded-lg hover:bg-green-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-medium"
                         >
@@ -208,6 +255,64 @@ export default function LibraryPage() {
                   <p>No books found. Try a different search.</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {showDatePicker && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="font-display font-bold text-gray-800 text-xl">Select Rental Dates</h2>
+                  <button onClick={closeDatePicker} className="text-gray-400 hover:text-gray-600">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Pickup Date (Saturdays only)</label>
+                    <input
+                      type="date"
+                      value={pickupDate}
+                      onChange={(e) => setPickupDate(e.target.value)}
+                      className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                    {pickupDate && !isSaturday(pickupDate) && (
+                      <p className="text-xs text-red-500 mt-1">Please select a Saturday</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Return Date</label>
+                    <input
+                      type="date"
+                      value={returnDate}
+                      onChange={(e) => setReturnDate(e.target.value)}
+                      min={pickupDate ? new Date(new Date(pickupDate).getTime() + 86400000).toISOString().split("T")[0] : ""}
+                      max={pickupDate ? new Date(new Date(pickupDate).getTime() + 30 * 86400000).toISOString().split("T")[0] : ""}
+                      className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                    {pickupDate && returnDate && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {Math.floor((new Date(returnDate).getTime() - new Date(pickupDate).getTime()) / 86400000)} days
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button onClick={closeDatePicker} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium">
+                      Cancel
+                    </button>
+                    <button
+                      onClick={reserveBook}
+                      disabled={!pickupDate || !returnDate || !isSaturday(pickupDate) || reserving === showDatePicker}
+                      className="flex-1 bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50 transition-colors"
+                    >
+                      {reserving === showDatePicker ? "Reserving..." : "Reserve Book"}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </>

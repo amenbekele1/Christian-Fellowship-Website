@@ -6,7 +6,7 @@ import { Plus, BookMarked, Trash2, X, BookOpen } from "lucide-react";
 interface Book {
   id: string; title: string; author: string; description: string | null;
   totalQuantity: number; availableQty: number; category: string | null;
-  publishedYear: number | null; isActive: boolean;
+  publishedYear: number | null; isActive: boolean; imageUrl: string | null;
 }
 interface Rental {
   id: string; status: string; reservedAt: string; dueDate: string | null;
@@ -21,9 +21,10 @@ export default function AdminBooksPage() {
   const [activeTab, setActiveTab] = useState<"books" | "rentals">("books");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
     title: "", author: "", description: "", category: "", publishedYear: "",
-    totalQuantity: "1",
+    totalQuantity: "1", imageUrl: "",
   });
 
   useEffect(() => { fetchData(); }, []);
@@ -35,6 +36,28 @@ export default function AdminBooksPage() {
     const rentalData = await r.json();
     setRentals(Array.isArray(rentalData) ? rentalData : []);
     setLoading(false);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setForm({ ...form, imageUrl: data.url });
+      }
+    } finally {
+      setUploading(false);
+    }
   };
 
   const createBook = async (e: React.FormEvent) => {
@@ -50,7 +73,7 @@ export default function AdminBooksPage() {
       }),
     });
     setShowForm(false);
-    setForm({ title: "", author: "", description: "", category: "", publishedYear: "", totalQuantity: "1" });
+    setForm({ title: "", author: "", description: "", category: "", publishedYear: "", totalQuantity: "1", imageUrl: "" });
     fetchData();
     setSaving(false);
   };
@@ -139,6 +162,31 @@ export default function AdminBooksPage() {
                 <input type="number" min="1800" max="2024" value={form.publishedYear} onChange={e => setForm({...form, publishedYear: e.target.value})}
                   placeholder="e.g. 1952" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"/>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Book Cover Image</label>
+                <div className="space-y-2">
+                  {form.imageUrl && (
+                    <div className="relative w-24 h-32 rounded-lg overflow-hidden border border-green-100">
+                      <img src={form.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setForm({...form, imageUrl: ""})}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 text-xs"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                    className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-green-100 file:text-green-700 hover:file:bg-green-200"
+                  />
+                  {uploading && <p className="text-xs text-green-600">Uploading...</p>}
+                </div>
+              </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">Cancel</button>
                 <button type="submit" disabled={saving} className="flex-1 bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50">
@@ -156,8 +204,12 @@ export default function AdminBooksPage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {books.map(book => (
             <div key={book.id} className="bg-white border border-green-100 rounded-2xl shadow-sm overflow-hidden">
-              <div className="h-24 bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center">
-                <BookOpen className="w-8 h-8 text-white/30"/>
+              <div className="h-40 bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center overflow-hidden">
+                {book.imageUrl ? (
+                  <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover" />
+                ) : (
+                  <BookOpen className="w-8 h-8 text-white/30"/>
+                )}
               </div>
               <div className="p-4">
                 <h3 className="font-semibold text-gray-800 text-sm leading-tight">{book.title}</h3>

@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { sendEmail, absenceNotificationEmail } from "@/lib/email";
+import { sendEmail, sendBusLeaderAbsenceReport } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
 
 const recordSchema = z.object({
@@ -66,8 +66,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || !["GUARDIAN", "BUS_LEADER"].includes(session.user.role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!session || session.user.role !== "GUARDIAN") {
+    return NextResponse.json({ error: "Only Guardians can record attendance" }, { status: 403 });
   }
 
   const body = await req.json();
@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
   if (!busGroup) return NextResponse.json({ error: "BUS group not found" }, { status: 404 });
 
   const results = [];
+  const absentMembers: Array<{ name: string; phone?: string }> = [];
 
   for (const record of records) {
     // Upsert attendance record
@@ -100,19 +101,27 @@ export async function POST(req: NextRequest) {
 
     results.push(attendance);
 
-    // Send email to BUS leader if member is ABSENT
-    if (record.status === "ABSENT" && busGroup.leader) {
-      const member = attendance.user;
-      sendEmail({
-        to: busGroup.leader.email,
-        subject: `Follow-up Needed: ${member.name} was absent on ${formatDate(attendanceDate)}`,
-        html: absenceNotificationEmail(
-          busGroup.leader.name,
-          member.name,
-          formatDate(attendanceDate)
-        ),
-      }).catch(console.error);
+    // Track absent members
+    if (record.status === "ABSENT") {
+      absentMembers.push({
+        name: attendance.user.name,
+        phone: attendance.user.phone || undefined,
+      });
     }
+  }
+
+  // Send consolidated email to BUS leader if there are absent members
+  if (absentMembers.length > 0 && busGroup.leader) {
+    sendEmail({
+      to: busGroup.leader.email,
+      subject: `Absence Report — ${busGroup.name} (${formatDate(attendanceDate)})`,
+      html: sendBusLeaderAbsenceReport(
+        busGroup.leader.name,
+        busGroup.name,
+        formatDate(attendanceDate),
+        absentMembers
+      ),
+    }).catch(console.error);
   }
 
   return NextResponse.json({ message: "Attendance recorded", count: results.length });

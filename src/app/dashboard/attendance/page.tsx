@@ -20,10 +20,10 @@ export default function AttendancePage() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const isLeader = session?.user.role === "BUS_LEADER" || session?.user.role === "GUARDIAN";
+  const isGuardian = session?.user.role === "GUARDIAN";
 
   useEffect(() => {
-    if (isLeader) {
+    if (isGuardian) {
       fetch("/api/bus-groups")
         .then(r => r.json())
         .then(data => {
@@ -37,7 +37,7 @@ export default function AttendancePage() {
         .then(data => setMyAttendance(Array.isArray(data) ? data : []))
         .finally(() => setLoading(false));
     }
-  }, [isLeader, session]);
+  }, [isGuardian, session]);
 
   useEffect(() => {
     if (selectedGroup) {
@@ -89,14 +89,14 @@ export default function AttendancePage() {
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
         <h1 className="font-display text-3xl font-bold text-gray-800">
-          {isLeader ? "Record Attendance" : "My Attendance"}
+          {isGuardian ? "Record Attendance" : "My Attendance"}
         </h1>
         <p className="text-gray-500 mt-1">
-          {isLeader ? "Mark attendance for BUS group members" : "Your attendance history"}
+          {isGuardian ? "Mark attendance for BUS group members" : "Your attendance history"}
         </p>
       </div>
 
-      {isLeader ? (
+      {isGuardian ? (
         /* ── Leader: record attendance ── */
         <div className="bg-white rounded-2xl border border-green-100 shadow-sm">
           <div className="p-5 border-b border-green-50">

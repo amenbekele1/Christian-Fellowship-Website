@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 
 interface EmailOptions {
-  to: string;
+  to: string | string[];
   subject: string;
   html: string;
 }
@@ -20,7 +20,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
   try {
     await transporter.sendMail({
       from: process.env.EMAIL_FROM || "Warsaw Ethiopian Christian Fellowship <noreply@wecf.org>",
-      to,
+      to: Array.isArray(to) ? to.join(",") : to,
       subject,
       html,
     });
@@ -77,6 +77,89 @@ export function absenceNotificationEmail(
             <p style="margin:8px 0 0; font-weight: bold; font-style: normal;">— Hebrews 10:24-25 (NIV)</p>
           </div>
           <p>Thank you for your dedication to shepherding your group members. Your pastoral care makes a real difference in our community.</p>
+          <p>In His service,<br><strong>Warsaw Ethiopian Christian Fellowship</strong></p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+          <p><strong>Warsaw Ethiopian Christian Fellowship</strong> · Warsaw, Poland</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+export function sendBusLeaderAbsenceReport(
+  leaderName: string,
+  busGroupName: string,
+  eventDate: string,
+  absentMembers: Array<{ name: string; phone?: string }>
+): string {
+  const memberRows = absentMembers
+    .map(
+      (member) =>
+        `<tr style="border-bottom: 1px solid #e5e7eb;">
+          <td style="padding: 12px; color: #374151;">${member.name}</td>
+          <td style="padding: 12px; color: #6b7280;">${member.phone || "—"}</td>
+        </tr>`
+    )
+    .join("");
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #14532d, #166534); padding: 40px; text-align: center; }
+        .header h1 { color: #fde047; margin: 0; font-size: 22px; letter-spacing: 0.5px; }
+        .header p { color: #bbf7d0; margin: 8px 0 0; font-size: 14px; }
+        .cross { font-size: 40px; margin-bottom: 12px; display: block; }
+        .body { padding: 40px; }
+        .body h2 { color: #166534; font-size: 20px; margin-top: 0; }
+        .body p { color: #374151; line-height: 1.7; }
+        .event-info { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px; border-radius: 8px; margin: 20px 0; }
+        .event-info strong { color: #14532d; display: block; }
+        .event-info p { margin: 8px 0 0; font-size: 14px; color: #6b7280; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        table th { background: #f3f4f6; padding: 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #d1d5db; font-size: 13px; }
+        .footer { background: #f0fdf4; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <span class="cross">✝</span>
+          <h1>Warsaw Ethiopian Christian Fellowship</h1>
+          <p>Absence Report</p>
+        </div>
+        <div class="body">
+          <h2>Dear ${leaderName},</h2>
+          <p>This is a consolidated report of absent members from your BUS group.</p>
+
+          <div class="event-info">
+            <strong>${busGroupName}</strong>
+            <p>Event Date: ${eventDate}</p>
+            <p>Absent Members: ${absentMembers.length}</p>
+          </div>
+
+          <p>Please reach out to these members to check on their wellbeing and encourage their participation:</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Member Name</th>
+                <th>Phone</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${memberRows}
+            </tbody>
+          </table>
+
+          <p>Your pastoral care and encouragement are vital to maintaining the strength and cohesion of our fellowship community.</p>
           <p>In His service,<br><strong>Warsaw Ethiopian Christian Fellowship</strong></p>
         </div>
         <div class="footer">
@@ -190,6 +273,69 @@ export function passwordResetEmail(
             <strong>Security Note:</strong> This link will expire in 1 hour. If the link has expired, you can request a new password reset from the login page.
           </div>
           <p>If you have any questions or concerns, please contact a fellowship guardian.</p>
+          <p>In His service,<br><strong>Warsaw Ethiopian Christian Fellowship</strong></p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+          <p><strong>Warsaw Ethiopian Christian Fellowship</strong> · Warsaw, Poland</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+export function newMemberNotificationEmail(
+  guardianName: string,
+  memberName: string,
+  memberEmail: string,
+  registrationDate: string
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #14532d, #166534); padding: 40px; text-align: center; }
+        .header h1 { color: #fde047; margin: 0; font-size: 22px; letter-spacing: 0.5px; }
+        .header p { color: #bbf7d0; margin: 8px 0 0; font-size: 14px; }
+        .cross { font-size: 40px; margin-bottom: 12px; display: block; }
+        .body { padding: 40px; }
+        .body h2 { color: #166534; font-size: 20px; margin-top: 0; }
+        .body p { color: #374151; line-height: 1.7; }
+        .member-card { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .member-card strong { color: #14532d; display: block; font-size: 18px; margin-bottom: 8px; }
+        .member-detail { color: #6b7280; font-size: 14px; line-height: 1.8; }
+        .footer { background: #f0fdf4; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <span class="cross">✝</span>
+          <h1>Warsaw Ethiopian Christian Fellowship</h1>
+          <p>New Member Registration Notification</p>
+        </div>
+        <div class="body">
+          <h2>Dear ${guardianName},</h2>
+          <p>A new member has registered with the fellowship! Please welcome them to our community and help them get connected.</p>
+          <div class="member-card">
+            <strong>${memberName}</strong>
+            <div class="member-detail">
+              <p style="margin:0"><strong>Email:</strong> ${memberEmail}</p>
+              <p style="margin:8px 0 0"><strong>Registered:</strong> ${registrationDate}</p>
+            </div>
+          </div>
+          <p>Please reach out to ${memberName} soon to help them:
+          <ul style="color: #374151; line-height: 1.8;">
+            <li>Get connected with a BUS group</li>
+            <li>Understand our programs and activities</li>
+            <li>Access the fellowship community and resources</li>
+          </ul>
+          <p>Your pastoral care and welcome are crucial in helping new members feel embraced by our fellowship.</p>
           <p>In His service,<br><strong>Warsaw Ethiopian Christian Fellowship</strong></p>
         </div>
         <div class="footer">
