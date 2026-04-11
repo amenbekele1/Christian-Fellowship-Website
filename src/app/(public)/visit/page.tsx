@@ -32,9 +32,17 @@ export default function VisitPage() {
                 </div>
                 <p className="text-gray-600 leading-relaxed">
                   Warsaw Ethiopian Christian Fellowship<br />
-                  Warsaw, Poland<br />
-                  <span className="text-gray-400 text-sm">(Contact us for exact address)</span>
+                  <strong>Naddnieprzańska 7</strong><br />
+                  04-205 Warszawa, Poland
                 </p>
+                <a
+                  href="https://maps.google.com/?q=Naddnieprzańska+7,+04-205+Warszawa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block mt-3 text-sm text-green-700 font-medium hover:underline"
+                >
+                  Open in Google Maps →
+                </a>
               </div>
 
               {/* Service times */}
@@ -47,9 +55,7 @@ export default function VisitPage() {
                 </div>
                 <ul className="space-y-3">
                   {[
-                    { day: "Saturday", time: "10:00 AM – 1:00 PM", label: "Main Service" },
-                    { day: "Sunday", time: "10:00 AM – 12:00 PM", label: "Worship & Word" },
-                    { day: "Wednesday", time: "7:00 PM – 9:00 PM", label: "Bible Study" },
+                    { day: "Saturday", time: "18:00", label: "Main Service" },
                   ].map((s) => (
                     <li key={s.day} className="flex items-center justify-between py-2 border-b border-green-50 last:border-0">
                       <div>
@@ -107,7 +113,7 @@ export default function VisitPage() {
               <div className="rounded-2xl overflow-hidden border border-green-100 shadow-sm h-full min-h-[500px] bg-green-50 flex flex-col">
                 {/* Embed Google Maps — Warsaw city centre */}
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d78991.75814!2d20.9217!3d52.2297!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x471ecc669a869f01%3A0x72f0be2a88ead3fc!2sWarsaw%2C%20Poland!5e0!3m2!1sen!2s!4v1700000000000"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2445.123!2d21.0722!3d52.2185!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x471eccf5b5f0b0b3%3A0x1!2sNaddnieprzańska+7%2C+04-205+Warszawa!5e0!3m2!1sen!2spl!4v1700000000000"
                   className="w-full flex-1"
                   style={{ border: 0, minHeight: "460px" }}
                   allowFullScreen
@@ -116,7 +122,7 @@ export default function VisitPage() {
                 />
                 <div className="p-4 bg-white border-t border-green-100">
                   <p className="text-sm text-gray-500 text-center">
-                    📍 Warsaw, Poland · Contact us for the exact address of our fellowship hall
+                    📍 Naddnieprzańska 7, 04-205 Warszawa · Saturdays at 18:00
                   </p>
                 </div>
               </div>
