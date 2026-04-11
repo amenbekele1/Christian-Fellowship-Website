@@ -9,6 +9,7 @@ const bookSchema = z.object({
   author: z.string().min(1),
   description: z.string().optional(),
   coverImage: z.string().optional(),
+  imageUrl: z.string().optional(),
   totalQuantity: z.number().int().positive().default(1),
   category: z.string().optional(),
   publishedYear: z.number().int().optional(),

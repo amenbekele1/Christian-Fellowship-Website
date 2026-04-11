@@ -133,6 +133,7 @@ model Book {
   author          String
   description     String?  @db.Text
   coverImage      String?
+  imageUrl        String?
   totalQuantity   Int      @default(1)
   availableQty    Int      @default(1)
   category        String?
@@ -152,6 +153,7 @@ model BookRental {
   bookId       String
   status       RentalStatus @default(ACTIVE)
   reservedAt   DateTime     @default(now())
+  pickupDate   DateTime?
   borrowedAt   DateTime?
   dueDate      DateTime?
   returnedAt   DateTime?
@@ -234,4 +236,17 @@ model Leader {
   updatedAt   DateTime @updatedAt
 
   @@map("leaders")
+}
+
+model InviteToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String?
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  createdById String
+
+  @@map("invite_tokens")
 }

@@ -4,14 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, bookReminderEmail } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
-import { addDays, nextSaturday } from "date-fns";
+import { addDays } from "date-fns";
+import { z } from "zod";
 
-// Helper to calculate due date: next Saturday + 14 days
-function calculateDueDate(): Date {
-  const today = new Date();
-  const nextSat = nextSaturday(today);
-  return addDays(nextSat, 14);
-}
+const createRentalSchema = z.object({
+  bookId: z.string().min(1),
+  pickupDate: z.string(),
+  returnDate: z.string(),
+});
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -41,9 +41,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { bookId } = body;
-
-  if (!bookId) return NextResponse.json({ error: "Book ID required" }, { status: 400 });
+  const { bookId, pickupDate, returnDate } = createRentalSchema.parse(body);
 
   // Check availability
   const book = await prisma.book.findUnique({ where: { id: bookId } });
@@ -60,14 +58,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "You already have this book reserved" }, { status: 400 });
   }
 
-  // Create rental — due date is next Saturday + 14 days
-  const dueDate = calculateDueDate();
+  // Parse and validate dates
+  const pickupDateObj = new Date(pickupDate);
+  const returnDateObj = new Date(returnDate);
 
+  if (returnDateObj <= pickupDateObj) {
+    return NextResponse.json({ error: "Return date must be after pickup date" }, { status: 400 });
+  }
+
+  const daysDifference = Math.floor((returnDateObj.getTime() - pickupDateObj.getTime()) / (1000 * 60 * 60 * 24));
+  if (daysDifference > 30) {
+    return NextResponse.json({ error: "Rental period cannot exceed 30 days" }, { status: 400 });
+  }
+
+  // Create rental
   const rental = await prisma.bookRental.create({
     data: {
       userId: session.user.id,
       bookId,
-      dueDate,
+      pickupDate: pickupDateObj,
+      dueDate: returnDateObj,
       status: "ACTIVE",
     },
     include: {

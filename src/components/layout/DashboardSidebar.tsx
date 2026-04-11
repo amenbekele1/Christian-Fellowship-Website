@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard, Users, BookOpen, Calendar, Bell,
   ClipboardList, LogOut, Shield, UserCog, BookMarked,
-  ChevronRight, Church, UserCircle
+  ChevronRight, Church, UserCircle, Link2
 } from "lucide-react";
 import { cn, getRoleLabel } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
@@ -31,6 +31,7 @@ const adminLinks = [
   { href: "/dashboard/admin/programs", label: "Programs", icon: BookOpen },
   { href: "/dashboard/admin/leaders", label: "Leadership", icon: Shield },
   { href: "/dashboard/admin/books", label: "Library Books", icon: BookMarked },
+  { href: "/dashboard/admin/invites", label: "Invites", icon: Link2 },
 ];
 
 export function DashboardSidebar() {
