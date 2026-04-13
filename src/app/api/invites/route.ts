@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import crypto from "crypto";
+import { sendEmail, inviteEmail } from "@/lib/email";
 
 const generateInviteSchema = z.object({
   email: z.string().email().optional(),
@@ -53,6 +54,15 @@ export async function POST(req: NextRequest) {
   });
 
   const inviteUrl = `${process.env.NEXTAUTH_URL}/register?invite=${token}`;
+
+  // Send email if recipient address was provided
+  if (email) {
+    sendEmail({
+      to: email,
+      subject: "You're invited to join Warsaw Ethiopian Christian Fellowship",
+      html: inviteEmail(inviteUrl, session.user.name ?? "A fellowship guardian"),
+    }).catch(console.error);
+  }
 
   return NextResponse.json({ inviteToken, inviteUrl }, { status: 201 });
 }

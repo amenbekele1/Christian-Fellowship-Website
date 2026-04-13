@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Bell, Trash2, X, Pin, Edit2 } from "lucide-react";
+import { Plus, Bell, Trash2, X, Pin, Edit2, AlertCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 interface Announcement {
@@ -15,15 +15,24 @@ export default function AdminAnnouncementsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [form, setForm] = useState({ title: "", content: "", isPublic: false, isPinned: false, expiresAt: "" });
 
   useEffect(() => { fetchAnnouncements(); }, []);
 
   const fetchAnnouncements = async () => {
     setLoading(true);
-    const res = await fetch("/api/announcements");
-    setAnnouncements(await res.json());
-    setLoading(false);
+    setFetchError(null);
+    try {
+      const res = await fetch("/api/announcements");
+      if (!res.ok) throw new Error("Failed to load announcements");
+      const data = await res.json();
+      setAnnouncements(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      setFetchError(err.message ?? "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const createAnnouncement = async (e: React.FormEvent) => {
@@ -97,6 +106,14 @@ export default function AdminAnnouncementsPage() {
           <Plus className="w-4 h-4"/> New Announcement
         </button>
       </div>
+
+      {fetchError && (
+        <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-5">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <p className="text-sm">{fetchError}</p>
+          <button onClick={fetchAnnouncements} className="ml-auto text-sm underline">Retry</button>
+        </div>
+      )}
 
       {/* Modal */}
       {showForm && (

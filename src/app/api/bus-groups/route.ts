@@ -14,14 +14,31 @@ export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const groups = await prisma.bUSGroup.findMany({
-    include: {
-      leader: { select: { id: true, name: true, email: true } },
-      members: { select: { id: true, name: true, email: true, role: true } },
-      _count: { select: { members: true } },
-    },
-    orderBy: { name: "asc" },
-  });
+  const include = {
+    leader: { select: { id: true, name: true, email: true } },
+    members: { select: { id: true, name: true, email: true, role: true } },
+    _count: { select: { members: true } },
+  };
+
+  let groups;
+  if (session.user.role === "BUS_LEADER") {
+    groups = await prisma.bUSGroup.findMany({
+      where: { leaderId: session.user.id },
+      include,
+      orderBy: { name: "asc" },
+    });
+  } else if (session.user.role === "MEMBER") {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { busGroupId: true },
+    });
+    groups = user?.busGroupId
+      ? await prisma.bUSGroup.findMany({ where: { id: user.busGroupId }, include })
+      : [];
+  } else {
+    // GUARDIAN sees all
+    groups = await prisma.bUSGroup.findMany({ include, orderBy: { name: "asc" } });
+  }
 
   return NextResponse.json(groups);
 }
@@ -104,6 +121,10 @@ export async function DELETE(req: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Group ID required" }, { status: 400 });
 
-  await prisma.bUSGroup.delete({ where: { id } });
+  // Unassign all members before deleting so no orphaned busGroupId references remain
+  await prisma.$transaction([
+    prisma.user.updateMany({ where: { busGroupId: id }, data: { busGroupId: null } }),
+    prisma.bUSGroup.delete({ where: { id } }),
+  ]);
   return NextResponse.json({ message: "Deleted" });
 }

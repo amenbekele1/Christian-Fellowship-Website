@@ -3,10 +3,15 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{10,}$/;
+
 const resetPasswordSchema = z.object({
   token: z.string().min(1),
-  password: z.string().min(6),
-  confirmPassword: z.string().min(6),
+  password: z
+    .string()
+    .min(10, "Password must be at least 10 characters")
+    .regex(PASSWORD_REGEX, "Password must contain uppercase, lowercase, and a number"),
+  confirmPassword: z.string().min(10),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],

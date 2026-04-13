@@ -75,8 +75,18 @@ function RegisterContent() {
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(!!inviteToken);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
   const [inviteValid, setInviteValid] = useState(false);
+
+  const pwdRules = {
+    length: form.password.length >= 10,
+    upper: /[A-Z]/.test(form.password),
+    lower: /[a-z]/.test(form.password),
+    number: /\d/.test(form.password),
+  };
+  const pwdValid = Object.values(pwdRules).every(Boolean);
+  const confirmMatch = form.confirm.length > 0 && form.password === form.confirm;
 
   useEffect(() => {
     if (!inviteToken) {
@@ -106,14 +116,13 @@ function RegisterContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (form.password !== form.confirm) {
-      setError("Passwords do not match");
-      return;
-    }
-    if (form.password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
+    const errors: Record<string, string> = {};
+    if (form.name.trim().length < 2) errors.name = "Name must be at least 2 characters";
+    if (!pwdValid) errors.password = "Password does not meet requirements";
+    if (form.password !== form.confirm) errors.confirm = "Passwords do not match";
+    if (Object.keys(errors).length > 0) { setFieldErrors(errors); return; }
+    setFieldErrors({});
+
     setLoading(true);
     try {
       const res = await fetch("/api/auth/register", {
@@ -242,10 +251,11 @@ function RegisterContent() {
                 type="text"
                 required
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={(e) => { setForm({ ...form, name: e.target.value }); setFieldErrors(fe => ({ ...fe, name: "" })); }}
                 placeholder="Miriam Haile"
-                className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className={`w-full h-10 rounded-lg border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${fieldErrors.name ? "border-red-300 bg-red-50" : "border-gray-200"}`}
               />
+              {fieldErrors.name && <p className="text-xs text-red-600 mt-1">{fieldErrors.name}</p>}
             </div>
 
             <div>
@@ -278,9 +288,9 @@ function RegisterContent() {
                   type={showPwd ? "text" : "password"}
                   required
                   value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="At least 8 characters"
-                  className="w-full h-10 rounded-lg border border-gray-200 px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  onChange={(e) => { setForm({ ...form, password: e.target.value }); setFieldErrors(fe => ({ ...fe, password: "" })); }}
+                  placeholder="Min 10 chars, upper + lower + number"
+                  className={`w-full h-10 rounded-lg border px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${fieldErrors.password ? "border-red-300 bg-red-50" : "border-gray-200"}`}
                 />
                 <button
                   type="button"
@@ -290,6 +300,21 @@ function RegisterContent() {
                   {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {form.password.length > 0 && (
+                <div className="mt-2 grid grid-cols-2 gap-1 text-xs">
+                  {[
+                    { ok: pwdRules.length, label: "10+ characters" },
+                    { ok: pwdRules.upper,  label: "Uppercase letter" },
+                    { ok: pwdRules.lower,  label: "Lowercase letter" },
+                    { ok: pwdRules.number, label: "Number" },
+                  ].map(({ ok, label }) => (
+                    <span key={label} className={`flex items-center gap-1 ${ok ? "text-green-600" : "text-gray-400"}`}>
+                      <span>{ok ? "✓" : "○"}</span> {label}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {fieldErrors.password && <p className="text-xs text-red-600 mt-1">{fieldErrors.password}</p>}
             </div>
 
             <div>
@@ -298,10 +323,14 @@ function RegisterContent() {
                 type="password"
                 required
                 value={form.confirm}
-                onChange={(e) => setForm({ ...form, confirm: e.target.value })}
+                onChange={(e) => { setForm({ ...form, confirm: e.target.value }); setFieldErrors(fe => ({ ...fe, confirm: "" })); }}
                 placeholder="Repeat your password"
-                className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className={`w-full h-10 rounded-lg border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${fieldErrors.confirm ? "border-red-300 bg-red-50" : form.confirm.length > 0 ? (confirmMatch ? "border-green-400" : "border-red-300") : "border-gray-200"}`}
               />
+              {form.confirm.length > 0 && !confirmMatch && !fieldErrors.confirm && (
+                <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
+              )}
+              {fieldErrors.confirm && <p className="text-xs text-red-600 mt-1">{fieldErrors.confirm}</p>}
             </div>
 
             <button

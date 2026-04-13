@@ -72,7 +72,9 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { records, date } = recordSchema.parse(body);
-  const attendanceDate = new Date(date);
+  // Normalize to midnight UTC so the composite unique key (userId, date)
+  // is always identical for the same calendar day regardless of submission time.
+  const attendanceDate = new Date(date.split("T")[0] + "T00:00:00.000Z");
 
   const results = [];
   // Map: busGroupId -> { group, absentMembers[] }

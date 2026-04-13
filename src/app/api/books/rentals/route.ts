@@ -43,54 +43,62 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { bookId, pickupDate, returnDate } = createRentalSchema.parse(body);
 
-  // Check availability
-  const book = await prisma.book.findUnique({ where: { id: bookId } });
-  if (!book) return NextResponse.json({ error: "Book not found" }, { status: 404 });
-  if (book.availableQty <= 0) {
-    return NextResponse.json({ error: "Book is not available" }, { status: 400 });
-  }
-
-  // Check if user already has an active rental for this book
-  const existing = await prisma.bookRental.findFirst({
-    where: { userId: session.user.id, bookId, status: "ACTIVE" },
-  });
-  if (existing) {
-    return NextResponse.json({ error: "You already have this book reserved" }, { status: 400 });
-  }
-
-  // Parse and validate dates
+  // Parse and validate dates first (before hitting DB)
   const pickupDateObj = new Date(pickupDate);
   const returnDateObj = new Date(returnDate);
 
   if (returnDateObj <= pickupDateObj) {
     return NextResponse.json({ error: "Return date must be after pickup date" }, { status: 400 });
   }
-
-  const daysDifference = Math.floor((returnDateObj.getTime() - pickupDateObj.getTime()) / (1000 * 60 * 60 * 24));
+  const daysDifference = Math.floor(
+    (returnDateObj.getTime() - pickupDateObj.getTime()) / (1000 * 60 * 60 * 24)
+  );
   if (daysDifference > 30) {
     return NextResponse.json({ error: "Rental period cannot exceed 30 days" }, { status: 400 });
   }
 
-  // Create rental
-  const rental = await prisma.bookRental.create({
-    data: {
-      userId: session.user.id,
-      bookId,
-      pickupDate: pickupDateObj,
-      dueDate: returnDateObj,
-      status: "ACTIVE",
-    },
-    include: {
-      book: true,
-      user: true,
-    },
-  });
+  // Atomic transaction: check availability, claim copy, create rental
+  let rental;
+  try {
+    rental = await prisma.$transaction(async (tx) => {
+      // Check existing rental inside transaction to avoid TOCTOU race
+      const existing = await tx.bookRental.findFirst({
+        where: { userId: session!.user.id, bookId, status: "ACTIVE" },
+      });
+      if (existing) throw new Error("ALREADY_RESERVED");
 
-  // Decrement available quantity
-  await prisma.book.update({
-    where: { id: bookId },
-    data: { availableQty: { decrement: 1 } },
-  });
+      // Decrement with a WHERE guard — this acts as the availability check AND the claim.
+      // If availableQty is 0, the update returns 0 rows and Prisma throws P2025.
+      const updatedBook = await tx.book.update({
+        where: { id: bookId, availableQty: { gt: 0 } },
+        data: { availableQty: { decrement: 1 } },
+      });
+
+      return tx.bookRental.create({
+        data: {
+          userId: session!.user.id,
+          bookId,
+          pickupDate: pickupDateObj,
+          dueDate: returnDateObj,
+          status: "ACTIVE",
+        },
+        include: { book: true, user: true },
+      });
+    });
+  } catch (err: any) {
+    if (err.message === "ALREADY_RESERVED") {
+      return NextResponse.json({ error: "You already have this book reserved" }, { status: 400 });
+    }
+    // Prisma P2025 = record not found (availableQty was 0, WHERE guard failed)
+    if (err.code === "P2025" || err.message?.includes("Record to update not found")) {
+      return NextResponse.json({ error: "Book is not available" }, { status: 400 });
+    }
+    // Book itself doesn't exist
+    if (err.code === "P2003" || err.code === "P2016") {
+      return NextResponse.json({ error: "Book not found" }, { status: 404 });
+    }
+    throw err;
+  }
 
   return NextResponse.json(rental, { status: 201 });
 }
