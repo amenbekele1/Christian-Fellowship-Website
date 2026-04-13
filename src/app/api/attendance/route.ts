@@ -81,10 +81,10 @@ export async function POST(req: NextRequest) {
   for (const record of records) {
     const attendance = await prisma.attendance.upsert({
       where: { userId_date: { userId: record.userId, date: attendanceDate } },
-      update: { status: record.status, notes: record.notes, busGroupId: record.busGroupId ?? null },
+      update: { status: record.status, notes: record.notes, ...(record.busGroupId ? { busGroupId: record.busGroupId } : {}) },
       create: {
         userId: record.userId,
-        busGroupId: record.busGroupId ?? null,
+        busGroupId: record.busGroupId ?? undefined,
         date: attendanceDate,
         status: record.status,
         notes: record.notes,
