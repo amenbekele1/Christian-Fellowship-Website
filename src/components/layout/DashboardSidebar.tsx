@@ -16,7 +16,6 @@ const memberLinks = [
   { href: "/dashboard/profile", label: "Profile", icon: UserCircle },
   { href: "/dashboard/library", label: "Library", icon: BookOpen },
   { href: "/dashboard/bus-groups", label: "My BUS Group", icon: Users },
-  { href: "/dashboard/attendance", label: "My Attendance", icon: ClipboardList },
 ];
 
 const leaderLinks = [
