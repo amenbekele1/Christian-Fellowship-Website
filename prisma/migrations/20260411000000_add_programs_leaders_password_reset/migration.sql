@@ -43,3 +43,6 @@ CREATE TABLE "Leader" (
 
     CONSTRAINT "Leader_pkey" PRIMARY KEY ("id")
 );
+
+-- Make busGroupId optional in attendances table
+ALTER TABLE "attendances" ALTER COLUMN "busGroupId" DROP NOT NULL;

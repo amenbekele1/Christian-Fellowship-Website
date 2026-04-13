@@ -113,15 +113,15 @@ model BUSGroup {
 model Attendance {
   id         String           @id @default(cuid())
   userId     String
-  busGroupId String
+  busGroupId String?
   date       DateTime
   status     AttendanceStatus @default(PRESENT)
   notes      String?
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  busGroup BUSGroup @relation(fields: [busGroupId], references: [id])
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  busGroup BUSGroup? @relation(fields: [busGroupId], references: [id])
 
   @@unique([userId, date])
   @@map("attendances")
