@@ -33,8 +33,9 @@ function ResetPasswordForm() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    const pwdRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{10,}$/;
+    if (!pwdRegex.test(password)) {
+      setError("Password must be at least 10 characters and include uppercase, lowercase, and a number");
       return;
     }
 
@@ -104,7 +105,7 @@ function ResetPasswordForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder="At least 6 characters"
+                  placeholder="Min 10 chars, upper + lower + number"
                   className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 pr-10"
                 />
                 <button

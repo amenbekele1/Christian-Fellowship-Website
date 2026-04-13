@@ -1,5 +1,15 @@
 import nodemailer from "nodemailer";
 
+/** Escape user-supplied strings before embedding in HTML email bodies. */
+function esc(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_SERVER_HOST,
   port: Number(process.env.EMAIL_SERVER_PORT) || 587,
@@ -66,12 +76,12 @@ export function absenceNotificationEmail(
           <p>Member Attendance Notification</p>
         </div>
         <div class="body">
-          <h2>Dear ${leaderName},</h2>
+          <h2>Dear ${esc(leaderName)},</h2>
           <p>This is an automated notification from the fellowship attendance system.</p>
           <div class="highlight">
-            <p style="margin:0"><strong>${memberName}</strong> was marked <strong>absent</strong> from the fellowship gathering on <strong>${date}</strong>.</p>
+            <p style="margin:0"><strong>${esc(memberName)}</strong> was marked <strong>absent</strong> from the fellowship gathering on <strong>${esc(date)}</strong>.</p>
           </div>
-          <p>As their BUS group leader, we kindly ask you to reach out to ${memberName} to check on their wellbeing and encourage their continued participation in our fellowship community.</p>
+          <p>As their BUS group leader, we kindly ask you to reach out to ${esc(memberName)} to check on their wellbeing and encourage their continued participation in our fellowship community.</p>
           <div class="verse">
             <p style="margin:0">"And let us consider how we may spur one another on toward love and good deeds, not giving up meeting together..."</p>
             <p style="margin:8px 0 0; font-weight: bold; font-style: normal;">— Hebrews 10:24-25 (NIV)</p>
@@ -99,8 +109,8 @@ export function sendBusLeaderAbsenceReport(
     .map(
       (member) =>
         `<tr style="border-bottom: 1px solid #e5e7eb;">
-          <td style="padding: 12px; color: #374151;">${member.name}</td>
-          <td style="padding: 12px; color: #6b7280;">${member.phone || "—"}</td>
+          <td style="padding: 12px; color: #374151;">${esc(member.name)}</td>
+          <td style="padding: 12px; color: #6b7280;">${member.phone ? esc(member.phone) : "—"}</td>
         </tr>`
     )
     .join("");
@@ -136,12 +146,12 @@ export function sendBusLeaderAbsenceReport(
           <p>Absence Report</p>
         </div>
         <div class="body">
-          <h2>Dear ${leaderName},</h2>
+          <h2>Dear ${esc(leaderName)},</h2>
           <p>This is a consolidated report of absent members from your BUS group.</p>
 
           <div class="event-info">
-            <strong>${busGroupName}</strong>
-            <p>Event Date: ${eventDate}</p>
+            <strong>${esc(busGroupName)}</strong>
+            <p>Event Date: ${esc(eventDate)}</p>
             <p>Absent Members: ${absentMembers.length}</p>
           </div>
 
@@ -207,15 +217,15 @@ export function bookReminderEmail(
           <p>Library Book Return Reminder</p>
         </div>
         <div class="body">
-          <h2>Dear ${memberName},</h2>
+          <h2>Dear ${esc(memberName)},</h2>
           <p>This is a friendly reminder that a library book you borrowed is due soon.</p>
           <div class="book-card">
             <p style="margin:0; color:#6b7280; font-size:13px; text-transform:uppercase; letter-spacing:1px;">Book Title</p>
-            <strong>${bookTitle}</strong>
+            <strong>${esc(bookTitle)}</strong>
           </div>
           <div class="due-date">
             <p style="margin:0; color:#6b7280; font-size:13px;">Return Due Date</p>
-            <strong>${dueDate}</strong>
+            <strong>${esc(dueDate)}</strong>
           </div>
           <p>Please return the book during <strong>Saturday service</strong> at the fellowship hall. If you need more time, please contact a fellowship guardian.</p>
           <p>Thank you for using our library and helping keep books available for all members.</p>
@@ -264,7 +274,7 @@ export function passwordResetEmail(
           <p>Password Reset Request</p>
         </div>
         <div class="body">
-          <h2>Dear ${name},</h2>
+          <h2>Dear ${esc(name)},</h2>
           <p>We received a request to reset your password. If you didn't make this request, you can safely ignore this email.</p>
           <div class="cta">
             <a href="${resetUrl}">Reset Your Password</a>
@@ -320,22 +330,78 @@ export function newMemberNotificationEmail(
           <p>New Member Registration Notification</p>
         </div>
         <div class="body">
-          <h2>Dear ${guardianName},</h2>
+          <h2>Dear ${esc(guardianName)},</h2>
           <p>A new member has registered with the fellowship! Please welcome them to our community and help them get connected.</p>
           <div class="member-card">
-            <strong>${memberName}</strong>
+            <strong>${esc(memberName)}</strong>
             <div class="member-detail">
-              <p style="margin:0"><strong>Email:</strong> ${memberEmail}</p>
-              <p style="margin:8px 0 0"><strong>Registered:</strong> ${registrationDate}</p>
+              <p style="margin:0"><strong>Email:</strong> ${esc(memberEmail)}</p>
+              <p style="margin:8px 0 0"><strong>Registered:</strong> ${esc(registrationDate)}</p>
             </div>
           </div>
-          <p>Please reach out to ${memberName} soon to help them:
+          <p>Please reach out to ${esc(memberName)} soon to help them:
           <ul style="color: #374151; line-height: 1.8;">
             <li>Get connected with a BUS group</li>
             <li>Understand our programs and activities</li>
             <li>Access the fellowship community and resources</li>
           </ul>
           <p>Your pastoral care and welcome are crucial in helping new members feel embraced by our fellowship.</p>
+          <p>In His service,<br><strong>Warsaw Ethiopian Christian Fellowship</strong></p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+          <p><strong>Warsaw Ethiopian Christian Fellowship</strong> · Warsaw, Poland</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+export function inviteEmail(inviteUrl: string, senderName: string): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #14532d, #166534); padding: 40px; text-align: center; }
+        .header h1 { color: #fde047; margin: 0; font-size: 22px; letter-spacing: 0.5px; }
+        .header p { color: #bbf7d0; margin: 8px 0 0; font-size: 14px; }
+        .cross { font-size: 40px; margin-bottom: 12px; display: block; }
+        .body { padding: 40px; }
+        .body h2 { color: #166534; font-size: 20px; margin-top: 0; }
+        .body p { color: #374151; line-height: 1.7; }
+        .cta { text-align: center; margin: 30px 0; }
+        .cta a { background: #166534; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; display: inline-block; }
+        .warning { background: #fefce8; border: 1px solid #fde047; padding: 16px 20px; border-radius: 8px; margin: 20px 0; color: #713f12; font-size: 13px; line-height: 1.6; }
+        .verse { background: #fefce8; border: 1px solid #fde047; padding: 20px; border-radius: 8px; margin: 24px 0; font-style: italic; color: #713f12; text-align: center; }
+        .footer { background: #f0fdf4; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <span class="cross">✝</span>
+          <h1>Warsaw Ethiopian Christian Fellowship</h1>
+          <p>You've Been Invited!</p>
+        </div>
+        <div class="body">
+          <h2>Welcome to the Fellowship!</h2>
+          <p>${esc(senderName)} has invited you to join the Warsaw Ethiopian Christian Fellowship member portal. Click the button below to create your account.</p>
+          <div class="cta">
+            <a href="${inviteUrl}">Accept Invitation →</a>
+          </div>
+          <div class="warning">
+            <strong>Note:</strong> This invitation link expires in 48 hours. If you did not expect this invitation or have questions, please ignore this email or contact a fellowship guardian.
+          </div>
+          <div class="verse">
+            <p style="margin:0">"Not giving up meeting together, but encouraging one another..."</p>
+            <p style="margin:8px 0 0; font-weight: bold; font-style: normal;">— Hebrews 10:25 (NIV)</p>
+          </div>
+          <p>We look forward to welcoming you into our community!</p>
           <p>In His service,<br><strong>Warsaw Ethiopian Christian Fellowship</strong></p>
         </div>
         <div class="footer">
@@ -380,7 +446,7 @@ export function welcomeEmail(name: string): string {
           <p>Welcome to the Family!</p>
         </div>
         <div class="body">
-          <h2>Dear ${name},</h2>
+          <h2>Dear ${esc(name)},</h2>
           <p>Welcome to the Warsaw Ethiopian Christian Fellowship! We are so glad you have joined our community. You are now part of a family that worships, grows, and serves together.</p>
           <div class="verse">
             <p style="margin:0">"And let us consider how we may spur one another on toward love and good deeds, not giving up meeting together, as some are in the habit of doing, but encouraging one another..."</p>

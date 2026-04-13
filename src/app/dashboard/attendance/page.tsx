@@ -28,15 +28,17 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/members")
+    fetch("/api/members?limit=200")
       .then(r => r.json())
-      .then((data: Member[]) => {
-        const active = Array.isArray(data) ? data.filter(m => m) : [];
+      .then((json: any) => {
+        const raw = Array.isArray(json) ? json : (json.data ?? []);
+        const active = raw.filter((m: Member) => m);
         setMembers(active);
         const init: Record<string, "PRESENT" | "ABSENT" | "EXCUSED"> = {};
-        active.forEach(m => { init[m.id] = "PRESENT"; });
+        active.forEach((m: Member) => { init[m.id] = "PRESENT"; });
         setAttendance(init);
       })
+      .catch(() => setMembers([]))
       .finally(() => setLoading(false));
   }, []);
 

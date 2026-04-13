@@ -4,17 +4,33 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, welcomeEmail, newMemberNotificationEmail } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{10,}$/;
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z
+    .string()
+    .min(10, "Password must be at least 10 characters")
+    .regex(PASSWORD_REGEX, "Password must contain uppercase, lowercase, and a number"),
   phone: z.string().optional(),
   inviteToken: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit: 5 registration attempts per IP per 15 minutes
+    const ip = getClientIp(req);
+    const rl = checkRateLimit(`register:${ip}`, 5, 15 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many registration attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const { name, email, password, phone, inviteToken } = registerSchema.parse(body);
 
