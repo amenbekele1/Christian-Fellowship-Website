@@ -33,9 +33,15 @@ export default function AdminProgramsPage() {
 
   const fetchPrograms = async () => {
     setLoading(true);
-    const res = await fetch("/api/programs");
-    setPrograms(await res.json());
-    setLoading(false);
+    try {
+      const res = await fetch("/api/programs");
+      const data = await res.json();
+      setPrograms(Array.isArray(data) ? data : []);
+    } catch {
+      setPrograms([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const saveProgram = async (e: React.FormEvent) => {
