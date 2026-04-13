@@ -18,11 +18,10 @@ const memberLinks = [
   { href: "/dashboard/bus-groups", label: "My BUS Group", icon: Users },
 ];
 
-const leaderLinks = [
-  { href: "/dashboard/attendance", label: "Record Attendance", icon: ClipboardList },
-];
+const leaderLinks: { href: string; label: string; icon: any }[] = [];
 
 const adminLinks = [
+  { href: "/dashboard/attendance", label: "Record Attendance", icon: ClipboardList },
   { href: "/dashboard/admin/members", label: "Members", icon: UserCog },
   { href: "/dashboard/admin/bus-groups", label: "BUS Groups", icon: Users },
   { href: "/dashboard/admin/events", label: "Events", icon: Calendar },

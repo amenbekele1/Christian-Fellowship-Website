@@ -11,10 +11,10 @@ const recordSchema = z.object({
     z.object({
       userId: z.string(),
       status: z.enum(["PRESENT", "ABSENT", "EXCUSED"]),
+      busGroupId: z.string().optional().nullable(),
       notes: z.string().optional(),
     })
   ),
-  busGroupId: z.string(),
   date: z.string(),
 });
 
@@ -71,57 +71,57 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { records, busGroupId, date } = recordSchema.parse(body);
+  const { records, date } = recordSchema.parse(body);
   const attendanceDate = new Date(date);
 
-  // Fetch BUS group with leader
-  const busGroup = await prisma.bUSGroup.findUnique({
-    where: { id: busGroupId },
-    include: { leader: true },
-  });
-  if (!busGroup) return NextResponse.json({ error: "BUS group not found" }, { status: 404 });
-
   const results = [];
-  const absentMembers: Array<{ name: string; phone?: string }> = [];
+  // Map: busGroupId -> { group, absentMembers[] }
+  const absentByGroup = new Map<string, { group: any; members: Array<{ name: string; phone?: string }> }>();
 
   for (const record of records) {
-    // Upsert attendance record
     const attendance = await prisma.attendance.upsert({
       where: { userId_date: { userId: record.userId, date: attendanceDate } },
-      update: { status: record.status, notes: record.notes },
+      update: { status: record.status, notes: record.notes, busGroupId: record.busGroupId ?? null },
       create: {
         userId: record.userId,
-        busGroupId,
+        busGroupId: record.busGroupId ?? null,
         date: attendanceDate,
         status: record.status,
         notes: record.notes,
       },
       include: { user: true },
     });
-
     results.push(attendance);
 
-    // Track absent members
-    if (record.status === "ABSENT") {
-      absentMembers.push({
+    if (record.status === "ABSENT" && record.busGroupId) {
+      if (!absentByGroup.has(record.busGroupId)) {
+        const grp = await prisma.bUSGroup.findUnique({
+          where: { id: record.busGroupId },
+          include: { leader: true },
+        });
+        absentByGroup.set(record.busGroupId, { group: grp, members: [] });
+      }
+      absentByGroup.get(record.busGroupId)!.members.push({
         name: attendance.user.name,
         phone: attendance.user.phone || undefined,
       });
     }
   }
 
-  // Send consolidated email to BUS leader if there are absent members
-  if (absentMembers.length > 0 && busGroup.leader) {
-    sendEmail({
-      to: busGroup.leader.email,
-      subject: `Absence Report — ${busGroup.name} (${formatDate(attendanceDate)})`,
-      html: sendBusLeaderAbsenceReport(
-        busGroup.leader.name,
-        busGroup.name,
-        formatDate(attendanceDate),
-        absentMembers
-      ),
-    }).catch(console.error);
+  // Send one consolidated email per BUS leader
+  for (const { group, members } of absentByGroup.values()) {
+    if (group?.leader && members.length > 0) {
+      sendEmail({
+        to: group.leader.email,
+        subject: `Absence Report — ${group.name} (${formatDate(attendanceDate)})`,
+        html: sendBusLeaderAbsenceReport(
+          group.leader.name,
+          group.name,
+          formatDate(attendanceDate),
+          members
+        ),
+      }).catch(console.error);
+    }
   }
 
   return NextResponse.json({ message: "Attendance recorded", count: results.length });
