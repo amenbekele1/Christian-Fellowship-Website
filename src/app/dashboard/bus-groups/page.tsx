@@ -1,7 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Users, Mail, Phone } from "lucide-react";
+import Link from "next/link";
+import { Users, Mail, MessageSquare } from "lucide-react";
 import { getRoleLabel, getRoleBadgeColor } from "@/lib/utils";
 
 export default async function BusGroupsPage() {
@@ -75,9 +76,18 @@ export default async function BusGroupsPage() {
                     <h2 className="font-display font-bold text-white text-xl">{group.name}</h2>
                     {group.description && <p className="text-green-200 text-sm mt-1">{group.description}</p>}
                   </div>
-                  <div className="text-right">
-                    <p className="text-amber-300 text-2xl font-display font-bold">{group._count.members}</p>
-                    <p className="text-green-300 text-xs">members</p>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-amber-300 text-2xl font-display font-bold">{group._count.members}</p>
+                      <p className="text-green-300 text-xs">members</p>
+                    </div>
+                    <Link
+                      href={`/dashboard/bus-groups/${group.id}/chat`}
+                      className="flex items-center gap-2 bg-white/15 hover:bg-white/25 transition-colors text-white text-sm font-medium px-4 py-2 rounded-xl border border-white/20"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      Open Hub
+                    </Link>
                   </div>
                 </div>
               </div>
