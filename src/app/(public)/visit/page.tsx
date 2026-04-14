@@ -11,7 +11,7 @@ export default function VisitPage() {
         <div className="max-w-4xl mx-auto px-6 text-center relative">
           <p className="text-amber-300 text-sm font-semibold uppercase tracking-widest mb-4">We'd Love to See You</p>
           <h1 className="font-display text-5xl font-bold text-white mb-5">Visit Us</h1>
-          <p className="text-green-100 text-lg max-w-2xl mx-auto">
+          <p className="text-brown-100 text-lg max-w-2xl mx-auto">
             Our doors are always open. Come as you are and experience the warmth of our fellowship.
           </p>
         </div>
@@ -23,10 +23,10 @@ export default function VisitPage() {
             {/* Info cards */}
             <div className="lg:col-span-2 space-y-5">
               {/* Location */}
-              <div className="bg-white border border-green-100 rounded-2xl p-6 shadow-sm">
+              <div className="bg-white border border-brown-200 rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-green-600" />
+                  <div className="w-10 h-10 rounded-xl bg-brown-100 flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-gold-600" />
                   </div>
                   <h3 className="font-display font-bold text-gray-800 text-lg">Our Location</h3>
                 </div>
@@ -39,14 +39,14 @@ export default function VisitPage() {
                   href="https://maps.google.com/?q=Naddnieprzańska+7,+04-205+Warszawa"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block mt-3 text-sm text-green-700 font-medium hover:underline"
+                  className="inline-block mt-3 text-sm text-gold-500 font-medium hover:underline"
                 >
                   Open in Google Maps →
                 </a>
               </div>
 
               {/* Service times */}
-              <div className="bg-white border border-green-100 rounded-2xl p-6 shadow-sm">
+              <div className="bg-white border border-brown-200 rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
                     <Clock className="w-5 h-5 text-amber-600" />
@@ -57,10 +57,10 @@ export default function VisitPage() {
                   {[
                     { day: "Saturday", time: "18:00", label: "Main Service" },
                   ].map((s) => (
-                    <li key={s.day} className="flex items-center justify-between py-2 border-b border-green-50 last:border-0">
+                    <li key={s.day} className="flex items-center justify-between py-2 border-b border-brown-100 last:border-0">
                       <div>
                         <p className="font-medium text-gray-800 text-sm">{s.day}</p>
-                        <p className="text-xs text-green-600">{s.label}</p>
+                        <p className="text-xs text-gold-600">{s.label}</p>
                       </div>
                       <span className="text-sm text-gray-500 font-medium">{s.time}</span>
                     </li>
@@ -69,7 +69,7 @@ export default function VisitPage() {
               </div>
 
               {/* Contact */}
-              <div className="bg-white border border-green-100 rounded-2xl p-6 shadow-sm">
+              <div className="bg-white border border-brown-200 rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
                     <Mail className="w-5 h-5 text-blue-600" />
@@ -79,11 +79,11 @@ export default function VisitPage() {
                 <ul className="space-y-3">
                   <li className="flex items-center gap-2.5 text-sm text-gray-600">
                     <Mail className="w-4 h-4 text-gray-400" />
-                    <a href="mailto:info@wecf.org" className="hover:text-green-700 transition-colors">info@wecf.org</a>
+                    <a href="mailto:info@wecf.org" className="hover:text-gold-500 transition-colors">info@wecf.org</a>
                   </li>
                   <li className="flex items-center gap-2.5 text-sm text-gray-600">
                     <Phone className="w-4 h-4 text-gray-400" />
-                    <a href="tel:+48123456789" className="hover:text-green-700 transition-colors">+48 123 456 789</a>
+                    <a href="tel:+48123456789" className="hover:text-gold-500 transition-colors">+48 123 456 789</a>
                   </li>
                 </ul>
               </div>
@@ -110,7 +110,7 @@ export default function VisitPage() {
 
             {/* Map */}
             <div className="lg:col-span-3">
-              <div className="rounded-2xl overflow-hidden border border-green-100 shadow-sm h-full min-h-[500px] bg-green-50 flex flex-col">
+              <div className="rounded-2xl overflow-hidden border border-brown-200 shadow-sm h-full min-h-[500px] bg-brown-50 flex flex-col">
                 {/* Embed Google Maps — Warsaw city centre */}
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2445.123!2d21.0722!3d52.2185!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x471eccf5b5f0b0b3%3A0x1!2sNaddnieprzańska+7%2C+04-205+Warszawa!5e0!3m2!1sen!2spl!4v1700000000000"
@@ -120,7 +120,7 @@ export default function VisitPage() {
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 />
-                <div className="p-4 bg-white border-t border-green-100">
+                <div className="p-4 bg-white border-t border-brown-200">
                   <p className="text-sm text-gray-500 text-center">
                     📍 Naddnieprzańska 7, 04-205 Warszawa · Saturdays at 18:00
                   </p>
@@ -132,17 +132,17 @@ export default function VisitPage() {
       </section>
 
       {/* First time visitor */}
-      <section className="py-14 bg-green-900">
+      <section className="py-14 bg-brown-900">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <div className="text-4xl mb-4">🤝</div>
           <h2 className="font-display text-3xl font-bold text-white mb-4">First Time Visiting?</h2>
-          <p className="text-green-200 leading-relaxed mb-8">
+          <p className="text-brown-200 leading-relaxed mb-8">
             You will be warmly welcomed! Our services are conducted in Amharic and English. Dress
             comfortably, come with an open heart, and expect to be blessed. We would love to meet you.
           </p>
           <a
             href="/register"
-            className="inline-block bg-amber-400 text-green-900 font-bold px-8 py-3.5 rounded-xl hover:bg-amber-300 transition-colors"
+            className="inline-block bg-amber-400 text-brown-800 font-bold px-8 py-3.5 rounded-xl hover:bg-amber-300 transition-colors"
           >
             Register as a New Member
           </a>

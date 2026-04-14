@@ -132,17 +132,17 @@ export default function AdminBooksPage() {
           <h1 className="font-display text-3xl font-bold text-gray-800">Library Management</h1>
           <p className="text-gray-500 mt-1">{books.length} books · {activeRentals.length} active rentals</p>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-2 bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 shadow-sm">
+        <button onClick={openCreate} className="flex items-center gap-2 bg-brown-800 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 shadow-sm">
           <Plus className="w-4 h-4"/> Add Book
         </button>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">
-        <button onClick={() => setActiveTab("books")} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "books" ? "bg-white text-green-700 shadow-sm" : "text-gray-500"}`}>
+        <button onClick={() => setActiveTab("books")} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "books" ? "bg-white text-gold-500 shadow-sm" : "text-gray-500"}`}>
           Books ({books.length})
         </button>
-        <button onClick={() => setActiveTab("rentals")} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "rentals" ? "bg-white text-green-700 shadow-sm" : "text-gray-500"}`}>
+        <button onClick={() => setActiveTab("rentals")} className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "rentals" ? "bg-white text-gold-500 shadow-sm" : "text-gray-500"}`}>
           Active Rentals ({activeRentals.length})
         </button>
       </div>
@@ -161,18 +161,18 @@ export default function AdminBooksPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Title *</label>
                 <input type="text" required value={form.title} onChange={e => setForm({...form, title: e.target.value})}
-                  placeholder="Book title" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"/>
+                  placeholder="Book title" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"/>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Author *</label>
                 <input type="text" required value={form.author} onChange={e => setForm({...form, author: e.target.value})}
-                  placeholder="Author name" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"/>
+                  placeholder="Author name" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"/>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
                   <select value={form.category} onChange={e => setForm({...form, category: e.target.value})}
-                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500">
                     <option value="">Select...</option>
                     {["Theology","Christian Living","Apologetics","Devotional","Fiction","Biography","Other"].map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -180,38 +180,38 @@ export default function AdminBooksPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Quantity</label>
                   <input type="number" min="1" value={form.totalQuantity} onChange={e => setForm({...form, totalQuantity: e.target.value})}
-                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"/>
+                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"/>
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
                 <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})}
                   placeholder="Book description..." rows={3}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"/>
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none"/>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Published Year</label>
                 <input type="number" min="1800" max="2030" value={form.publishedYear} onChange={e => setForm({...form, publishedYear: e.target.value})}
-                  placeholder="e.g. 1952" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"/>
+                  placeholder="e.g. 1952" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"/>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Book Cover Image</label>
                 <div className="space-y-2">
                   {form.imageUrl && (
-                    <div className="relative w-24 h-32 rounded-lg overflow-hidden border border-green-100">
+                    <div className="relative w-24 h-32 rounded-lg overflow-hidden border border-brown-200">
                       <img src={form.imageUrl} alt="Preview" className="w-full h-full object-cover" />
                       <button type="button" onClick={() => setForm({...form, imageUrl: ""})}
                         className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 text-xs">✕</button>
                     </div>
                   )}
                   <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading}
-                    className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-green-100 file:text-green-700 hover:file:bg-green-200"/>
-                  {uploading && <p className="text-xs text-green-600">Uploading...</p>}
+                    className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-brown-100 file:text-gold-500 hover:file:bg-brown-100"/>
+                  {uploading && <p className="text-xs text-gold-600">Uploading...</p>}
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeForm} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">Cancel</button>
-                <button type="submit" disabled={saving} className="flex-1 bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="flex-1 bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 disabled:opacity-50">
                   {saving ? (editingBook ? "Saving..." : "Adding...") : (editingBook ? "Save Changes" : "Add to Library")}
                 </button>
               </div>
@@ -221,12 +221,12 @@ export default function AdminBooksPage() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-16"><svg className="animate-spin w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>
+        <div className="flex justify-center py-16"><svg className="animate-spin w-8 h-8 text-gold-600" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>
       ) : activeTab === "books" ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {books.map(book => (
-            <div key={book.id} className="bg-white border border-green-100 rounded-2xl shadow-sm overflow-hidden">
-              <div className="h-40 bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center overflow-hidden">
+            <div key={book.id} className="bg-white border border-brown-200 rounded-2xl shadow-sm overflow-hidden">
+              <div className="h-40 bg-gradient-to-br from-brown-800 to-brown-900 flex items-center justify-center overflow-hidden">
                 {book.imageUrl ? (
                   <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover" />
                 ) : (
@@ -235,15 +235,15 @@ export default function AdminBooksPage() {
               </div>
               <div className="p-4">
                 <h3 className="font-semibold text-gray-800 text-sm leading-tight">{book.title}</h3>
-                <p className="text-xs text-green-600 mt-0.5">{book.author}</p>
+                <p className="text-xs text-gold-600 mt-0.5">{book.author}</p>
                 {book.category && <p className="text-xs text-gray-400 mt-0.5">{book.category}</p>}
                 <div className="flex items-center justify-between mt-3">
                   <div className="flex items-center gap-1.5">
-                    <div className={`w-2 h-2 rounded-full ${book.availableQty > 0 ? "bg-green-500" : "bg-red-400"}`}/>
+                    <div className={`w-2 h-2 rounded-full ${book.availableQty > 0 ? "bg-gold-500" : "bg-red-400"}`}/>
                     <span className="text-xs text-gray-500">{book.availableQty}/{book.totalQuantity} available</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => openEdit(book)} className="text-gray-300 hover:text-green-600 transition-colors p-1" title="Edit book">
+                    <button onClick={() => openEdit(book)} className="text-gray-300 hover:text-gold-600 transition-colors p-1" title="Edit book">
                       <Pencil className="w-3.5 h-3.5"/>
                     </button>
                     <button onClick={() => deleteBook(book.id)} className="text-gray-300 hover:text-red-400 transition-colors p-1" title="Delete book">
@@ -255,7 +255,7 @@ export default function AdminBooksPage() {
             </div>
           ))}
           {books.length === 0 && (
-            <div className="col-span-3 text-center py-14 bg-white rounded-2xl border border-green-100 text-gray-400">
+            <div className="col-span-3 text-center py-14 bg-white rounded-2xl border border-brown-200 text-gray-400">
               <BookMarked className="w-12 h-12 mx-auto mb-3 opacity-30"/>
               <p>No books in the library yet.</p>
             </div>
@@ -263,10 +263,10 @@ export default function AdminBooksPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {activeRentals.length === 0 && <p className="text-center py-14 text-gray-400 bg-white rounded-2xl border border-green-100">No active rentals.</p>}
+          {activeRentals.length === 0 && <p className="text-center py-14 text-gray-400 bg-white rounded-2xl border border-brown-200">No active rentals.</p>}
           {activeRentals.map(rental => (
-            <div key={rental.id} className={`bg-white border rounded-2xl p-4 flex items-center gap-4 shadow-sm ${rental.status === "OVERDUE" ? "border-red-200" : "border-green-100"}`}>
-              <BookOpen className={`w-8 h-8 shrink-0 ${rental.status === "OVERDUE" ? "text-red-300" : "text-green-300"}`}/>
+            <div key={rental.id} className={`bg-white border rounded-2xl p-4 flex items-center gap-4 shadow-sm ${rental.status === "OVERDUE" ? "border-red-200" : "border-brown-200"}`}>
+              <BookOpen className={`w-8 h-8 shrink-0 ${rental.status === "OVERDUE" ? "text-red-300" : "text-brown-300"}`}/>
               <div className="flex-1">
                 <p className="font-medium text-gray-800 text-sm">{rental.book.title}</p>
                 <p className="text-xs text-gray-500">{rental.user.name} · {rental.user.email}</p>
@@ -278,7 +278,7 @@ export default function AdminBooksPage() {
                 )}
               </div>
               <button onClick={() => returnBook(rental.id)}
-                className="bg-green-700 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-green-800 transition-colors font-medium shrink-0">
+                className="bg-brown-800 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-brown-800 transition-colors font-medium shrink-0">
                 Mark Returned
               </button>
             </div>

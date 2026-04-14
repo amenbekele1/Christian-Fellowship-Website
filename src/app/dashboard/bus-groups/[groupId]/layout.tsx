@@ -41,7 +41,7 @@ export default async function GroupHubLayout({
       <div className="mb-5">
         <Link
           href="/dashboard/bus-groups"
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-green-700 mb-3 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gold-500 mb-3 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Groups
         </Link>

@@ -60,7 +60,7 @@ export default async function BusGroupsPage() {
       </div>
 
       {groups.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-green-100 p-16 text-center">
+        <div className="bg-white rounded-2xl border border-brown-200 p-16 text-center">
           <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <h3 className="font-semibold text-gray-600 mb-1">Not assigned to a group yet</h3>
           <p className="text-sm text-gray-400">A guardian will assign you to a BUS group soon.</p>
@@ -68,18 +68,18 @@ export default async function BusGroupsPage() {
       ) : (
         <div className="space-y-6">
           {groups.map((group) => (
-            <div key={group.id} className="bg-white rounded-2xl border border-green-100 shadow-sm overflow-hidden">
+            <div key={group.id} className="bg-white rounded-2xl border border-brown-200 shadow-sm overflow-hidden">
               {/* Group header */}
-              <div className="bg-gradient-to-r from-green-800 to-green-900 px-6 py-5">
+              <div className="bg-gradient-to-r from-brown-800 to-brown-900 px-6 py-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-display font-bold text-white text-xl">{group.name}</h2>
-                    {group.description && <p className="text-green-200 text-sm mt-1">{group.description}</p>}
+                    {group.description && <p className="text-brown-200 text-sm mt-1">{group.description}</p>}
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <p className="text-amber-300 text-2xl font-display font-bold">{group._count.members}</p>
-                      <p className="text-green-300 text-xs">members</p>
+                      <p className="text-brown-300 text-xs">members</p>
                     </div>
                     <Link
                       href={`/dashboard/bus-groups/${group.id}/chat`}
@@ -93,10 +93,10 @@ export default async function BusGroupsPage() {
               </div>
 
               {/* Leader */}
-              <div className="px-6 py-4 bg-green-50 border-b border-green-100">
-                <p className="text-xs text-green-600 font-bold uppercase tracking-wider mb-2">Group Leader</p>
+              <div className="px-6 py-4 bg-brown-50 border-b border-brown-200">
+                <p className="text-xs text-gold-600 font-bold uppercase tracking-wider mb-2">Group Leader</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-green-200 flex items-center justify-center text-green-800 font-bold text-sm">
+                  <div className="w-9 h-9 rounded-full bg-brown-100 flex items-center justify-center text-brown-700 font-bold text-sm">
                     {group.leader.name.charAt(0)}
                   </div>
                   <div>
@@ -114,7 +114,7 @@ export default async function BusGroupsPage() {
                 ) : (
                   <div className="grid sm:grid-cols-2 gap-3 pb-4">
                     {group.members.map((member) => (
-                      <div key={member.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-green-200 transition-colors">
+                      <div key={member.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-brown-200 transition-colors">
                         <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm shrink-0">
                           {member.name.charAt(0)}
                         </div>

@@ -17,7 +17,7 @@ function formatTime(date: Date) {
 const typeColors: Record<string, string> = {
   "Worship": "bg-amber-100 text-amber-700 border-amber-200",
   "Worship Night": "bg-amber-100 text-amber-700 border-amber-200",
-  "Bible Study": "bg-green-100 text-green-700 border-green-200",
+  "Bible Study": "bg-brown-100 text-gold-500 border-brown-200",
   "Literature Night": "bg-blue-100 text-blue-700 border-blue-200",
   "BUS Meeting": "bg-purple-100 text-purple-700 border-purple-200",
   "Sermon": "bg-rose-100 text-rose-700 border-rose-200",
@@ -39,7 +39,7 @@ export default async function EventsPage() {
         <div className="max-w-4xl mx-auto px-6 text-center relative">
           <p className="text-amber-300 text-sm font-semibold uppercase tracking-widest mb-4">Stay Connected</p>
           <h1 className="font-display text-5xl font-bold text-white mb-5">Events</h1>
-          <p className="text-green-100 text-lg max-w-xl mx-auto">
+          <p className="text-brown-100 text-lg max-w-xl mx-auto">
             Don't miss a moment of fellowship, worship, and growth.
           </p>
         </div>
@@ -57,13 +57,13 @@ export default async function EventsPage() {
           ) : (
             <div className="space-y-4 mb-14">
               {upcoming.map((event) => (
-                <div key={event.id} className="bg-white border border-green-100 rounded-2xl p-6 card-hover flex gap-5">
+                <div key={event.id} className="bg-white border border-brown-200 rounded-2xl p-6 card-hover flex gap-5">
                   {/* Date badge */}
-                  <div className="shrink-0 text-center bg-green-50 rounded-xl px-4 py-3 border border-green-100 min-w-[68px]">
-                    <p className="text-xs font-bold text-green-600 uppercase">
+                  <div className="shrink-0 text-center bg-brown-50 rounded-xl px-4 py-3 border border-brown-200 min-w-[68px]">
+                    <p className="text-xs font-bold text-gold-600 uppercase">
                       {new Date(event.startDate).toLocaleDateString("en-GB", { month: "short" })}
                     </p>
-                    <p className="font-display font-bold text-green-800 text-2xl leading-none">
+                    <p className="font-display font-bold text-brown-700 text-2xl leading-none">
                       {new Date(event.startDate).getDate()}
                     </p>
                   </div>

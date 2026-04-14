@@ -108,7 +108,7 @@ export default function AdminMembersPage() {
 
   if (loading && members.length === 0) return (
     <div className="flex items-center justify-center py-20">
-      <svg className="animate-spin w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24">
+      <svg className="animate-spin w-8 h-8 text-gold-600" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
       </svg>
@@ -123,11 +123,11 @@ export default function AdminMembersPage() {
           <p className="text-gray-500 mt-1">{total} total members registered</p>
         </div>
         <div className="flex gap-3">
-          <div className="bg-white border border-green-100 rounded-xl px-4 py-2.5 text-center">
-            <p className="font-display font-bold text-green-700 text-xl">{members.filter(m => m.isActive).length}</p>
+          <div className="bg-white border border-brown-200 rounded-xl px-4 py-2.5 text-center">
+            <p className="font-display font-bold text-gold-500 text-xl">{members.filter(m => m.isActive).length}</p>
             <p className="text-xs text-gray-400">Active (this page)</p>
           </div>
-          <div className="bg-white border border-green-100 rounded-xl px-4 py-2.5 text-center">
+          <div className="bg-white border border-brown-200 rounded-xl px-4 py-2.5 text-center">
             <p className="font-display font-bold text-amber-600 text-xl">{members.filter(m => m.role === "BUS_LEADER").length}</p>
             <p className="text-xs text-gray-400">Leaders (this page)</p>
           </div>
@@ -151,10 +151,10 @@ export default function AdminMembersPage() {
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
             placeholder="Search by name or email..."
-            className="w-full pl-10 pr-4 h-10 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+            className="w-full pl-10 pr-4 h-10 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
           />
         </div>
-        <button type="submit" className="px-4 h-10 bg-green-700 text-white rounded-xl text-sm font-medium hover:bg-green-800">
+        <button type="submit" className="px-4 h-10 bg-brown-800 text-white rounded-xl text-sm font-medium hover:bg-brown-800">
           Search
         </button>
         {search && (
@@ -166,11 +166,11 @@ export default function AdminMembersPage() {
       </form>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-green-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-brown-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 border-b border-green-100">
+              <tr className="bg-gray-50 border-b border-brown-200">
                 <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Member</th>
                 <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Role</th>
                 <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">BUS Group</th>
@@ -178,12 +178,12 @@ export default function AdminMembersPage() {
                 <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-green-50">
+            <tbody className="divide-y divide-brown-100">
               {members.map((member) => (
                 <tr key={member.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-brown-100 flex items-center justify-center text-gold-500 font-bold text-sm shrink-0">
                         {member.name.charAt(0)}
                       </div>
                       <div>
@@ -197,7 +197,7 @@ export default function AdminMembersPage() {
                       value={member.role}
                       onChange={e => updateMember(member.id, { role: e.target.value as any })}
                       disabled={updating === member.id}
-                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white cursor-pointer disabled:opacity-50"
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white cursor-pointer disabled:opacity-50"
                     >
                       <option value="MEMBER">Member</option>
                       <option value="BUS_LEADER">BUS Leader</option>
@@ -209,7 +209,7 @@ export default function AdminMembersPage() {
                       value={member.busGroup?.id || ""}
                       onChange={e => updateMember(member.id, { busGroupId: e.target.value || null })}
                       disabled={updating === member.id}
-                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-500 bg-white cursor-pointer disabled:opacity-50 max-w-[150px]"
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white cursor-pointer disabled:opacity-50 max-w-[150px]"
                     >
                       <option value="">Unassigned</option>
                       {busGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
@@ -224,8 +224,8 @@ export default function AdminMembersPage() {
                       disabled={updating === member.id}
                       className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-colors disabled:opacity-50 ${
                         member.isActive
-                          ? "bg-green-100 text-green-700 border-green-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                          : "bg-red-100 text-red-700 border-red-200 hover:bg-green-50 hover:text-green-700 hover:border-green-200"
+                          ? "bg-brown-100 text-gold-500 border-brown-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                          : "bg-red-100 text-red-700 border-red-200 hover:bg-brown-50 hover:text-gold-500 hover:border-brown-200"
                       }`}
                     >
                       {updating === member.id ? "..." : member.isActive ? "Active" : "Inactive"}
@@ -245,7 +245,7 @@ export default function AdminMembersPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-green-50 bg-gray-50">
+          <div className="flex items-center justify-between px-5 py-3 border-t border-brown-100 bg-gray-50">
             <p className="text-xs text-gray-500">
               Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total} members
             </p>

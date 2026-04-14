@@ -92,7 +92,7 @@ export default function AttendancePage() {
 
   if (loading) return (
     <div className="flex items-center justify-center py-20">
-      <svg className="animate-spin w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24">
+      <svg className="animate-spin w-8 h-8 text-gold-600" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
       </svg>
@@ -110,13 +110,13 @@ export default function AttendancePage() {
           type="date"
           value={date}
           onChange={e => setDate(e.target.value)}
-          className="h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
         />
       </div>
 
       {/* Legend */}
       <div className="flex gap-4 text-xs text-gray-500 mb-4">
-        <span className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-green-500"/>Present</span>
+        <span className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-gold-500"/>Present</span>
         <span className="flex items-center gap-1"><XCircle className="w-3.5 h-3.5 text-red-400"/>Absent</span>
         <span className="flex items-center gap-1"><MinusCircle className="w-3.5 h-3.5 text-amber-400"/>Excused</span>
         <span className="text-gray-400">· Click name to toggle</span>
@@ -124,12 +124,12 @@ export default function AttendancePage() {
 
       <div className="space-y-4">
         {groupEntries.map(([groupId, { name: groupName, members: groupMembers }]) => (
-          <div key={groupId} className="bg-white rounded-2xl border border-green-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-3 bg-green-50 border-b border-green-100 flex items-center justify-between">
-              <p className="text-sm font-semibold text-green-800">{groupName}</p>
+          <div key={groupId} className="bg-white rounded-2xl border border-brown-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-3 bg-brown-50 border-b border-brown-200 flex items-center justify-between">
+              <p className="text-sm font-semibold text-brown-700">{groupName}</p>
               <span className="text-xs text-gray-400">{groupMembers.length} members</span>
             </div>
-            <div className="divide-y divide-green-50">
+            <div className="divide-y divide-brown-100">
               {groupMembers.map(member => {
                 const status = attendance[member.id] || "PRESENT";
                 return (
@@ -139,7 +139,7 @@ export default function AttendancePage() {
                     className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors text-left"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-brown-100 flex items-center justify-center text-gold-500 font-bold text-sm shrink-0">
                         {member.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -148,11 +148,11 @@ export default function AttendancePage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {status === "PRESENT" && <CheckCircle className="w-5 h-5 text-green-500"/>}
+                      {status === "PRESENT" && <CheckCircle className="w-5 h-5 text-gold-500"/>}
                       {status === "ABSENT" && <XCircle className="w-5 h-5 text-red-400"/>}
                       {status === "EXCUSED" && <MinusCircle className="w-5 h-5 text-amber-400"/>}
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        status === "PRESENT" ? "text-green-700 bg-green-100" :
+                        status === "PRESENT" ? "text-gold-500 bg-brown-100" :
                         status === "ABSENT" ? "text-red-700 bg-red-100" :
                         "text-amber-700 bg-amber-100"
                       }`}>{status}</span>
@@ -167,16 +167,16 @@ export default function AttendancePage() {
 
       {/* Footer save bar */}
       <div className="sticky bottom-4 mt-6">
-        <div className="bg-white border border-green-100 rounded-2xl shadow-lg px-5 py-4 flex items-center justify-between">
+        <div className="bg-white border border-brown-200 rounded-2xl shadow-lg px-5 py-4 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            <span className="text-green-700 font-semibold">{present}</span> present ·{" "}
+            <span className="text-gold-500 font-semibold">{present}</span> present ·{" "}
             <span className="text-red-600 font-semibold">{absent}</span> absent ·{" "}
             <span className="text-amber-600 font-semibold">{excused}</span> excused
           </div>
           <button
             onClick={saveAttendance}
             disabled={saving}
-            className="flex items-center gap-2 bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-brown-800 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 transition-colors disabled:opacity-50"
           >
             {saving
               ? <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>

@@ -69,8 +69,8 @@ export default function AdminInvitesPage() {
     if (token.status === "Used") {
       return (
         <div className="flex items-center gap-1.5">
-          <CheckCircle className="w-4 h-4 text-green-500" />
-          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Used</span>
+          <CheckCircle className="w-4 h-4 text-gold-500" />
+          <span className="text-xs bg-brown-100 text-gold-500 px-2 py-0.5 rounded-full">Used</span>
           {token.usedAt && (
             <span className="text-xs text-gray-500">
               {new Date(token.usedAt).toLocaleDateString("en-GB", {day: "numeric", month: "short"})}
@@ -104,7 +104,7 @@ export default function AdminInvitesPage() {
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 shadow-sm"
+          className="flex items-center gap-2 bg-brown-800 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 shadow-sm"
         >
           <Plus className="w-4 h-4" /> Generate Invite
         </button>
@@ -123,14 +123,14 @@ export default function AdminInvitesPage() {
 
             {generatedUrl ? (
               <div className="space-y-4">
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-2">Invite Link Generated</p>
+                <div className="bg-brown-50 border border-brown-200 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-gold-500 uppercase tracking-wide mb-2">Invite Link Generated</p>
                   <div className="bg-white rounded-lg p-3 mb-3 break-all text-sm text-gray-700 font-mono">
                     {generatedUrl}
                   </div>
                   <button
                     onClick={() => copyToClipboard(generatedUrl, "generated")}
-                    className="w-full flex items-center justify-center gap-2 bg-green-700 text-white py-2 rounded-lg text-sm font-medium hover:bg-green-800 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 bg-brown-800 text-white py-2 rounded-lg text-sm font-medium hover:bg-brown-800 transition-colors"
                   >
                     <Copy className="w-4 h-4" />
                     {copied === "generated" ? "Copied!" : "Copy Link"}
@@ -155,7 +155,7 @@ export default function AdminInvitesPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="member@example.com"
-                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
                   />
                   <p className="text-xs text-gray-500 mt-1">Leave empty to create a generic invite</p>
                 </div>
@@ -170,7 +170,7 @@ export default function AdminInvitesPage() {
                   <button
                     type="submit"
                     disabled={creating}
-                    className="flex-1 bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50"
+                    className="flex-1 bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 disabled:opacity-50"
                   >
                     {creating ? "Generating..." : "Generate"}
                   </button>
@@ -183,13 +183,13 @@ export default function AdminInvitesPage() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <svg className="animate-spin w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin w-8 h-8 text-gold-600" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-green-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-brown-200 shadow-sm overflow-hidden">
           {tokens.length === 0 ? (
             <div className="text-center py-14 text-gray-400">
               <Link2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -197,7 +197,7 @@ export default function AdminInvitesPage() {
               <p className="text-sm">Create your first invite link to get started</p>
             </div>
           ) : (
-            <div className="divide-y divide-green-50">
+            <div className="divide-y divide-brown-100">
               <div className="grid grid-cols-6 gap-4 px-6 py-3 bg-gray-50 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 <div className="col-span-2">Email / Link</div>
                 <div>Created</div>
@@ -235,7 +235,7 @@ export default function AdminInvitesPage() {
                         onClick={() =>
                           copyToClipboard(`${process.env.NEXT_PUBLIC_BASE_URL || window.location.origin}/register?invite=${token.token}`, token.id)
                         }
-                        className="text-green-600 hover:text-green-700 p-1 transition-colors"
+                        className="text-gold-600 hover:text-gold-500 p-1 transition-colors"
                         title="Copy link"
                       >
                         <Copy className="w-4 h-4" />

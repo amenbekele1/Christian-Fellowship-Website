@@ -106,7 +106,7 @@ export default function ChatPage({ params }: { params: { groupId: string } }) {
 
   if (loading) return (
     <div className="flex items-center justify-center py-20">
-      <svg className="animate-spin w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24">
+      <svg className="animate-spin w-7 h-7 text-gold-600" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
       </svg>
@@ -147,7 +147,7 @@ export default function ChatPage({ params }: { params: { groupId: string } }) {
           }
           return (
             <div key={msg.id} className={`flex gap-2.5 group ${isMe ? "flex-row-reverse" : ""}`}>
-              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xs shrink-0 mt-1">
+              <div className="w-8 h-8 rounded-full bg-brown-100 flex items-center justify-center text-gold-500 font-bold text-xs shrink-0 mt-1">
                 {msg.sender.name.charAt(0).toUpperCase()}
               </div>
               <div className={`max-w-[75%] ${isMe ? "items-end" : "items-start"} flex flex-col gap-0.5`}>
@@ -163,7 +163,7 @@ export default function ChatPage({ params }: { params: { groupId: string } }) {
                   )}
                 </div>
                 <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                  isMe ? "bg-green-700 text-white rounded-tr-sm" : "bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm"
+                  isMe ? "bg-brown-800 text-white rounded-tr-sm" : "bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm"
                 }`}>
                   {msg.content && <p>{msg.content}</p>}
                   {msg.fileUrl && <FileAttachment url={msg.fileUrl} name={msg.fileName} type={msg.fileType} dark={isMe} />}
@@ -186,7 +186,7 @@ export default function ChatPage({ params }: { params: { groupId: string } }) {
 
       {/* Uploaded file preview */}
       {uploadedFile && (
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2 mt-2 text-xs text-green-800">
+        <div className="flex items-center gap-2 bg-brown-50 border border-brown-200 rounded-lg px-3 py-2 mt-2 text-xs text-brown-700">
           <Paperclip className="w-3.5 h-3.5 shrink-0" />
           <span className="truncate">{uploadedFile.name}</span>
           <button onClick={() => setUploadedFile(null)} className="ml-auto"><X className="w-3.5 h-3.5" /></button>
@@ -206,7 +206,7 @@ export default function ChatPage({ params }: { params: { groupId: string } }) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="p-2 text-gray-400 hover:text-green-600 transition-colors disabled:opacity-50"
+          className="p-2 text-gray-400 hover:text-gold-600 transition-colors disabled:opacity-50"
           title="Attach file"
         >
           {uploading
@@ -223,7 +223,7 @@ export default function ChatPage({ params }: { params: { groupId: string } }) {
         <button
           type="submit"
           disabled={sending || uploading || (!input.trim() && !uploadedFile)}
-          className="bg-green-700 hover:bg-green-800 text-white p-2 rounded-xl transition-colors disabled:opacity-40"
+          className="bg-brown-800 hover:bg-brown-800 text-white p-2 rounded-xl transition-colors disabled:opacity-40"
         >
           <Send className="w-4 h-4" />
         </button>
@@ -246,7 +246,7 @@ function FileAttachment({ url, name, type, dark }: { url: string; name?: string 
       download={name ?? "file"}
       target="_blank"
       rel="noreferrer"
-      className={`flex items-center gap-2 mt-2 text-xs underline ${dark ? "text-green-100" : "text-green-700"}`}
+      className={`flex items-center gap-2 mt-2 text-xs underline ${dark ? "text-brown-100" : "text-gold-500"}`}
     >
       <Download className="w-3.5 h-3.5" />
       {name ?? "Download file"}

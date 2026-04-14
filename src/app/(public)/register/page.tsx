@@ -30,7 +30,7 @@ function ContactInterestForm() {
   if (sent) {
     return (
       <div className="text-center py-4">
-        <CheckCircle className="w-10 h-10 text-green-600 mx-auto mb-3" />
+        <CheckCircle className="w-10 h-10 text-gold-600 mx-auto mb-3" />
         <p className="font-semibold text-gray-800">Message sent!</p>
         <p className="text-gray-500 text-sm mt-1">A fellowship leader will reach out to you soon.</p>
       </div>
@@ -43,21 +43,21 @@ function ContactInterestForm() {
       <input
         type="text" required placeholder="Your name"
         value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-        className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+        className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
       />
       <input
         type="email" required placeholder="Your email"
         value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
-        className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+        className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
       />
       <textarea
         placeholder="Tell us a little about yourself (optional)" rows={2}
         value={form.message} onChange={e => setForm({ ...form, message: e.target.value })}
-        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none"
       />
       <button
         type="submit" disabled={sending}
-        className="w-full bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50 transition-colors"
+        className="w-full bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 disabled:opacity-50 transition-colors"
       >
         {sending ? "Sending..." : "Send Message"}
       </button>
@@ -159,9 +159,9 @@ function RegisterContent() {
 
   if (validating) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl p-10 max-w-md w-full text-center shadow-sm border border-green-100">
-          <svg className="animate-spin w-8 h-8 text-green-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+      <div className="min-h-screen bg-brown-50 flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl p-10 max-w-md w-full text-center shadow-sm border border-brown-200">
+          <svg className="animate-spin w-8 h-8 text-gold-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
@@ -173,20 +173,20 @@ function RegisterContent() {
 
   if (!inviteValid) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center px-4 py-12">
-        <div className="bg-white rounded-2xl p-10 max-w-lg w-full shadow-sm border border-green-100">
+      <div className="min-h-screen bg-brown-50 flex items-center justify-center px-4 py-12">
+        <div className="bg-white rounded-2xl p-10 max-w-lg w-full shadow-sm border border-brown-200">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-full bg-green-700 flex items-center justify-center text-amber-300 text-2xl font-bold mx-auto mb-4">✝</div>
+            <div className="w-14 h-14 rounded-full bg-brown-800 flex items-center justify-center text-amber-300 text-2xl font-bold mx-auto mb-4">✝</div>
             <h1 className="font-display text-3xl font-bold text-gray-800 mb-2">Join the Fellowship</h1>
             <p className="text-gray-500 text-sm">Membership is by invitation. Come meet us first!</p>
           </div>
 
           {/* Visit invitation */}
-          <div className="bg-green-50 border border-green-100 rounded-2xl p-6 mb-6">
-            <p className="font-semibold text-green-800 mb-1">📍 Join us this Saturday</p>
+          <div className="bg-brown-50 border border-brown-200 rounded-2xl p-6 mb-6">
+            <p className="font-semibold text-brown-700 mb-1">📍 Join us this Saturday</p>
             <p className="text-gray-700 font-medium">Naddnieprzańska 7, 04-205 Warszawa</p>
-            <p className="text-green-700 font-bold text-lg mt-1">18:00</p>
+            <p className="text-gold-500 font-bold text-lg mt-1">18:00</p>
             <p className="text-gray-500 text-sm mt-2">Come to our Saturday service, meet the fellowship, and a leader will send you an invite link to register.</p>
           </div>
 
@@ -195,9 +195,9 @@ function RegisterContent() {
 
           <p className="text-center text-sm text-gray-400 mt-6">
             Already have an invite?{" "}
-            <Link href="/register?invite=" className="text-green-700 font-medium hover:underline">Use your link</Link>
+            <Link href="/register?invite=" className="text-gold-500 font-medium hover:underline">Use your link</Link>
             {" · "}
-            <Link href="/login" className="text-green-700 font-medium hover:underline">Sign in</Link>
+            <Link href="/login" className="text-gold-500 font-medium hover:underline">Sign in</Link>
           </p>
         </div>
       </div>
@@ -206,10 +206,10 @@ function RegisterContent() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl p-10 max-w-md w-full text-center shadow-sm border border-green-100">
+      <div className="min-h-screen bg-brown-50 flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl p-10 max-w-md w-full text-center shadow-sm border border-brown-200">
           <div className="text-6xl mb-5">🎉</div>
-          <h2 className="font-display text-3xl font-bold text-green-800 mb-3">Welcome to the Family!</h2>
+          <h2 className="font-display text-3xl font-bold text-brown-700 mb-3">Welcome to the Family!</h2>
           <p className="text-gray-500 mb-2">Your account has been created successfully.</p>
           <p className="text-sm text-gray-400">Redirecting you to sign in...</p>
         </div>
@@ -218,18 +218,18 @@ function RegisterContent() {
   }
 
   return (
-    <div className="min-h-screen bg-green-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-brown-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-full bg-green-700 flex items-center justify-center text-amber-300 text-2xl font-bold mx-auto mb-4">
+          <div className="w-14 h-14 rounded-full bg-brown-800 flex items-center justify-center text-amber-300 text-2xl font-bold mx-auto mb-4">
             ✝
           </div>
           <h1 className="font-display text-3xl font-bold text-gray-800 mb-2">Join the Fellowship</h1>
           <p className="text-gray-500 text-sm">Create your member account</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-green-100 shadow-sm p-8">
+        <div className="bg-white rounded-2xl border border-brown-200 shadow-sm p-8">
           {/* Scripture */}
           <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6 text-center">
             <p className="scripture text-sm text-amber-800 italic">
@@ -253,7 +253,7 @@ function RegisterContent() {
                 value={form.name}
                 onChange={(e) => { setForm({ ...form, name: e.target.value }); setFieldErrors(fe => ({ ...fe, name: "" })); }}
                 placeholder="Miriam Haile"
-                className={`w-full h-10 rounded-lg border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${fieldErrors.name ? "border-red-300 bg-red-50" : "border-gray-200"}`}
+                className={`w-full h-10 rounded-lg border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent ${fieldErrors.name ? "border-red-300 bg-red-50" : "border-gray-200"}`}
               />
               {fieldErrors.name && <p className="text-xs text-red-600 mt-1">{fieldErrors.name}</p>}
             </div>
@@ -266,7 +266,7 @@ function RegisterContent() {
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="miriam@example.com"
-                className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
               />
             </div>
 
@@ -277,7 +277,7 @@ function RegisterContent() {
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 placeholder="+48 123 456 789"
-                className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
               />
             </div>
 
@@ -290,7 +290,7 @@ function RegisterContent() {
                   value={form.password}
                   onChange={(e) => { setForm({ ...form, password: e.target.value }); setFieldErrors(fe => ({ ...fe, password: "" })); }}
                   placeholder="Min 10 chars, upper + lower + number"
-                  className={`w-full h-10 rounded-lg border px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${fieldErrors.password ? "border-red-300 bg-red-50" : "border-gray-200"}`}
+                  className={`w-full h-10 rounded-lg border px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent ${fieldErrors.password ? "border-red-300 bg-red-50" : "border-gray-200"}`}
                 />
                 <button
                   type="button"
@@ -308,7 +308,7 @@ function RegisterContent() {
                     { ok: pwdRules.lower,  label: "Lowercase letter" },
                     { ok: pwdRules.number, label: "Number" },
                   ].map(({ ok, label }) => (
-                    <span key={label} className={`flex items-center gap-1 ${ok ? "text-green-600" : "text-gray-400"}`}>
+                    <span key={label} className={`flex items-center gap-1 ${ok ? "text-gold-600" : "text-gray-400"}`}>
                       <span>{ok ? "✓" : "○"}</span> {label}
                     </span>
                   ))}
@@ -325,7 +325,7 @@ function RegisterContent() {
                 value={form.confirm}
                 onChange={(e) => { setForm({ ...form, confirm: e.target.value }); setFieldErrors(fe => ({ ...fe, confirm: "" })); }}
                 placeholder="Repeat your password"
-                className={`w-full h-10 rounded-lg border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${fieldErrors.confirm ? "border-red-300 bg-red-50" : form.confirm.length > 0 ? (confirmMatch ? "border-green-400" : "border-red-300") : "border-gray-200"}`}
+                className={`w-full h-10 rounded-lg border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent ${fieldErrors.confirm ? "border-red-300 bg-red-50" : form.confirm.length > 0 ? (confirmMatch ? "border-gold-400" : "border-red-300") : "border-gray-200"}`}
               />
               {form.confirm.length > 0 && !confirmMatch && !fieldErrors.confirm && (
                 <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
@@ -336,7 +336,7 @@ function RegisterContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-700 text-white font-semibold py-3 rounded-xl hover:bg-green-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+              className="w-full bg-brown-800 text-white font-semibold py-3 rounded-xl hover:bg-brown-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
             >
               {loading ? (
                 <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -352,7 +352,7 @@ function RegisterContent() {
 
           <p className="text-center text-sm text-gray-500 mt-5">
             Already have an account?{" "}
-            <Link href="/login" className="text-green-700 font-semibold hover:underline">
+            <Link href="/login" className="text-gold-500 font-semibold hover:underline">
               Sign in
             </Link>
           </p>
@@ -364,7 +364,7 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-green-50 flex items-center justify-center"><div className="text-gray-600">Loading...</div></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-brown-50 flex items-center justify-center"><div className="text-gray-600">Loading...</div></div>}>
       <RegisterContent />
     </Suspense>
   );

@@ -18,7 +18,7 @@ interface GroupMember { id: string; name: string; }
 const STATUS_CONFIG = {
   PENDING:     { label: "To Do",       icon: Circle,       color: "bg-gray-100 text-gray-600 border-gray-200" },
   IN_PROGRESS: { label: "In Progress", icon: Clock,        color: "bg-blue-100 text-blue-700 border-blue-200" },
-  COMPLETED:   { label: "Done",        icon: CheckCircle2, color: "bg-green-100 text-green-700 border-green-200" },
+  COMPLETED:   { label: "Done",        icon: CheckCircle2, color: "bg-brown-100 text-gold-500 border-brown-200" },
 };
 
 const NEXT_STATUS: Record<string, string> = {
@@ -111,7 +111,7 @@ export default function TasksPage({ params }: { params: { groupId: string } }) {
 
   if (loading) return (
     <div className="flex justify-center py-16">
-      <svg className="animate-spin w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24">
+      <svg className="animate-spin w-7 h-7 text-gold-600" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
       </svg>
@@ -123,7 +123,7 @@ export default function TasksPage({ params }: { params: { groupId: string } }) {
       <div className="flex items-center justify-between mb-5">
         <p className="text-gray-500 text-sm">{tasks.length} tasks</p>
         {isLeader && (
-          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-green-800">
+          <button onClick={() => setShowForm(true)} className="flex items-center gap-2 bg-brown-800 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-brown-800">
             <Plus className="w-4 h-4" /> New Task
           </button>
         )}
@@ -148,18 +148,18 @@ export default function TasksPage({ params }: { params: { groupId: string } }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Title *</label>
                 <input type="text" required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
-                  placeholder="Task title" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                  placeholder="Task title" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
                 <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                  placeholder="Optional details..." rows={3} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
+                  placeholder="Optional details..." rows={3} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Assign to</label>
                   <select value={form.assignedToId} onChange={e => setForm({ ...form, assignedToId: e.target.value })}
-                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500">
                     <option value="">Whole Group</option>
                     {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                   </select>
@@ -167,12 +167,12 @@ export default function TasksPage({ params }: { params: { groupId: string } }) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Due Date</label>
                   <input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })}
-                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500" />
                 </div>
               </div>
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowForm(false)} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">Cancel</button>
-                <button type="submit" disabled={saving} className="flex-1 bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="flex-1 bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 disabled:opacity-50">
                   {saving ? "Creating..." : "Create Task"}
                 </button>
               </div>
@@ -183,7 +183,7 @@ export default function TasksPage({ params }: { params: { groupId: string } }) {
 
       {/* Task columns */}
       {tasks.length === 0 ? (
-        <div className="bg-white border border-green-100 rounded-2xl p-12 text-center text-gray-400">
+        <div className="bg-white border border-brown-200 rounded-2xl p-12 text-center text-gray-400">
           <p className="text-sm">{isLeader ? 'No tasks yet. Create one to get started.' : 'No tasks assigned yet.'}</p>
         </div>
       ) : (
@@ -204,11 +204,11 @@ export default function TasksPage({ params }: { params: { groupId: string } }) {
                     const canAct = isLeader || task.assignedTo?.id === session?.user?.id || !task.assignedTo;
                     const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "COMPLETED";
                     return (
-                      <div key={task.id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm hover:border-green-200 transition-colors">
+                      <div key={task.id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm hover:border-brown-200 transition-colors">
                         <div className="flex items-start gap-3">
                           <button onClick={() => canAct && updateStatus(task)} disabled={!canAct}
-                            className={`mt-0.5 shrink-0 transition-colors ${canAct ? "cursor-pointer hover:text-green-600" : "cursor-default opacity-50"}`}>
-                            <Icon className={`w-4 h-4 ${status === "COMPLETED" ? "text-green-500" : status === "IN_PROGRESS" ? "text-blue-500" : "text-gray-400"}`} />
+                            className={`mt-0.5 shrink-0 transition-colors ${canAct ? "cursor-pointer hover:text-gold-600" : "cursor-default opacity-50"}`}>
+                            <Icon className={`w-4 h-4 ${status === "COMPLETED" ? "text-gold-500" : status === "IN_PROGRESS" ? "text-blue-500" : "text-gray-400"}`} />
                           </button>
                           <div className="flex-1 min-w-0">
                             <p className={`text-sm font-medium ${status === "COMPLETED" ? "line-through text-gray-400" : "text-gray-800"}`}>
@@ -240,7 +240,7 @@ export default function TasksPage({ params }: { params: { groupId: string } }) {
                         </div>
                         {canAct && task.status !== "COMPLETED" && (
                           <button onClick={() => updateStatus(task)}
-                            className="mt-3 text-xs text-green-600 hover:text-green-700 font-medium">
+                            className="mt-3 text-xs text-gold-600 hover:text-gold-500 font-medium">
                             Mark as {STATUS_CONFIG[NEXT_STATUS[task.status] as keyof typeof STATUS_CONFIG].label} →
                           </button>
                         )}

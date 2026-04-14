@@ -24,8 +24,8 @@ const DEFAULT_PROGRAMS: DisplayProgram[] = [
     description:
       "The centerpiece of our weekly gathering. Anointed, Spirit-filled preaching from the Word of God that challenges, encourages, and equips believers to live victoriously in Christ.",
     details: ["Expository preaching style", "Translated into Amharic when needed", "Combined with worship and prayer", "Sermon notes available online"],
-    color: "from-green-600 to-green-800",
-    accent: "bg-green-100 text-green-700",
+    color: "from-gold-600 to-brown-800",
+    accent: "bg-brown-100 text-gold-500",
     isActive: true,
     order: 0,
   },
@@ -109,7 +109,7 @@ function ProgramsContent() {
   }, []);
 
   const colorMap: { [key: string]: string } = {
-    "bg-green-100": "from-green-600 to-green-800",
+    "bg-brown-100": "from-gold-600 to-brown-800",
     "bg-blue-100": "from-blue-600 to-blue-800",
     "bg-purple-100": "from-purple-600 to-purple-800",
     "bg-amber-100": "from-amber-600 to-amber-800",
@@ -117,7 +117,7 @@ function ProgramsContent() {
   };
 
   const accentMap: { [key: string]: string } = {
-    "bg-green-100": "bg-green-100 text-green-700",
+    "bg-brown-100": "bg-brown-100 text-gold-500",
     "bg-blue-100": "bg-blue-100 text-blue-700",
     "bg-purple-100": "bg-purple-100 text-purple-700",
     "bg-amber-100": "bg-amber-100 text-amber-700",
@@ -127,7 +127,7 @@ function ProgramsContent() {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <svg className="animate-spin w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin w-8 h-8 text-gold-600" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
@@ -142,7 +142,7 @@ function ProgramsContent() {
         <div className="max-w-4xl mx-auto px-6 text-center relative">
           <p className="text-amber-300 text-sm font-semibold uppercase tracking-widest mb-4">How We Grow Together</p>
           <h1 className="font-display text-5xl font-bold text-white mb-5">Our Programs</h1>
-          <p className="text-green-100 text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-brown-100 text-lg max-w-2xl mx-auto leading-relaxed">
             From Scripture study to worship nights, we have something for every season of your
             spiritual journey.
           </p>
@@ -152,8 +152,8 @@ function ProgramsContent() {
       <section className="py-20 bg-white">
         <div className="max-w-5xl mx-auto px-6 space-y-10">
           {programs.map((prog, i) => {
-            const gradientColor = prog.color || colorMap[prog.color || "bg-green-100"] || "from-green-600 to-green-800";
-            const accentClass = accentMap[prog.color || "bg-green-100"] || "bg-green-100 text-green-700";
+            const gradientColor = prog.color || colorMap[prog.color || "bg-brown-100"] || "from-gold-600 to-brown-800";
+            const accentClass = accentMap[prog.color || "bg-brown-100"] || "bg-brown-100 text-gold-500";
             const details = prog.details || [];
 
             return (
@@ -189,7 +189,7 @@ function ProgramsContent() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-green-50 border-t border-green-100">
+      <section className="py-16 bg-brown-50 border-t border-brown-200">
         <div className="max-w-2xl mx-auto px-6 text-center">
           <h2 className="font-display text-3xl font-bold text-gray-800 mb-4">
             Ready to Get Involved?
@@ -199,7 +199,7 @@ function ProgramsContent() {
           </p>
           <a
             href="/register"
-            className="inline-block bg-green-700 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-green-800 transition-colors shadow-sm"
+            className="inline-block bg-brown-800 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-brown-800 transition-colors shadow-sm"
           >
             Create Your Member Account
           </a>

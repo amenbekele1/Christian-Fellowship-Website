@@ -10,16 +10,16 @@ export function DashboardMobileNav() {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-green-100">
+      <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-brown-200">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-green-700 flex items-center justify-center text-amber-300 text-xs font-bold">
+          <div className="w-7 h-7 rounded-full bg-brown-800 flex items-center justify-center text-amber-300 text-xs font-bold">
             ✝
           </div>
-          <span className="font-display font-bold text-green-800 text-sm">WECF Member Portal</span>
+          <span className="font-display font-bold text-brown-700 text-sm">WECF Member Portal</span>
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="p-2 rounded-lg text-gray-600 hover:bg-green-50"
+          className="p-2 rounded-lg text-gray-600 hover:bg-brown-50"
         >
           <Menu className="w-5 h-5" />
         </button>

@@ -54,15 +54,15 @@ export default function MeetingPage({ params }: { params: { groupId: string } })
     <div>
       {!joined ? (
         /* Pre-join screen */
-        <div className="bg-white border border-green-100 rounded-2xl overflow-hidden shadow-sm">
-          <div className="bg-gradient-to-br from-green-800 to-green-900 p-10 text-center">
+        <div className="bg-white border border-brown-200 rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-gradient-to-br from-brown-800 to-brown-900 p-10 text-center">
             <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <Video className="w-8 h-8 text-white" />
             </div>
             <h2 className="font-display text-2xl font-bold text-white mb-1">
               {groupName ? `${groupName} Meeting Room` : "Meeting Room"}
             </h2>
-            <p className="text-green-200 text-sm">Video conferencing powered by Jitsi Meet</p>
+            <p className="text-brown-200 text-sm">Video conferencing powered by Jitsi Meet</p>
           </div>
 
           <div className="p-8 space-y-6">
@@ -78,7 +78,7 @@ export default function MeetingPage({ params }: { params: { groupId: string } })
                 <span>Meeting will open without automatic sign-in. <span className="font-medium">JaaS not yet configured.</span></span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-xl p-3 text-sm">
+              <div className="flex items-center gap-2 bg-brown-50 border border-brown-200 text-gold-500 rounded-xl p-3 text-sm">
                 <Check className="w-4 h-4 shrink-0" />
                 <span>You&apos;ll join as <span className="font-semibold">yourself</span> — no separate Jitsi login needed.</span>
               </div>
@@ -91,8 +91,8 @@ export default function MeetingPage({ params }: { params: { groupId: string } })
                 { icon: Users,   title: "Open to Guests", desc: "No account required" },
                 { icon: Info,    title: "Persistent Room", desc: "Same link every time" },
               ].map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="bg-green-50 rounded-xl p-4">
-                  <Icon className="w-5 h-5 text-green-600 mx-auto mb-2" />
+                <div key={title} className="bg-brown-50 rounded-xl p-4">
+                  <Icon className="w-5 h-5 text-gold-600 mx-auto mb-2" />
                   <p className="text-sm font-semibold text-gray-800">{title}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
                 </div>
@@ -108,7 +108,7 @@ export default function MeetingPage({ params }: { params: { groupId: string } })
                 </p>
                 <button onClick={copyLink}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                    copied ? "bg-green-100 text-green-700" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-100"
+                    copied ? "bg-brown-100 text-gold-500" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-100"
                   }`}>
                   {copied ? <><Check className="w-3.5 h-3.5" /> Copied!</> : <><Copy className="w-3.5 h-3.5" /> Copy</>}
                 </button>
@@ -121,7 +121,7 @@ export default function MeetingPage({ params }: { params: { groupId: string } })
               <button
                 onClick={() => setJoined(true)}
                 disabled={loadingToken}
-                className="flex-1 flex items-center justify-center gap-2 bg-green-700 hover:bg-green-800 disabled:opacity-50 text-white py-3 rounded-xl font-medium transition-colors">
+                className="flex-1 flex items-center justify-center gap-2 bg-brown-800 hover:bg-brown-800 disabled:opacity-50 text-white py-3 rounded-xl font-medium transition-colors">
                 {loadingToken
                   ? <><Loader2 className="w-5 h-5 animate-spin" /> Preparing…</>
                   : <><Video className="w-5 h-5" /> Join Meeting</>}
@@ -138,13 +138,13 @@ export default function MeetingPage({ params }: { params: { groupId: string } })
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+              <div className="w-2.5 h-2.5 bg-gold-500 rounded-full animate-pulse" />
               <span className="text-sm font-medium text-gray-700">Meeting in progress</span>
             </div>
             <div className="flex gap-2">
               <button onClick={copyLink}
                 className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-                  copied ? "bg-green-50 border-green-200 text-green-700" : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                  copied ? "bg-brown-50 border-brown-200 text-gold-500" : "border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}>
                 {copied ? <><Check className="w-3 h-3" /> Copied!</> : <><Copy className="w-3 h-3" /> Invite</>}
               </button>
