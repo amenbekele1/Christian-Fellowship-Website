@@ -53,12 +53,7 @@ export function DashboardSidebar() {
       {/* Logo */}
       <div className="px-5 py-5" style={{ borderBottom: "1px solid rgba(201,168,76,0.12)" }}>
         <Link href="/" className="flex items-center gap-3 group">
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-transform duration-200 group-hover:scale-105"
-            style={{ background: "linear-gradient(135deg, #C9A84C, #EDD090)", color: "#1C0F07" }}
-          >
-            ✝
-          </div>
+          <img src="/logo.svg" alt="WECF" className="w-8 h-8 rounded-full transition-transform duration-200 group-hover:scale-105" />
           <div>
             <p className="font-display font-bold text-xs leading-tight" style={{ color: "#FAF7F0" }}>
               Warsaw Ethiopian

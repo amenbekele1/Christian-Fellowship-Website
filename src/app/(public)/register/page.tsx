@@ -177,7 +177,7 @@ function RegisterContent() {
         <div className="bg-white rounded-2xl p-10 max-w-lg w-full shadow-sm border border-brown-200">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-full bg-brown-800 flex items-center justify-center text-amber-300 text-2xl font-bold mx-auto mb-4">✝</div>
+            <img src="/logo.svg" alt="WECF" className="w-20 h-20 rounded-full mx-auto mb-4 shadow-warm" />
             <h1 className="font-display text-3xl font-bold text-gray-800 mb-2">Join the Fellowship</h1>
             <p className="text-gray-500 text-sm">Membership is by invitation. Come meet us first!</p>
           </div>
@@ -222,9 +222,7 @@ function RegisterContent() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-full bg-brown-800 flex items-center justify-center text-amber-300 text-2xl font-bold mx-auto mb-4">
-            ✝
-          </div>
+          <img src="/logo.svg" alt="WECF" className="w-14 h-14 rounded-full mx-auto mb-4 shadow-warm" />
           <h1 className="font-display text-3xl font-bold text-gray-800 mb-2">Join the Fellowship</h1>
           <p className="text-gray-500 text-sm">Create your member account</p>
         </div>
