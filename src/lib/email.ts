@@ -54,18 +54,18 @@ export function absenceNotificationEmail(
       <style>
         body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #14532d, #166534); padding: 40px; text-align: center; }
+        .header { background: linear-gradient(135deg, #1C0F07, #2C1A0E); padding: 40px; text-align: center; }
         .header h1 { color: #fde047; margin: 0; font-size: 22px; letter-spacing: 0.5px; }
         .header p { color: #bbf7d0; margin: 8px 0 0; font-size: 14px; }
         .cross { font-size: 40px; margin-bottom: 12px; display: block; }
         .body { padding: 40px; }
-        .body h2 { color: #166534; font-size: 20px; margin-top: 0; }
+        .body h2 { color: #2C1A0E; font-size: 20px; margin-top: 0; }
         .body p { color: #374151; line-height: 1.7; }
-        .highlight { background: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; }
-        .highlight strong { color: #14532d; }
+        .highlight { background: #FAF7F0; border-left: 4px solid #C9A84C; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; }
+        .highlight strong { color: #1C0F07; }
         .verse { background: #fefce8; border: 1px solid #fde047; padding: 20px; border-radius: 8px; margin: 24px 0; font-style: italic; color: #713f12; text-align: center; }
-        .footer { background: #f0fdf4; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
-        .footer strong { color: #14532d; }
+        .footer { background: #FAF7F0; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
+        .footer strong { color: #1C0F07; }
       </style>
     </head>
     <body>
@@ -123,19 +123,19 @@ export function sendBusLeaderAbsenceReport(
       <style>
         body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #14532d, #166534); padding: 40px; text-align: center; }
+        .header { background: linear-gradient(135deg, #1C0F07, #2C1A0E); padding: 40px; text-align: center; }
         .header h1 { color: #fde047; margin: 0; font-size: 22px; letter-spacing: 0.5px; }
         .header p { color: #bbf7d0; margin: 8px 0 0; font-size: 14px; }
         .cross { font-size: 40px; margin-bottom: 12px; display: block; }
         .body { padding: 40px; }
-        .body h2 { color: #166534; font-size: 20px; margin-top: 0; }
+        .body h2 { color: #2C1A0E; font-size: 20px; margin-top: 0; }
         .body p { color: #374151; line-height: 1.7; }
-        .event-info { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px; border-radius: 8px; margin: 20px 0; }
-        .event-info strong { color: #14532d; display: block; }
+        .event-info { background: #FAF7F0; border: 1px solid #bbf7d0; padding: 16px; border-radius: 8px; margin: 20px 0; }
+        .event-info strong { color: #1C0F07; display: block; }
         .event-info p { margin: 8px 0 0; font-size: 14px; color: #6b7280; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         table th { background: #f3f4f6; padding: 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #d1d5db; font-size: 13px; }
-        .footer { background: #f0fdf4; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
+        .footer { background: #FAF7F0; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
       </style>
     </head>
     <body>
@@ -195,18 +195,18 @@ export function bookReminderEmail(
       <style>
         body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #14532d, #166534); padding: 40px; text-align: center; }
+        .header { background: linear-gradient(135deg, #1C0F07, #2C1A0E); padding: 40px; text-align: center; }
         .header h1 { color: #fde047; margin: 0; font-size: 22px; }
         .header p { color: #bbf7d0; margin: 8px 0 0; font-size: 14px; }
         .cross { font-size: 40px; margin-bottom: 12px; display: block; }
         .body { padding: 40px; }
-        .body h2 { color: #166534; font-size: 20px; margin-top: 0; }
+        .body h2 { color: #2C1A0E; font-size: 20px; margin-top: 0; }
         .body p { color: #374151; line-height: 1.7; }
-        .book-card { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 8px; margin: 20px 0; }
-        .book-card strong { color: #14532d; font-size: 18px; }
+        .book-card { background: #FAF7F0; border: 1px solid #bbf7d0; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .book-card strong { color: #1C0F07; font-size: 18px; }
         .due-date { background: #fefce8; border: 2px solid #fde047; padding: 16px; border-radius: 8px; text-align: center; margin: 24px 0; }
         .due-date strong { color: #713f12; font-size: 20px; display: block; margin-top: 4px; }
-        .footer { background: #f0fdf4; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
+        .footer { background: #FAF7F0; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
       </style>
     </head>
     <body>
@@ -253,17 +253,17 @@ export function passwordResetEmail(
       <style>
         body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #14532d, #166534); padding: 40px; text-align: center; }
+        .header { background: linear-gradient(135deg, #1C0F07, #2C1A0E); padding: 40px; text-align: center; }
         .header h1 { color: #fde047; margin: 0; font-size: 22px; letter-spacing: 0.5px; }
         .header p { color: #bbf7d0; margin: 8px 0 0; font-size: 14px; }
         .cross { font-size: 40px; margin-bottom: 12px; display: block; }
         .body { padding: 40px; }
-        .body h2 { color: #166534; font-size: 20px; margin-top: 0; }
+        .body h2 { color: #2C1A0E; font-size: 20px; margin-top: 0; }
         .body p { color: #374151; line-height: 1.7; }
         .cta { text-align: center; margin: 30px 0; }
-        .cta a { background: #166534; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; display: inline-block; }
+        .cta a { background: #2C1A0E; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; display: inline-block; }
         .warning { background: #fefce8; border: 1px solid #fde047; padding: 16px 20px; border-radius: 8px; margin: 20px 0; color: #713f12; font-size: 13px; line-height: 1.6; }
-        .footer { background: #f0fdf4; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
+        .footer { background: #FAF7F0; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
       </style>
     </head>
     <body>
@@ -309,17 +309,17 @@ export function newMemberNotificationEmail(
       <style>
         body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #14532d, #166534); padding: 40px; text-align: center; }
+        .header { background: linear-gradient(135deg, #1C0F07, #2C1A0E); padding: 40px; text-align: center; }
         .header h1 { color: #fde047; margin: 0; font-size: 22px; letter-spacing: 0.5px; }
         .header p { color: #bbf7d0; margin: 8px 0 0; font-size: 14px; }
         .cross { font-size: 40px; margin-bottom: 12px; display: block; }
         .body { padding: 40px; }
-        .body h2 { color: #166534; font-size: 20px; margin-top: 0; }
+        .body h2 { color: #2C1A0E; font-size: 20px; margin-top: 0; }
         .body p { color: #374151; line-height: 1.7; }
-        .member-card { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 8px; margin: 20px 0; }
-        .member-card strong { color: #14532d; display: block; font-size: 18px; margin-bottom: 8px; }
+        .member-card { background: #FAF7F0; border: 1px solid #bbf7d0; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .member-card strong { color: #1C0F07; display: block; font-size: 18px; margin-bottom: 8px; }
         .member-detail { color: #6b7280; font-size: 14px; line-height: 1.8; }
-        .footer { background: #f0fdf4; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
+        .footer { background: #FAF7F0; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
       </style>
     </head>
     <body>
@@ -367,18 +367,18 @@ export function inviteEmail(inviteUrl: string, senderName: string): string {
       <style>
         body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #14532d, #166534); padding: 40px; text-align: center; }
+        .header { background: linear-gradient(135deg, #1C0F07, #2C1A0E); padding: 40px; text-align: center; }
         .header h1 { color: #fde047; margin: 0; font-size: 22px; letter-spacing: 0.5px; }
         .header p { color: #bbf7d0; margin: 8px 0 0; font-size: 14px; }
         .cross { font-size: 40px; margin-bottom: 12px; display: block; }
         .body { padding: 40px; }
-        .body h2 { color: #166534; font-size: 20px; margin-top: 0; }
+        .body h2 { color: #2C1A0E; font-size: 20px; margin-top: 0; }
         .body p { color: #374151; line-height: 1.7; }
         .cta { text-align: center; margin: 30px 0; }
-        .cta a { background: #166534; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; display: inline-block; }
+        .cta a { background: #2C1A0E; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; display: inline-block; }
         .warning { background: #fefce8; border: 1px solid #fde047; padding: 16px 20px; border-radius: 8px; margin: 20px 0; color: #713f12; font-size: 13px; line-height: 1.6; }
         .verse { background: #fefce8; border: 1px solid #fde047; padding: 20px; border-radius: 8px; margin: 24px 0; font-style: italic; color: #713f12; text-align: center; }
-        .footer { background: #f0fdf4; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
+        .footer { background: #FAF7F0; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
       </style>
     </head>
     <body>
@@ -423,19 +423,19 @@ export function welcomeEmail(name: string): string {
       <style>
         body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #14532d, #166534); padding: 40px; text-align: center; }
+        .header { background: linear-gradient(135deg, #1C0F07, #2C1A0E); padding: 40px; text-align: center; }
         .header h1 { color: #fde047; margin: 0; font-size: 24px; }
         .header p { color: #bbf7d0; margin: 8px 0 0; font-size: 15px; }
         .cross { font-size: 48px; margin-bottom: 12px; display: block; }
         .body { padding: 40px; }
-        .body h2 { color: #166534; font-size: 22px; margin-top: 0; }
+        .body h2 { color: #2C1A0E; font-size: 22px; margin-top: 0; }
         .body p { color: #374151; line-height: 1.7; }
         .verse { background: #fefce8; border: 1px solid #fde047; padding: 20px; border-radius: 8px; margin: 24px 0; font-style: italic; color: #713f12; text-align: center; }
         .features { display: grid; gap: 12px; margin: 20px 0; }
-        .feature { background: #f0fdf4; padding: 12px 16px; border-radius: 8px; color: #166534; }
+        .feature { background: #FAF7F0; padding: 12px 16px; border-radius: 8px; color: #2C1A0E; }
         .cta { text-align: center; margin: 30px 0; }
-        .cta a { background: #166534; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; display: inline-block; }
-        .footer { background: #f0fdf4; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
+        .cta a { background: #2C1A0E; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; display: inline-block; }
+        .footer { background: #FAF7F0; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #dcfce7; }
       </style>
     </head>
     <body>

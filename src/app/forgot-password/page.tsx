@@ -37,19 +37,19 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-brown-50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-700 text-amber-300 font-bold text-lg mb-4">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brown-800 text-amber-300 font-bold text-lg mb-4">
             ✝
           </div>
-          <h1 className="font-display text-2xl font-bold text-green-800">Warsaw Ethiopian</h1>
-          <p className="text-green-600 text-sm">Christian Fellowship</p>
+          <h1 className="font-display text-2xl font-bold text-brown-700">Warsaw Ethiopian</h1>
+          <p className="text-gold-600 text-sm">Christian Fellowship</p>
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-2xl border border-green-100 p-8 shadow-sm">
+        <div className="bg-white rounded-2xl border border-brown-200 p-8 shadow-sm">
           {!sent ? (
             <>
               <h2 className="font-display font-bold text-gray-800 text-xl mb-2">Forgot Password?</h2>
@@ -73,14 +73,14 @@ export default function ForgotPasswordPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="you@example.com"
-                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50 transition-colors"
+                  className="w-full bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 disabled:opacity-50 transition-colors"
                 >
                   {loading ? "Sending..." : "Send Reset Link"}
                 </button>
@@ -89,7 +89,7 @@ export default function ForgotPasswordPage() {
               <div className="mt-6 pt-6 border-t border-gray-100">
                 <p className="text-sm text-gray-600 text-center">
                   Remember your password?{" "}
-                  <Link href="/login" className="text-green-600 hover:text-green-700 font-medium">
+                  <Link href="/login" className="text-gold-600 hover:text-gold-500 font-medium">
                     Sign in
                   </Link>
                 </p>
@@ -97,7 +97,7 @@ export default function ForgotPasswordPage() {
             </>
           ) : (
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-600 mb-4">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brown-100 text-gold-600 mb-4">
                 <Check className="w-6 h-6" />
               </div>
               <h3 className="font-semibold text-gray-800 mb-2">Check Your Email</h3>
@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
               </p>
               <button
                 onClick={() => setSent(false)}
-                className="w-full bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 transition-colors"
+                className="w-full bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 transition-colors"
               >
                 Send Another Link
               </button>

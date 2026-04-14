@@ -71,11 +71,11 @@ export default function AboutContent() {
       {/* Header */}
       <section className="hero-gradient py-20 relative overflow-hidden">
         <div className="absolute left-0 top-0 bottom-0 w-1.5 eth-stripe" />
-        <div className="absolute right-20 top-10 text-green-600 opacity-10 text-[150px] font-serif">✝</div>
+        <div className="absolute right-20 top-10 text-gold-600 opacity-10 text-[150px] font-serif">✝</div>
         <div className="max-w-4xl mx-auto px-6 text-center relative">
           <p className="text-amber-300 text-sm font-semibold uppercase tracking-widest mb-4">Who We Are</p>
           <h1 className="font-display text-5xl font-bold text-white mb-5">About Our Fellowship</h1>
-          <p className="text-green-100 text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-brown-100 text-lg max-w-2xl mx-auto leading-relaxed">
             A community of Ethiopian believers and friends in Warsaw, bound together by the love of
             Christ and a shared hunger for God.
           </p>
@@ -87,7 +87,7 @@ export default function AboutContent() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-14 items-center">
             <div>
-              <p className="text-green-600 text-sm font-semibold uppercase tracking-widest mb-3">Our Mission</p>
+              <p className="text-gold-600 text-sm font-semibold uppercase tracking-widest mb-3">Our Mission</p>
               <h2 className="font-display text-4xl font-bold text-gray-800 mb-5">
                 Inspiring Lives for the Glory of God
               </h2>
@@ -110,7 +110,7 @@ export default function AboutContent() {
             </div>
 
             {/* Verse block */}
-            <div className="bg-green-900 rounded-3xl p-10 text-center relative overflow-hidden">
+            <div className="bg-brown-900 rounded-3xl p-10 text-center relative overflow-hidden">
               <div className="absolute inset-0 opacity-5 text-[200px] font-serif text-white flex items-center justify-center select-none">✝</div>
               <p className="text-amber-300 text-xs uppercase tracking-widest mb-6 font-bold">Our Foundation</p>
               <blockquote className="scripture text-white text-2xl leading-relaxed mb-6">
@@ -128,14 +128,14 @@ export default function AboutContent() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-green-600 text-sm font-semibold uppercase tracking-widest mb-3">What We Stand For</p>
+            <p className="text-gold-600 text-sm font-semibold uppercase tracking-widest mb-3">What We Stand For</p>
             <h2 className="font-display text-4xl font-bold text-gray-800">Our Core Values</h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((val) => (
-              <div key={val.title} className="bg-white rounded-2xl p-7 border border-green-100 card-hover">
-                <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center mb-5">
-                  <val.icon className="w-6 h-6 text-green-600" />
+              <div key={val.title} className="bg-white rounded-2xl p-7 border border-brown-200 card-hover">
+                <div className="w-12 h-12 rounded-xl bg-brown-50 flex items-center justify-center mb-5">
+                  <val.icon className="w-6 h-6 text-gold-600" />
                 </div>
                 <h3 className="font-display font-bold text-gray-800 text-lg mb-3">{val.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{val.desc}</p>
@@ -148,11 +148,11 @@ export default function AboutContent() {
       {/* Leadership */}
       <section className="py-20 bg-white">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-green-600 text-sm font-semibold uppercase tracking-widest mb-3">Those Who Serve</p>
+          <p className="text-gold-600 text-sm font-semibold uppercase tracking-widest mb-3">Those Who Serve</p>
           <h2 className="font-display text-4xl font-bold text-gray-800 mb-12">Our Leadership</h2>
           {loading ? (
             <div className="flex justify-center py-10">
-              <svg className="animate-spin w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin w-8 h-8 text-gold-600" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
@@ -178,12 +178,12 @@ export default function AboutContent() {
                         className="w-20 h-20 rounded-full object-cover mx-auto mb-4"
                       />
                     ) : (
-                      <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-2xl mx-auto mb-4 font-display">
+                      <div className="w-20 h-20 rounded-full bg-brown-100 flex items-center justify-center text-gold-500 font-bold text-2xl mx-auto mb-4 font-display">
                         {initials}
                       </div>
                     )}
                     <h3 className="font-display font-semibold text-gray-800 mb-1">{leader.name}</h3>
-                    <p className="text-sm text-green-600">{leader.title}</p>
+                    <p className="text-sm text-gold-600">{leader.title}</p>
                     {leader.bio && <p className="text-xs text-gray-500 mt-2">{leader.bio}</p>}
                   </div>
                 );

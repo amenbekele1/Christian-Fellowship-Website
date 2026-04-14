@@ -40,22 +40,22 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-green-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-brown-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-full bg-green-700 flex items-center justify-center text-amber-300 text-2xl font-bold mx-auto mb-4">
+          <div className="w-14 h-14 rounded-full bg-brown-800 flex items-center justify-center text-amber-300 text-2xl font-bold mx-auto mb-4">
             ✝
           </div>
           <h1 className="font-display text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
           <p className="text-gray-500 text-sm">Sign in to your member account</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-green-100 shadow-sm p-8">
-          <div className="bg-green-50 border border-green-100 rounded-xl p-4 mb-6 text-center">
-            <p className="scripture text-sm text-green-800 italic">
+        <div className="bg-white rounded-2xl border border-brown-200 shadow-sm p-8">
+          <div className="bg-brown-50 border border-brown-200 rounded-xl p-4 mb-6 text-center">
+            <p className="scripture text-sm text-brown-700 italic">
               "I am the way and the truth and the life"
             </p>
-            <p className="text-xs text-green-600 font-semibold mt-1">— John 14:6</p>
+            <p className="text-xs text-gold-600 font-semibold mt-1">— John 14:6</p>
           </div>
 
           {error && (
@@ -74,7 +74,7 @@ function LoginForm() {
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="your@email.com"
-                className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
               />
             </div>
 
@@ -87,7 +87,7 @@ function LoginForm() {
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   placeholder="Your password"
-                  className="w-full h-10 rounded-lg border border-gray-200 px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full h-10 rounded-lg border border-gray-200 px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                 />
                 <button
                   type="button"
@@ -102,7 +102,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-700 text-white font-semibold py-3 rounded-xl hover:bg-green-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+              className="w-full bg-brown-800 text-white font-semibold py-3 rounded-xl hover:bg-brown-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
             >
               {loading ? (
                 <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -115,7 +115,7 @@ function LoginForm() {
               {loading ? "Signing in..." : "Sign In"}
             </button>
             <div className="text-right mt-3">
-              <Link href="/forgot-password" className="text-sm text-green-600 hover:text-green-700 font-medium">
+              <Link href="/forgot-password" className="text-sm text-gold-600 hover:text-gold-500 font-medium">
                 Forgot password?
               </Link>
             </div>
@@ -133,7 +133,7 @@ function LoginForm() {
 
           <p className="text-center text-sm text-gray-500 mt-5">
             Don't have an account?{" "}
-            <Link href="/register" className="text-green-700 font-semibold hover:underline">
+            <Link href="/register" className="text-gold-500 font-semibold hover:underline">
               Join the Fellowship
             </Link>
           </p>

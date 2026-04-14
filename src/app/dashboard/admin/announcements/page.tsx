@@ -102,7 +102,7 @@ export default function AdminAnnouncementsPage() {
           <h1 className="font-display text-3xl font-bold text-gray-800">Announcements</h1>
           <p className="text-gray-500 mt-1">Manage fellowship announcements</p>
         </div>
-        <button onClick={() => { setEditingId(null); setForm({ title: "", content: "", isPublic: false, isPinned: false, expiresAt: "" }); setShowForm(true); }} className="flex items-center gap-2 bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 shadow-sm">
+        <button onClick={() => { setEditingId(null); setForm({ title: "", content: "", isPublic: false, isPinned: false, expiresAt: "" }); setShowForm(true); }} className="flex items-center gap-2 bg-brown-800 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 shadow-sm">
           <Plus className="w-4 h-4"/> New Announcement
         </button>
       </div>
@@ -127,34 +127,34 @@ export default function AdminAnnouncementsPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Title *</label>
                 <input type="text" required value={form.title} onChange={e => setForm({...form, title: e.target.value})}
-                  placeholder="Announcement title" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"/>
+                  placeholder="Announcement title" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"/>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Content *</label>
                 <textarea required value={form.content} onChange={e => setForm({...form, content: e.target.value})}
                   placeholder="Write your announcement..." rows={4}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"/>
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none"/>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Expires On (optional)</label>
                 <input type="date" value={form.expiresAt} onChange={e => setForm({...form, expiresAt: e.target.value})}
-                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"/>
+                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"/>
               </div>
               <div className="flex gap-5">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={form.isPublic} onChange={e => setForm({...form, isPublic: e.target.checked})}
-                    className="w-4 h-4 rounded accent-green-600"/>
+                    className="w-4 h-4 rounded accent-gold-500"/>
                   <span className="text-sm text-gray-700">Visible on public website</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={form.isPinned} onChange={e => setForm({...form, isPinned: e.target.checked})}
-                    className="w-4 h-4 rounded accent-green-600"/>
+                    className="w-4 h-4 rounded accent-gold-500"/>
                   <span className="text-sm text-gray-700">Pin to top</span>
                 </label>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeForm} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">Cancel</button>
-                <button type="submit" disabled={saving} className="flex-1 bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50">
+                <button type="submit" disabled={saving} className="flex-1 bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 disabled:opacity-50">
                   {saving ? (editingId ? "Updating..." : "Publishing...") : (editingId ? "Update Announcement" : "Publish Announcement")}
                 </button>
               </div>
@@ -164,17 +164,17 @@ export default function AdminAnnouncementsPage() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-16"><svg className="animate-spin w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>
+        <div className="flex justify-center py-16"><svg className="animate-spin w-8 h-8 text-gold-600" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>
       ) : (
         <div className="space-y-4">
           {announcements.length === 0 && (
-            <div className="text-center py-14 bg-white rounded-2xl border border-green-100 text-gray-400">
+            <div className="text-center py-14 bg-white rounded-2xl border border-brown-200 text-gray-400">
               <Bell className="w-12 h-12 mx-auto mb-3 opacity-30"/>
               <p>No announcements yet.</p>
             </div>
           )}
           {announcements.map(ann => (
-            <div key={ann.id} className={`bg-white border rounded-2xl p-5 shadow-sm ${ann.isPinned ? "border-amber-200" : "border-green-100"}`}>
+            <div key={ann.id} className={`bg-white border rounded-2xl p-5 shadow-sm ${ann.isPinned ? "border-amber-200" : "border-brown-200"}`}>
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   {ann.isPinned && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">📌 Pinned</span>}
@@ -185,7 +185,7 @@ export default function AdminAnnouncementsPage() {
                   <button onClick={() => togglePin(ann)} className={`p-1.5 rounded-lg transition-colors ${ann.isPinned ? "text-amber-500 hover:bg-amber-50" : "text-gray-300 hover:text-amber-400 hover:bg-amber-50"}`}>
                     <Pin className="w-4 h-4"/>
                   </button>
-                  <button onClick={() => editAnnouncement(ann)} className="p-1.5 text-gray-300 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                  <button onClick={() => editAnnouncement(ann)} className="p-1.5 text-gray-300 hover:text-gold-600 hover:bg-brown-50 rounded-lg transition-colors">
                     <Edit2 className="w-4 h-4"/>
                   </button>
                   <button onClick={() => deleteAnnouncement(ann.id)} className="p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors">

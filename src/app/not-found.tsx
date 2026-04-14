@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-green-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-brown-50 flex items-center justify-center px-4">
       <div className="text-center max-w-md">
-        <div className="text-7xl font-display font-bold text-green-200 mb-2">404</div>
+        <div className="text-7xl font-display font-bold text-brown-200 mb-2">404</div>
         <div className="text-5xl mb-6">✝</div>
         <h1 className="font-display text-2xl font-bold text-gray-800 mb-3">
           Page Not Found
@@ -16,13 +16,13 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/"
-            className="bg-green-700 text-white font-semibold px-6 py-3 rounded-xl hover:bg-green-800 transition-colors"
+            className="bg-brown-800 text-white font-semibold px-6 py-3 rounded-xl hover:bg-brown-800 transition-colors"
           >
             Go Home
           </Link>
           <Link
             href="/dashboard"
-            className="border border-green-200 text-green-700 font-medium px-6 py-3 rounded-xl hover:bg-green-50 transition-colors"
+            className="border border-brown-200 text-gold-500 font-medium px-6 py-3 rounded-xl hover:bg-brown-50 transition-colors"
           >
             My Dashboard
           </Link>

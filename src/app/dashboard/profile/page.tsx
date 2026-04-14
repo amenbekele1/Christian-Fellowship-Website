@@ -137,7 +137,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <svg className="animate-spin w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin w-8 h-8 text-gold-600" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
@@ -155,9 +155,9 @@ export default function ProfilePage() {
       <p className="text-gray-500 mb-6">Manage your account information and security settings</p>
 
       {success && (
-        <div className="mb-6 bg-green-50 border border-green-200 rounded-2xl p-4 flex gap-3 items-start">
-          <Check className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
-          <p className="text-green-700 text-sm">{success}</p>
+        <div className="mb-6 bg-brown-50 border border-brown-200 rounded-2xl p-4 flex gap-3 items-start">
+          <Check className="w-5 h-5 text-gold-600 mt-0.5 shrink-0" />
+          <p className="text-gold-500 text-sm">{success}</p>
         </div>
       )}
 
@@ -174,7 +174,7 @@ export default function ProfilePage() {
           onClick={() => setPasswordTab(false)}
           className={`pb-3 px-1 font-medium text-sm transition-colors ${
             !passwordTab
-              ? "text-green-600 border-b-2 border-green-600"
+              ? "text-gold-600 border-b-2 border-brown-500"
               : "text-gray-500 hover:text-gray-700"
           }`}
         >
@@ -184,7 +184,7 @@ export default function ProfilePage() {
           onClick={() => setPasswordTab(true)}
           className={`pb-3 px-1 font-medium text-sm transition-colors ${
             passwordTab
-              ? "text-green-600 border-b-2 border-green-600"
+              ? "text-gold-600 border-b-2 border-brown-500"
               : "text-gray-500 hover:text-gray-700"
           }`}
         >
@@ -193,7 +193,7 @@ export default function ProfilePage() {
       </div>
 
       {!passwordTab ? (
-        <div className="bg-white rounded-2xl p-6 border border-green-100">
+        <div className="bg-white rounded-2xl p-6 border border-brown-200">
           <form onSubmit={updateProfile} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
@@ -214,7 +214,7 @@ export default function ProfilePage() {
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   placeholder="John"
-                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
                 />
               </div>
               <div>
@@ -224,7 +224,7 @@ export default function ProfilePage() {
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   placeholder="Doe"
-                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
                 />
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function ProfilePage() {
                 value={formData.phoneNumber}
                 onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                 placeholder="+48 123 456 789"
-                className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
               />
             </div>
 
@@ -244,7 +244,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50"
+                className="w-full bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 disabled:opacity-50"
               >
                 {saving ? "Saving..." : "Save Changes"}
               </button>
@@ -252,7 +252,7 @@ export default function ProfilePage() {
           </form>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl p-6 border border-green-100">
+        <div className="bg-white rounded-2xl p-6 border border-brown-200">
           <form onSubmit={changePassword} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
@@ -263,7 +263,7 @@ export default function ProfilePage() {
                   onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
                   required
                   placeholder="Enter your current password"
-                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 pr-10"
+                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 pr-10"
                 />
                 <button
                   type="button"
@@ -284,7 +284,7 @@ export default function ProfilePage() {
                   onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                   required
                   placeholder="At least 6 characters"
-                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 pr-10"
+                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 pr-10"
                 />
                 <button
                   type="button"
@@ -305,7 +305,7 @@ export default function ProfilePage() {
                   onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                   required
                   placeholder="Confirm your new password"
-                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 pr-10"
+                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 pr-10"
                 />
                 <button
                   type="button"
@@ -321,7 +321,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full bg-green-700 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-green-800 disabled:opacity-50"
+                className="w-full bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 disabled:opacity-50"
               >
                 {saving ? "Updating..." : "Change Password"}
               </button>
