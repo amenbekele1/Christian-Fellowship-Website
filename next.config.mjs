@@ -16,7 +16,7 @@ const nextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "frame-src https://meet.jit.si;",
+            value: "frame-src https://meet.jit.si https://8x8.vc;",
           },
         ],
       },
