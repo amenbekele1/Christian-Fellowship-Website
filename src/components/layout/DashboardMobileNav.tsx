@@ -12,9 +12,7 @@ export function DashboardMobileNav() {
       {/* Mobile top bar */}
       <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-brown-200">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-brown-800 flex items-center justify-center text-amber-300 text-xs font-bold">
-            ✝
-          </div>
+          <img src="/logo.svg" alt="WECF" className="w-7 h-7 rounded-full" />
           <span className="font-display font-bold text-brown-700 text-sm">WECF Member Portal</span>
         </div>
         <button

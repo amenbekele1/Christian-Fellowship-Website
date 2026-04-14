@@ -44,12 +44,7 @@ export function PublicHeader() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-transform duration-200 group-hover:scale-105"
-              style={{ background: "linear-gradient(135deg, #C9A84C, #EDD090)", color: "#1C0F07" }}
-            >
-              ✝
-            </div>
+            <img src="/logo.svg" alt="WECF" className="w-9 h-9 rounded-full shadow-md transition-transform duration-200 group-hover:scale-105" />
             <div className="hidden sm:block">
               <p className="font-display font-bold text-sm leading-tight" style={{ color: "#FAF7F0" }}>
                 Warsaw Ethiopian
