@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export interface GroupAuthResult {
-  session: Awaited<ReturnType<typeof getServerSession>>;
+  session: NonNullable<Awaited<ReturnType<typeof getServerSession>>>;
   group: { id: string; name: string; leaderId: string };
   isLeader: boolean;
   userId: string;
