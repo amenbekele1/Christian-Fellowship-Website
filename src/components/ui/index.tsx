@@ -1,4 +1,4 @@
-// Consolidated UI components
+// Consolidated UI components — warm brown + gold palette
 "use client";
 
 import * as React from "react";
@@ -7,29 +7,26 @@ import { cn } from "@/lib/utils";
 
 // ─── Button ───────────────────────────────────────────────
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 disabled:opacity-50 disabled:pointer-events-none",
+  "inline-flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 disabled:opacity-50 disabled:pointer-events-none",
   {
     variants: {
       variant: {
-        default: "bg-green-700 text-white hover:bg-green-800 shadow-sm",
-        secondary: "bg-green-100 text-green-700 hover:bg-green-200",
-        outline: "border border-green-200 text-green-700 hover:bg-green-50",
-        ghost: "text-gray-600 hover:bg-gray-100 hover:text-gray-800",
+        default:     "bg-brown-800 text-brown-50 hover:bg-brown-700 shadow-warm-sm",
+        secondary:   "bg-brown-100 text-brown-700 hover:bg-brown-200",
+        outline:     "border border-brown-200 text-brown-600 hover:bg-brown-50",
+        ghost:       "text-brown-500 hover:bg-brown-100 hover:text-brown-700",
         destructive: "bg-red-600 text-white hover:bg-red-700",
-        gold: "bg-amber-400 text-green-900 hover:bg-amber-500 font-semibold shadow-sm",
-        white: "bg-white text-green-700 hover:bg-green-50 shadow-sm",
+        gold:        "bg-gold-500 text-brown-900 hover:bg-gold-400 font-semibold shadow-gold",
+        white:       "bg-white text-brown-700 hover:bg-brown-50 shadow-warm-sm border border-brown-200",
       },
       size: {
-        sm: "px-3 py-1.5 text-xs",
+        sm:   "px-3 py-1.5 text-xs",
         default: "px-4 py-2",
-        lg: "px-6 py-3 text-base",
+        lg:   "px-6 py-3 text-base",
         icon: "w-9 h-9",
       },
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
+    defaultVariants: { variant: "default", size: "default" },
   }
 );
 
@@ -40,31 +37,34 @@ export interface ButtonProps
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, loading, children, ...props }, ref) => {
-    return (
-      <button
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        disabled={loading || props.disabled}
-        {...props}
-      >
-        {loading && (
-          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-        )}
-        {children}
-      </button>
-    );
-  }
+  ({ className, variant, size, loading, children, ...props }, ref) => (
+    <button
+      className={cn(buttonVariants({ variant, size, className }))}
+      ref={ref}
+      disabled={loading || props.disabled}
+      {...props}
+    >
+      {loading && (
+        <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+      )}
+      {children}
+    </button>
+  )
 );
 Button.displayName = "Button";
 
 // ─── Card ──────────────────────────────────────────────────
 export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("bg-white rounded-xl border border-green-100 shadow-sm", className)} {...props} />
+    <div
+      ref={ref}
+      className={cn("bg-white rounded-2xl border shadow-warm-sm", className)}
+      style={{ borderColor: "#E0CBB0" }}
+      {...props}
+    />
   )
 );
 Card.displayName = "Card";
@@ -78,7 +78,12 @@ CardHeader.displayName = "CardHeader";
 
 export const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn("font-display font-semibold text-gray-800 text-lg", className)} {...props} />
+    <h3
+      ref={ref}
+      className={cn("font-display font-semibold text-lg", className)}
+      style={{ color: "#2C1A0E" }}
+      {...props}
+    />
   )
 );
 CardTitle.displayName = "CardTitle";
@@ -92,7 +97,12 @@ CardContent.displayName = "CardContent";
 
 export const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("px-5 pb-5 pt-3 border-t border-green-50", className)} {...props} />
+    <div
+      ref={ref}
+      className={cn("px-5 pb-5 pt-3", className)}
+      style={{ borderTop: "1px solid #F0E6D3" }}
+      {...props}
+    />
   )
 );
 CardFooter.displayName = "CardFooter";
@@ -103,14 +113,14 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-green-100 text-green-700 border-green-200",
-        secondary: "bg-gray-100 text-gray-600 border-gray-200",
-        destructive: "bg-red-100 text-red-700 border-red-200",
-        outline: "border-current text-current",
-        gold: "bg-amber-100 text-amber-700 border-amber-200",
-        guardian: "bg-red-100 text-red-700 border-red-200",
-        leader: "bg-amber-100 text-amber-700 border-amber-200",
-        member: "bg-green-100 text-green-700 border-green-200",
+        default:     "bg-brown-100 text-brown-700 border-brown-200",
+        secondary:   "bg-warm-100 text-warm-600 border-warm-200",
+        destructive: "bg-red-50 text-red-700 border-red-200",
+        outline:     "border-current text-current",
+        gold:        "bg-gold-100 text-gold-700 border-gold-200",
+        guardian:    "bg-red-50 text-red-700 border-red-200",
+        leader:      "bg-gold-100 text-gold-700 border-gold-200",
+        member:      "bg-brown-100 text-brown-600 border-brown-200",
       },
     },
     defaultVariants: { variant: "default" },
@@ -118,7 +128,6 @@ const badgeVariants = cva(
 );
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
-
 export function Badge({ className, variant, ...props }: BadgeProps) {
   return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
@@ -129,9 +138,13 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
     <input
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all",
+        "flex h-10 w-full rounded-xl border bg-white px-3 py-2 text-sm placeholder:text-brown-300 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all",
         className
       )}
+      style={{
+        borderColor: "#E0CBB0",
+        color: "#3D2410",
+      }}
       {...props}
     />
   )
@@ -141,7 +154,12 @@ Input.displayName = "Input";
 // ─── Label ────────────────────────────────────────────────
 export const Label = React.forwardRef<HTMLLabelElement, React.LabelHTMLAttributes<HTMLLabelElement>>(
   ({ className, ...props }, ref) => (
-    <label ref={ref} className={cn("text-sm font-medium text-gray-700 leading-none", className)} {...props} />
+    <label
+      ref={ref}
+      className={cn("text-sm font-medium leading-none", className)}
+      style={{ color: "#5C3D20" }}
+      {...props}
+    />
   )
 );
 Label.displayName = "Label";
@@ -152,9 +170,10 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
     <select
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 cursor-pointer",
+        "flex h-10 w-full rounded-xl border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 disabled:opacity-50 cursor-pointer",
         className
       )}
+      style={{ borderColor: "#E0CBB0", color: "#3D2410" }}
       {...props}
     >
       {children}
@@ -169,9 +188,10 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTML
     <textarea
       ref={ref}
       className={cn(
-        "flex min-h-[80px] w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 resize-none",
+        "flex min-h-[80px] w-full rounded-xl border bg-white px-3 py-2 text-sm placeholder:text-brown-300 focus:outline-none focus:ring-2 disabled:opacity-50 resize-none",
         className
       )}
+      style={{ borderColor: "#E0CBB0", color: "#3D2410" }}
       {...props}
     />
   )
@@ -191,14 +211,13 @@ export function Alert({
   className?: string;
 }) {
   const styles = {
-    default: "bg-blue-50 border-blue-200 text-blue-800",
-    error: "bg-red-50 border-red-200 text-red-800",
-    success: "bg-green-50 border-green-200 text-green-800",
-    warning: "bg-amber-50 border-amber-200 text-amber-800",
+    default: "bg-brown-50 border-brown-200 text-brown-700",
+    error:   "bg-red-50 border-red-200 text-red-800",
+    success: "bg-emerald-50 border-emerald-200 text-emerald-800",
+    warning: "bg-gold-50 border-gold-200 text-gold-800",
   };
-
   return (
-    <div className={cn("rounded-lg border p-4", styles[variant], className)}>
+    <div className={cn("rounded-xl border p-4", styles[variant], className)}>
       {title && <p className="font-semibold text-sm mb-1">{title}</p>}
       <p className="text-sm">{children}</p>
     </div>
@@ -209,7 +228,8 @@ export function Alert({
 export function Spinner({ className }: { className?: string }) {
   return (
     <svg
-      className={cn("animate-spin text-green-600", className || "w-6 h-6")}
+      className={cn("animate-spin", className || "w-6 h-6")}
+      style={{ color: "#C9A84C" }}
       fill="none"
       viewBox="0 0 24 24"
     >
@@ -228,8 +248,8 @@ export function PageHeader({ title, description, children }: {
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <h1 className="text-2xl font-display font-bold text-gray-800">{title}</h1>
-        {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
+        <h1 className="text-2xl font-display font-bold" style={{ color: "#2C1A0E" }}>{title}</h1>
+        {description && <p className="text-sm mt-1" style={{ color: "#9A7B5C" }}>{description}</p>}
       </div>
       {children && <div className="flex items-center gap-2">{children}</div>}
     </div>
@@ -246,12 +266,15 @@ export function EmptyState({ icon: Icon, title, description, action }: {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       {Icon && (
-        <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mb-4">
-          <Icon className="w-6 h-6 text-green-400" />
+        <div
+          className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
+          style={{ background: "rgba(201,168,76,0.10)" }}
+        >
+          <Icon className="w-6 h-6" style={{ color: "#C9A84C" }} />
         </div>
       )}
-      <h3 className="font-semibold text-gray-700 mb-1">{title}</h3>
-      {description && <p className="text-sm text-gray-400 max-w-xs">{description}</p>}
+      <h3 className="font-semibold mb-1" style={{ color: "#5C3D20" }}>{title}</h3>
+      {description && <p className="text-sm max-w-xs" style={{ color: "#9A7B5C" }}>{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

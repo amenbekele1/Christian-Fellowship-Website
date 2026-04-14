@@ -1,17 +1,15 @@
 import Link from "next/link";
-import { Calendar, BookOpen, Users, MapPin, ArrowRight, ChevronDown } from "lucide-react";
+import { Calendar, ArrowRight, ChevronDown, MapPin } from "lucide-react";
 
 async function getVerseOfDay() {
   try {
-    const res = await fetch(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/verse`, {
-      cache: "no-store",
-    });
+    const res = await fetch(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/verse`, { cache: "no-store" });
     if (!res.ok) throw new Error("Failed");
     return res.json();
   } catch {
     return {
       reference: "Hebrews 10:24-25",
-      text: "And let us consider how we may spur one another on toward love and good deeds, not giving up meeting together...",
+      text: "And let us consider how we may spur one another on toward love and good deeds, not giving up meeting together…",
       translation: "NIV",
     };
   }
@@ -31,21 +29,16 @@ async function getUpcomingEvents() {
 }
 
 const programs = [
-  { icon: "📖", title: "Bible Study", desc: "Deep dive into the Word of God every week" },
-  { icon: "🎵", title: "Worship Night", desc: "An evening of praise and worship" },
-  { icon: "🎤", title: "Sermon", desc: "Anointed preaching every Sunday service" },
-  { icon: "📚", title: "Literature Night", desc: "Exploring great Christian writings together" },
-  { icon: "👥", title: "BUS Meetings", desc: "Building community in small groups" },
+  { icon: "📖", title: "Bible Study",      desc: "Deep dive into the Word of God every week"         },
+  { icon: "🎵", title: "Worship Night",    desc: "An evening of praise and worship"                   },
+  { icon: "🎤", title: "Sunday Sermon",    desc: "Anointed preaching every Sunday service"            },
+  { icon: "📚", title: "Literature Night", desc: "Exploring great Christian writings together"        },
+  { icon: "👥", title: "BUS Meetings",     desc: "Building community in small groups"                 },
 ];
 
 function formatEventDate(date: string) {
-  return new Date(date).toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
+  return new Date(date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 }
-
 function formatEventTime(date: string) {
   return new Date(date).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
@@ -55,46 +48,73 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ── HERO ──────────────────────────────────────────── */}
-      <section className="relative overflow-hidden hero-gradient min-h-[92vh] flex items-center">
-        {/* Decorative background crosses */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-16 right-16 text-green-600 opacity-10 text-[180px] font-serif select-none">✝</div>
-          <div className="absolute bottom-20 left-10 text-green-600 opacity-5 text-[120px] font-serif select-none">✝</div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-green-600 opacity-5 blur-3xl" />
+      {/* ── HERO ──────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden min-h-[92vh] flex items-center hero-gradient">
+        {/* Decorative gold cross watermark */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+          <div
+            className="absolute top-10 right-14 text-[220px] font-serif leading-none"
+            style={{ color: "rgba(201,168,76,0.04)" }}
+          >✝</div>
+          <div
+            className="absolute bottom-16 left-8 text-[140px] font-serif leading-none"
+            style={{ color: "rgba(201,168,76,0.03)" }}
+          >✝</div>
+          {/* Warm radial glow */}
+          <div
+            className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl"
+            style={{ background: "radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%)" }}
+          />
         </div>
 
-        {/* Ethiopian flag stripe on left */}
-        <div className="absolute left-0 top-0 bottom-0 w-1.5 eth-stripe" />
-
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-20 w-full">
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-24 w-full">
           <div className="max-w-3xl">
-            {/* Motto pill */}
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-8 animate-fade-in">
-              <span className="text-amber-300 text-sm">✝</span>
-              <span className="text-green-100 text-sm font-medium tracking-wide">Hebrews 10:24-25</span>
+            {/* Scripture pill */}
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-8 animate-fade-up"
+              style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.25)" }}
+            >
+              <span style={{ color: "#C9A84C" }}>✝</span>
+              <span className="text-sm font-medium tracking-wide" style={{ color: "#EDD090" }}>
+                Hebrews 10:24-25
+              </span>
             </div>
 
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6 animate-fade-in stagger-1">
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight mb-6 animate-fade-up stagger-1"
+              style={{ color: "#FAF7F0" }}>
               Warsaw Ethiopian
-              <span className="block text-amber-300">Christian Fellowship</span>
+              <span className="block" style={{ color: "#C9A84C" }}>Christian Fellowship</span>
             </h1>
 
-            <p className="text-green-100 text-lg sm:text-xl leading-relaxed max-w-2xl mb-10 animate-fade-in stagger-2">
+            <p className="text-lg sm:text-xl leading-relaxed max-w-2xl mb-10 animate-fade-up stagger-2"
+              style={{ color: "#C4A882" }}>
               A Christ-centred community in the heart of Warsaw, united by faith, love, and the Holy
               Spirit. Worshipping, growing, and serving together.
             </p>
 
-            <div className="flex flex-wrap gap-4 animate-fade-in stagger-3">
+            <div className="flex flex-wrap gap-4 animate-fade-up stagger-3">
               <Link
                 href="/register"
-                className="bg-amber-400 text-green-900 font-semibold px-7 py-3.5 rounded-xl hover:bg-amber-300 transition-all shadow-lg hover:shadow-amber-400/25 hover:-translate-y-0.5"
+                className="font-semibold px-7 py-3.5 rounded-xl transition-all duration-200 hover:-translate-y-0.5"
+                style={{
+                  background: "#C9A84C",
+                  color: "#1C0F07",
+                  boxShadow: "0 4px 20px rgba(201,168,76,0.35)",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#DDB95A")}
+                onMouseLeave={e => (e.currentTarget.style.background = "#C9A84C")}
               >
                 Join the Fellowship
               </Link>
               <Link
                 href="/about"
-                className="border border-white/30 text-white font-medium px-7 py-3.5 rounded-xl hover:bg-white/10 transition-all backdrop-blur-sm"
+                className="font-medium px-7 py-3.5 rounded-xl transition-all duration-200"
+                style={{
+                  border: "1px solid rgba(201,168,76,0.30)",
+                  color: "#EDD090",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(201,168,76,0.08)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
               >
                 Learn More →
               </Link>
@@ -103,67 +123,69 @@ export default async function HomePage() {
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/40 animate-bounce">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce" style={{ color: "rgba(201,168,76,0.4)" }}>
           <ChevronDown className="w-6 h-6" />
         </div>
       </section>
 
-      {/* ── VERSE OF THE DAY ──────────────────────────────── */}
-      <section className="bg-amber-50 border-y border-amber-100 py-14">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <p className="text-amber-600 text-xs font-bold uppercase tracking-widest mb-5">
-            ✦ Verse of the Day ✦
-          </p>
-          <blockquote className="scripture text-2xl sm:text-3xl text-gray-800 leading-relaxed mb-5">
+      {/* ── VERSE OF THE DAY ──────────────────────────────────── */}
+      <section style={{ background: "#F0E6D3", borderTop: "1px solid #E0CBB0", borderBottom: "1px solid #E0CBB0" }}>
+        <div className="max-w-3xl mx-auto px-6 py-14 text-center">
+          <p className="section-label mb-5">✦ Verse of the Day ✦</p>
+          <blockquote className="scripture text-2xl sm:text-3xl leading-relaxed mb-5" style={{ color: "#3D2410" }}>
             "{verse.text}"
           </blockquote>
-          <p className="font-semibold text-green-700">
-            — {verse.reference} <span className="text-gray-400 font-normal">({verse.translation})</span>
+          <p className="font-semibold" style={{ color: "#5C3D20" }}>
+            — {verse.reference}{" "}
+            <span className="font-normal" style={{ color: "#9A7B5C" }}>({verse.translation})</span>
           </p>
         </div>
       </section>
 
-      {/* ── WELCOME ───────────────────────────────────────── */}
-      <section className="py-20 bg-white">
+      {/* ── WELCOME ───────────────────────────────────────────── */}
+      <section className="py-24" style={{ background: "#FAF7F0" }}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-14 items-center">
-            <div>
-              <p className="text-green-600 text-sm font-semibold uppercase tracking-widest mb-3">
-                Welcome Home
-              </p>
-              <h2 className="font-display text-4xl font-bold text-gray-800 mb-6 leading-tight">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="animate-fade-up">
+              <p className="section-label mb-3">Welcome Home</p>
+              <h2 className="font-display text-4xl font-bold mb-5 leading-tight" style={{ color: "#2C1A0E" }}>
                 You Are Welcome Here
               </h2>
               <div className="gold-bar mb-7" />
-              <p className="text-gray-600 text-lg leading-relaxed mb-5">
+              <p className="text-lg leading-relaxed mb-5" style={{ color: "#7A5C3E" }}>
                 The Warsaw Ethiopian Christian Fellowship is a vibrant, Spirit-filled community
                 serving the Ethiopian and broader Christian diaspora in Warsaw, Poland.
               </p>
-              <p className="text-gray-600 leading-relaxed mb-8">
+              <p className="leading-relaxed mb-8" style={{ color: "#9A7B5C" }}>
                 We believe every person is created in the image of God and deserves a place to
                 belong. Whether you are visiting for the first time or looking for a spiritual home,
                 our doors — and our hearts — are open.
               </p>
               <Link
                 href="/about"
-                className="inline-flex items-center gap-2 text-green-700 font-semibold hover:gap-3 transition-all"
+                className="inline-flex items-center gap-2 font-semibold transition-all hover:gap-3"
+                style={{ color: "#C9A84C" }}
               >
                 Read our story <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
-            {/* Stats / highlights */}
+            {/* Stats grid */}
             <div className="grid grid-cols-2 gap-5">
               {[
-                { value: "5+", label: "Years of Ministry", icon: "🙏" },
-                { value: "BUS", label: "Small Group System", icon: "👥" },
-                { value: "Sat & Sun", label: "Weekly Services", icon: "⛪" },
-                { value: "E-Library", label: "Digital Book Access", icon: "📚" },
-              ].map((stat) => (
-                <div key={stat.label} className="bg-green-50 rounded-2xl p-6 border border-green-100">
+                { value: "5+",       label: "Years of Ministry",    icon: "🙏" },
+                { value: "BUS",      label: "Small Group System",   icon: "👥" },
+                { value: "Sat & Sun",label: "Weekly Services",      icon: "⛪" },
+                { value: "E-Library",label: "Digital Book Access",  icon: "📚" },
+              ].map((stat, i) => (
+                <div
+                  key={stat.label}
+                  className={`rounded-2xl p-6 card-hover animate-fade-up stagger-${i + 1}`}
+                  style={{ background: "#fff", border: "1px solid #E0CBB0", boxShadow: "0 2px 8px rgba(44,26,14,0.06)" }}
+                >
                   <div className="text-3xl mb-3">{stat.icon}</div>
-                  <p className="font-display font-bold text-2xl text-green-800 mb-1">{stat.value}</p>
-                  <p className="text-sm text-gray-500">{stat.label}</p>
+                  <p className="font-display font-bold text-2xl mb-1" style={{ color: "#2C1A0E" }}>{stat.value}</p>
+                  <p className="text-sm" style={{ color: "#9A7B5C" }}>{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -171,17 +193,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── PROGRAMS ──────────────────────────────────────── */}
-      <section className="py-20 bg-gray-50">
+      {/* ── PROGRAMS ──────────────────────────────────────────── */}
+      <section className="py-24" style={{ background: "#F0E6D3" }}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <p className="text-green-600 text-sm font-semibold uppercase tracking-widest mb-3">
-              How We Grow
-            </p>
-            <h2 className="font-display text-4xl font-bold text-gray-800 mb-4">Our Programs</h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
-              We offer a range of programs to help every member grow spiritually and build meaningful
-              community.
+          <div className="text-center mb-14">
+            <p className="section-label mb-3">How We Grow</p>
+            <h2 className="font-display text-4xl font-bold mb-4" style={{ color: "#2C1A0E" }}>Our Programs</h2>
+            <p className="max-w-xl mx-auto" style={{ color: "#7A5C3E" }}>
+              We offer a range of programs to help every member grow spiritually and build meaningful community.
             </p>
           </div>
 
@@ -189,35 +208,41 @@ export default async function HomePage() {
             {programs.map((prog, i) => (
               <div
                 key={prog.title}
-                className="bg-white rounded-2xl p-6 border border-green-100 card-hover text-center animate-fade-in"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                className={`rounded-2xl p-6 text-center card-hover animate-fade-up stagger-${i + 1}`}
+                style={{ background: "#fff", border: "1px solid #E0CBB0", boxShadow: "0 2px 8px rgba(44,26,14,0.05)" }}
               >
                 <div className="text-4xl mb-4">{prog.icon}</div>
-                <h3 className="font-display font-bold text-gray-800 mb-2">{prog.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{prog.desc}</p>
+                <h3 className="font-display font-bold mb-2" style={{ color: "#2C1A0E" }}>{prog.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "#9A7B5C" }}>{prog.desc}</p>
               </div>
             ))}
           </div>
 
           <div className="text-center mt-10">
-            <Link href="/programs" className="inline-flex items-center gap-2 text-green-700 font-semibold hover:gap-3 transition-all">
+            <Link
+              href="/programs"
+              className="inline-flex items-center gap-2 font-semibold transition-all hover:gap-3"
+              style={{ color: "#C9A84C" }}
+            >
               View all programs <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ── UPCOMING EVENTS ───────────────────────────────── */}
-      <section className="py-20 bg-white">
+      {/* ── UPCOMING EVENTS ───────────────────────────────────── */}
+      <section className="py-24" style={{ background: "#FAF7F0" }}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-12">
+          <div className="flex items-end justify-between mb-14">
             <div>
-              <p className="text-green-600 text-sm font-semibold uppercase tracking-widest mb-3">
-                What's Coming Up
-              </p>
-              <h2 className="font-display text-4xl font-bold text-gray-800">Upcoming Events</h2>
+              <p className="section-label mb-3">What's Coming Up</p>
+              <h2 className="font-display text-4xl font-bold" style={{ color: "#2C1A0E" }}>Upcoming Events</h2>
             </div>
-            <Link href="/events" className="text-green-700 font-medium text-sm hover:underline hidden sm:block">
+            <Link
+              href="/events"
+              className="text-sm font-medium hidden sm:block transition-colors"
+              style={{ color: "#C9A84C" }}
+            >
               View all →
             </Link>
           </div>
@@ -227,32 +252,24 @@ export default async function HomePage() {
               {events.map((event: any, i: number) => (
                 <div
                   key={event.id}
-                  className="rounded-2xl border border-green-100 overflow-hidden card-hover bg-white animate-fade-in"
-                  style={{ animationDelay: `${i * 0.15}s` }}
+                  className={`rounded-2xl overflow-hidden card-hover animate-fade-up stagger-${i + 1}`}
+                  style={{ background: "#fff", border: "1px solid #E0CBB0", boxShadow: "0 2px 8px rgba(44,26,14,0.06)" }}
                 >
-                  {/* Color band based on type */}
-                  <div className={`h-2 ${
-                    event.type === "Worship" || event.type === "Worship Night"
-                      ? "bg-amber-400"
-                      : event.type === "Bible Study"
-                      ? "bg-green-500"
-                      : event.type === "BUS Meeting"
-                      ? "bg-blue-400"
-                      : "bg-purple-400"
-                  }`} />
+                  {/* Type bar */}
+                  <div className="h-1.5" style={{ background: event.type === "Worship" || event.type === "Worship Night" ? "#C9A84C" : event.type === "Bible Study" ? "#7A9B5C" : "#7A6B9A" }} />
                   <div className="p-6">
                     <div className="flex items-center gap-2 mb-3">
-                      <Calendar className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-700">
+                      <Calendar className="w-4 h-4" style={{ color: "#C9A84C" }} />
+                      <span className="text-sm font-medium" style={{ color: "#5C3D20" }}>
                         {formatEventDate(event.startDate)}
                       </span>
-                      <span className="text-gray-300">·</span>
-                      <span className="text-sm text-gray-500">{formatEventTime(event.startDate)}</span>
+                      <span style={{ color: "#C4A882" }}>·</span>
+                      <span className="text-sm" style={{ color: "#9A7B5C" }}>{formatEventTime(event.startDate)}</span>
                     </div>
-                    <h3 className="font-display font-bold text-gray-800 text-lg mb-2">{event.title}</h3>
-                    <p className="text-sm text-gray-500 line-clamp-2 mb-4">{event.description}</p>
+                    <h3 className="font-display font-bold text-lg mb-2" style={{ color: "#2C1A0E" }}>{event.title}</h3>
+                    <p className="text-sm line-clamp-2 mb-4" style={{ color: "#7A5C3E" }}>{event.description}</p>
                     {event.location && (
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                      <div className="flex items-center gap-1.5 text-xs" style={{ color: "#C4A882" }}>
                         <MapPin className="w-3 h-3" />
                         {event.location}
                       </div>
@@ -262,7 +279,7 @@ export default async function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 text-gray-400">
+            <div className="text-center py-16" style={{ color: "#C4A882" }}>
               <Calendar className="w-12 h-12 mx-auto mb-3 opacity-30" />
               <p>No upcoming events at the moment. Check back soon!</p>
             </div>
@@ -270,29 +287,38 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── JOIN CTA ──────────────────────────────────────── */}
-      <section className="py-20 hero-gradient relative overflow-hidden">
-        <div className="absolute left-0 top-0 bottom-0 w-1.5 eth-stripe" />
-        <div className="absolute right-0 top-0 bottom-0 w-1.5 eth-stripe" />
-        <div className="max-w-3xl mx-auto px-6 text-center relative">
-          <div className="text-5xl mb-6">✝</div>
-          <h2 className="font-display text-4xl font-bold text-white mb-5">
+      {/* ── JOIN CTA ──────────────────────────────────────────── */}
+      <section className="relative overflow-hidden py-24 hero-gradient">
+        {/* Decorative glow */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at center, rgba(201,168,76,0.08) 0%, transparent 70%)" }}
+        />
+        <div className="relative max-w-3xl mx-auto px-6 text-center">
+          <div className="text-5xl mb-6" style={{ color: "rgba(201,168,76,0.6)" }}>✝</div>
+          <h2 className="font-display text-4xl font-bold mb-5" style={{ color: "#FAF7F0" }}>
             Ready to Join the Fellowship?
           </h2>
-          <p className="text-green-100 text-lg mb-10 leading-relaxed">
+          <p className="text-lg mb-10 leading-relaxed" style={{ color: "#C4A882" }}>
             Become part of a growing community of believers. Create your member account today and
             connect with your brothers and sisters in Christ.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/register"
-              className="bg-amber-400 text-green-900 font-bold px-8 py-4 rounded-xl hover:bg-amber-300 transition-all shadow-lg hover:-translate-y-0.5"
+              className="font-bold px-8 py-4 rounded-xl transition-all duration-200 hover:-translate-y-0.5"
+              style={{ background: "#C9A84C", color: "#1C0F07", boxShadow: "0 4px 20px rgba(201,168,76,0.35)" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#DDB95A")}
+              onMouseLeave={e => (e.currentTarget.style.background = "#C9A84C")}
             >
               Create an Account
             </Link>
             <Link
               href="/visit"
-              className="border border-white/30 text-white font-medium px-8 py-4 rounded-xl hover:bg-white/10 transition-all"
+              className="font-medium px-8 py-4 rounded-xl transition-all duration-200"
+              style={{ border: "1px solid rgba(201,168,76,0.30)", color: "#EDD090" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(201,168,76,0.08)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
             >
               Visit Us First
             </Link>
