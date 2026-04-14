@@ -265,24 +265,11 @@ export default async function DashboardPage() {
             <h2 className="font-display font-bold mb-4" style={{ color: "#2C1A0E" }}>Quick Actions</h2>
             <div className="space-y-1">
               {[
-                { href: "/dashboard/library",    icon: BookOpen,     label: "Browse Library"   },
-                { href: "/dashboard/attendance", icon: ClipboardList, label: "My Attendance"    },
-                { href: "/events",               icon: Calendar,      label: "All Events"        },
+                { href: "/dashboard/library",    icon: BookOpen,      label: "Browse Library" },
+                { href: "/dashboard/attendance", icon: ClipboardList, label: "My Attendance"  },
+                { href: "/events",               icon: Calendar,      label: "All Events"     },
               ].map(({ href, icon: Icon, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className="flex items-center gap-3 p-3 rounded-xl transition-all group"
-                  style={{ color: "#7A5C3E" }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = "rgba(201,168,76,0.07)";
-                    (e.currentTarget as HTMLElement).style.color = "#C9A84C";
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.background = "transparent";
-                    (e.currentTarget as HTMLElement).style.color = "#7A5C3E";
-                  }}
-                >
+                <Link key={href} href={href} className="quick-action flex items-center gap-3 p-3">
                   <Icon className="w-4 h-4 shrink-0" />
                   <span className="text-sm font-medium">{label}</span>
                 </Link>
