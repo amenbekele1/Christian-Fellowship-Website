@@ -6,51 +6,55 @@
 
 @layer base {
   :root {
-    --background: 40 30% 98%;
-    --foreground: 150 20% 10%;
+    /* ── Warm cream + brown + gold palette ──────────────────── */
+    --background:          38 45% 97%;    /* #FAF7F0 warm cream */
+    --foreground:          24 50% 16%;    /* #3D2410 dark brown */
 
-    --card: 0 0% 100%;
-    --card-foreground: 150 20% 10%;
+    --card:                0 0% 100%;     /* white cards */
+    --card-foreground:     24 50% 16%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 150 20% 10%;
+    --popover:             0 0% 100%;
+    --popover-foreground:  24 50% 16%;
 
-    /* Deep forest green — Ethiopian flag green */
-    --primary: 150 73% 23%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary = dark brown */
+    --primary:             24 50% 14%;    /* #2C1A0E */
+    --primary-foreground:  43 55% 54%;    /* gold */
 
-    --secondary: 40 30% 94%;
-    --secondary-foreground: 150 20% 15%;
+    /* Secondary = warm cream */
+    --secondary:           38 40% 93%;    /* #F0E6D3 */
+    --secondary-foreground: 24 45% 25%;
 
-    --muted: 40 20% 92%;
-    --muted-foreground: 150 10% 45%;
+    /* Muted */
+    --muted:               35 30% 88%;    /* #E0CBB0-ish */
+    --muted-foreground:    27 25% 45%;    /* #9A7B5C */
 
-    /* Ethiopian gold */
-    --accent: 43 96% 56%;
-    --accent-foreground: 150 20% 10%;
+    /* Accent = logo gold */
+    --accent:              43 55% 54%;    /* #C9A84C */
+    --accent-foreground:   24 55% 14%;    /* dark brown */
 
-    --destructive: 0 72% 51%;
+    --destructive:         0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 150 15% 88%;
-    --input: 150 15% 88%;
-    --ring: 150 73% 23%;
+    --border:              33 38% 80%;    /* #E0CBB0 */
+    --input:               33 38% 80%;
+    --ring:                43 55% 54%;    /* gold focus ring */
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --font-display: 'Playfair Display', Georgia, serif;
-    --font-sans: 'Lato', system-ui, sans-serif;
+    --font-display:   'Playfair Display', Georgia, serif;
+    --font-sans:      'Lato', system-ui, sans-serif;
     --font-scripture: 'Playfair Display', Georgia, serif;
   }
 
-  * {
-    @apply border-border;
-  }
+  * { @apply border-border; }
+
+  html { scroll-behavior: smooth; }
 
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -59,104 +63,102 @@
 }
 
 @layer components {
-  /* Ethiopian cross decorative element */
-  .eth-cross::before {
-    content: '✝';
-    font-size: 0.9em;
-    margin-right: 0.4em;
-    opacity: 0.7;
-  }
 
-  /* Scripture quote styling */
+  /* ── Scripture ────────────────────────────────────────────── */
   .scripture {
     font-family: var(--font-scripture);
     font-style: italic;
   }
 
-  /* Gold accent bar */
+  /* ── Gold accent bar ──────────────────────────────────────── */
   .gold-bar {
-    @apply w-16 h-1 bg-amber-400 rounded-full;
+    @apply w-12 h-0.5 rounded-full;
+    background: #C9A84C;
   }
 
-  /* Ethiopian flag stripe */
-  .eth-stripe {
-    background: linear-gradient(180deg, #078930 33.33%, #FCDD09 33.33% 66.66%, #DA121A 66.66%);
-  }
-
-  /* Hero gradient */
+  /* ── Hero gradient (dark brown) ───────────────────────────── */
   .hero-gradient {
-    background: linear-gradient(135deg, #0a3d1f 0%, #14532d 40%, #166534 70%, #15803d 100%);
+    background: linear-gradient(135deg, #1C0F07 0%, #2C1A0E 40%, #3D2410 70%, #4A2D14 100%);
   }
 
-  /* Card hover */
+  /* ── Card with hover lift ─────────────────────────────────── */
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5;
+    @apply transition-all duration-300;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(44, 26, 14, 0.12), 0 4px 8px rgba(44, 26, 14, 0.07);
   }
 
-  /* Nav link */
+  /* ── Public nav link ──────────────────────────────────────── */
   .nav-link {
-    @apply text-sm font-medium text-gray-600 hover:text-green-700 transition-colors duration-200 relative;
+    @apply text-sm font-medium text-brown-500 transition-colors duration-200 relative;
   }
-
-  .nav-link.active {
-    @apply text-green-700;
-  }
+  .nav-link:hover { color: #C9A84C; }
+  .nav-link.active { color: #C9A84C; }
 
   .nav-link::after {
     content: '';
-    @apply absolute -bottom-1 left-0 w-0 h-0.5 bg-green-600 transition-all duration-200;
+    @apply absolute -bottom-1 left-0 w-0 h-px transition-all duration-200;
+    background: #C9A84C;
   }
-
   .nav-link:hover::after,
-  .nav-link.active::after {
-    @apply w-full;
-  }
+  .nav-link.active::after { @apply w-full; }
 
-  /* Attendance badge */
+  /* ── Attendance badges ────────────────────────────────────── */
   .badge-present {
-    @apply bg-green-100 text-green-700 border border-green-200 text-xs px-2 py-0.5 rounded-full font-medium;
+    @apply bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-2 py-0.5 rounded-full font-medium;
   }
-
   .badge-absent {
-    @apply bg-red-100 text-red-700 border border-red-200 text-xs px-2 py-0.5 rounded-full font-medium;
+    @apply bg-red-50 text-red-700 border border-red-200 text-xs px-2 py-0.5 rounded-full font-medium;
   }
-
   .badge-excused {
-    @apply bg-amber-100 text-amber-700 border border-amber-200 text-xs px-2 py-0.5 rounded-full font-medium;
+    @apply bg-amber-50 text-amber-700 border border-amber-200 text-xs px-2 py-0.5 rounded-full font-medium;
   }
 
-  /* Dashboard sidebar */
+  /* ── Dashboard sidebar link ───────────────────────────────── */
   .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-green-50 hover:text-green-700 transition-all duration-150;
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150;
+    color: #C4A882;
+  }
+  .sidebar-link:hover {
+    background: rgba(201, 168, 76, 0.10);
+    color: #EDD090;
+  }
+  .sidebar-link.active {
+    background: rgba(201, 168, 76, 0.15);
+    color: #C9A84C;
   }
 
-  .sidebar-link.active {
-    @apply bg-green-50 text-green-700;
+  /* ── Section label ────────────────────────────────────────── */
+  .section-label {
+    @apply text-xs font-bold uppercase tracking-widest;
+    color: #C9A84C;
+  }
+
+  /* ── Gold divider ─────────────────────────────────────────── */
+  .gold-divider {
+    @apply flex items-center gap-3 my-6;
+  }
+  .gold-divider::before,
+  .gold-divider::after {
+    content: '';
+    @apply flex-1 h-px;
+    background: rgba(201, 168, 76, 0.25);
   }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
 
-  /* Smooth scroll */
-  html {
-    scroll-behavior: smooth;
-  }
+  /* Stagger delays for lists */
+  .stagger-1  { animation-delay: 0.08s; }
+  .stagger-2  { animation-delay: 0.16s; }
+  .stagger-3  { animation-delay: 0.24s; }
+  .stagger-4  { animation-delay: 0.32s; }
+  .stagger-5  { animation-delay: 0.40s; }
 
-  /* Fade in animation */
-  .animate-fade-in {
-    animation: fadeIn 0.6s ease-out forwards;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .stagger-1 { animation-delay: 0.1s; }
-  .stagger-2 { animation-delay: 0.2s; }
-  .stagger-3 { animation-delay: 0.3s; }
-  .stagger-4 { animation-delay: 0.4s; }
+  /* Warm bg utilities */
+  .bg-cream     { background: #FAF7F0; }
+  .bg-cream-deep { background: #F0E6D3; }
 }

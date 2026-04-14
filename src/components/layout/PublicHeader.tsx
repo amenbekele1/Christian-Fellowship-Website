@@ -3,86 +3,122 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
-import { Menu, X, Cross, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: "/about", label: "About" },
+  { href: "/about",    label: "About"    },
   { href: "/programs", label: "Programs" },
-  { href: "/events", label: "Events" },
-  { href: "/visit", label: "Visit Us" },
+  { href: "/events",   label: "Events"   },
+  { href: "/visit",    label: "Visit Us" },
 ];
 
 export function PublicHeader() {
-  const pathname = usePathname();
+  const pathname    = usePathname();
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled,   setScrolled]   = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-green-100 shadow-sm">
-      {/* Ethiopian flag stripe — ultra-thin */}
-      <div className="h-0.5 eth-stripe" />
+    <header
+      className={cn(
+        "sticky top-0 z-50 transition-all duration-300",
+        scrolled
+          ? "bg-brown-900/97 backdrop-blur-md shadow-lg shadow-brown-900/20"
+          : "bg-brown-900"
+      )}
+      style={{ backgroundColor: scrolled ? "rgba(28,15,7,0.97)" : "#1C0F07" }}
+    >
+      {/* Gold accent line */}
+      <div className="h-px w-full" style={{ background: "linear-gradient(90deg, transparent, #C9A84C 30%, #C9A84C 70%, transparent)" }} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-full bg-green-700 flex items-center justify-center text-amber-300 font-bold text-sm shadow-md group-hover:shadow-green-200 transition-shadow">
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shadow-md transition-transform duration-200 group-hover:scale-105"
+              style={{ background: "linear-gradient(135deg, #C9A84C, #EDD090)", color: "#1C0F07" }}
+            >
               ✝
             </div>
             <div className="hidden sm:block">
-              <p className="font-display font-bold text-green-800 text-sm leading-tight">
+              <p className="font-display font-bold text-sm leading-tight" style={{ color: "#FAF7F0" }}>
                 Warsaw Ethiopian
               </p>
-              <p className="text-xs text-green-600 leading-tight">Christian Fellowship</p>
+              <p className="text-xs leading-tight" style={{ color: "#C9A84C" }}>
+                Christian Fellowship
+              </p>
             </div>
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "nav-link",
-                  pathname === link.href && "active"
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150",
+                  pathname === link.href
+                    ? "text-gold-400"
+                    : "text-brown-300 hover:text-gold-400 hover:bg-white/5"
                 )}
+                style={pathname === link.href ? { color: "#DDB95A" } : {}}
               >
                 {link.label}
               </Link>
             ))}
           </nav>
 
-          {/* Auth buttons */}
+          {/* Auth */}
           <div className="hidden md:flex items-center gap-3">
             {session ? (
-              <div className="flex items-center gap-3">
+              <>
                 <Link
                   href="/dashboard"
-                  className="text-sm font-medium text-green-700 hover:text-green-800 transition-colors"
+                  className="text-sm font-medium transition-colors"
+                  style={{ color: "#C4A882" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#C9A84C")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#C4A882")}
                 >
                   Dashboard
                 </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  className="text-sm transition-colors"
+                  style={{ color: "#9A7B5C" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#C4A882")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#9A7B5C")}
                 >
                   Sign out
                 </button>
-              </div>
+              </>
             ) : (
               <>
                 <Link
                   href="/login"
-                  className="text-sm font-medium text-gray-600 hover:text-green-700 transition-colors"
+                  className="text-sm font-medium transition-colors"
+                  style={{ color: "#C4A882" }}
+                  onMouseEnter={e => (e.currentTarget.style.color = "#C9A84C")}
+                  onMouseLeave={e => (e.currentTarget.style.color = "#C4A882")}
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/register"
-                  className="bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-green-800 transition-colors shadow-sm"
+                  className="text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-150 hover:shadow-gold"
+                  style={{ background: "#C9A84C", color: "#1C0F07" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "#DDB95A")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "#C9A84C")}
                 >
                   Join Fellowship
                 </Link>
@@ -90,10 +126,12 @@ export function PublicHeader() {
             )}
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile toggle */}
           <button
-            className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-green-50"
+            className="md:hidden p-2 rounded-lg transition-colors"
+            style={{ color: "#C4A882" }}
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle menu"
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -102,44 +140,38 @@ export function PublicHeader() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-green-100 bg-white px-4 py-4 space-y-1">
+        <div className="md:hidden px-4 pb-4 pt-2 space-y-1 border-t" style={{ borderColor: "rgba(201,168,76,0.15)", background: "#1C0F07" }}>
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={cn(
-                "block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+              className="block px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+              style={
                 pathname === link.href
-                  ? "bg-green-50 text-green-700"
-                  : "text-gray-600 hover:bg-green-50 hover:text-green-700"
-              )}
+                  ? { background: "rgba(201,168,76,0.12)", color: "#C9A84C" }
+                  : { color: "#C4A882" }
+              }
               onClick={() => setMobileOpen(false)}
             >
               {link.label}
             </Link>
           ))}
-          <div className="pt-3 border-t border-green-100 flex flex-col gap-2">
+          <div className="pt-3 border-t space-y-1" style={{ borderColor: "rgba(201,168,76,0.15)" }}>
             {session ? (
               <>
-                <Link href="/dashboard" className="block px-3 py-2.5 rounded-lg text-sm font-medium text-green-700 bg-green-50">
+                <Link href="/dashboard" className="block px-4 py-2.5 rounded-xl text-sm font-medium" style={{ color: "#C9A84C", background: "rgba(201,168,76,0.10)" }} onClick={() => setMobileOpen(false)}>
                   Dashboard
                 </Link>
-                <button
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="block text-left px-3 py-2.5 rounded-lg text-sm text-gray-500"
-                >
+                <button onClick={() => signOut({ callbackUrl: "/" })} className="block w-full text-left px-4 py-2.5 rounded-xl text-sm" style={{ color: "#9A7B5C" }}>
                   Sign out
                 </button>
               </>
             ) : (
               <>
-                <Link href="/login" className="block px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600">
+                <Link href="/login" className="block px-4 py-2.5 rounded-xl text-sm font-medium" style={{ color: "#C4A882" }} onClick={() => setMobileOpen(false)}>
                   Sign in
                 </Link>
-                <Link
-                  href="/register"
-                  className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white bg-green-700 text-center"
-                >
+                <Link href="/register" className="block px-4 py-2.5 rounded-xl text-sm font-semibold text-center" style={{ background: "#C9A84C", color: "#1C0F07" }} onClick={() => setMobileOpen(false)}>
                   Join Fellowship
                 </Link>
               </>
