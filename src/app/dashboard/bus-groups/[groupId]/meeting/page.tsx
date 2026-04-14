@@ -1,26 +1,51 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Copy, Check, ExternalLink, Video, Users, Info } from "lucide-react";
+import { Copy, Check, ExternalLink, Video, Users, Info, AlertCircle, Loader2 } from "lucide-react";
+
+interface TokenData {
+  token: string;
+  roomName: string;
+  appId: string;
+}
 
 export default function MeetingPage({ params }: { params: { groupId: string } }) {
-  const [groupName, setGroupName] = useState<string>("");
-  const [joined, setJoined] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [groupName, setGroupName]   = useState<string>("");
+  const [joined, setJoined]         = useState(false);
+  const [copied, setCopied]         = useState(false);
+  const [tokenData, setTokenData]   = useState<TokenData | null>(null);
+  const [tokenError, setTokenError] = useState<string | null>(null);
+  const [loadingToken, setLoadingToken] = useState(true);
 
-  // Deterministic room name per group — safe for Jitsi (alphanumeric + hyphens only)
-  const roomName = `wecf-bus-${params.groupId.replace(/[^a-z0-9]/gi, "")}`;
-  const meetingUrl = `https://meet.jit.si/${roomName}`;
+  // Guest invite link always uses plain meet.jit.si (no token needed for guests)
+  const roomName   = `wecf-bus-${params.groupId.replace(/[^a-z0-9]/gi, "")}`;
+  const guestUrl   = `https://meet.jit.si/${roomName}`;
+
+  // JaaS authenticated URL — only used inside the iframe when token is available
+  const meetingUrl = tokenData
+    ? `https://8x8.vc/${tokenData.appId}/${tokenData.roomName}?jwt=${tokenData.token}`
+    : guestUrl;
 
   useEffect(() => {
+    // Fetch group name
     fetch(`/api/bus-groups/${params.groupId}`)
       .then(r => r.json())
       .then(g => setGroupName(g.name ?? ""))
       .catch(() => {});
+
+    // Fetch JaaS token
+    fetch(`/api/bus-groups/${params.groupId}/meeting-token`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) setTokenError(data.error);
+        else setTokenData(data);
+      })
+      .catch(() => setTokenError("Could not load meeting credentials"))
+      .finally(() => setLoadingToken(false));
   }, [params.groupId]);
 
   const copyLink = async () => {
-    await navigator.clipboard.writeText(meetingUrl);
+    await navigator.clipboard.writeText(guestUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
@@ -41,12 +66,30 @@ export default function MeetingPage({ params }: { params: { groupId: string } })
           </div>
 
           <div className="p-8 space-y-6">
+            {/* Auth status */}
+            {loadingToken ? (
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-400 py-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Preparing your meeting credentials…
+              </div>
+            ) : tokenError ? (
+              <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl p-3 text-sm">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>Meeting will open without automatic sign-in. <span className="font-medium">JaaS not yet configured.</span></span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-xl p-3 text-sm">
+                <Check className="w-4 h-4 shrink-0" />
+                <span>You&apos;ll join as <span className="font-semibold">yourself</span> — no separate Jitsi login needed.</span>
+              </div>
+            )}
+
             {/* Info cards */}
             <div className="grid sm:grid-cols-3 gap-3 text-center">
               {[
-                { icon: Video, title: "HD Video", desc: "Camera & screen sharing" },
-                { icon: Users, title: "Open to Guests", desc: "No account required" },
-                { icon: Info, title: "Persistent Room", desc: "Same link every time" },
+                { icon: Video,   title: "HD Video",       desc: "Camera & screen sharing" },
+                { icon: Users,   title: "Open to Guests", desc: "No account required" },
+                { icon: Info,    title: "Persistent Room", desc: "Same link every time" },
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="bg-green-50 rounded-xl p-4">
                   <Icon className="w-5 h-5 text-green-600 mx-auto mb-2" />
@@ -61,7 +104,7 @@ export default function MeetingPage({ params }: { params: { groupId: string } })
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Guest Invite Link</p>
               <div className="flex items-center gap-2">
                 <p className="text-xs text-gray-600 truncate flex-1 font-mono bg-white border border-gray-200 rounded-lg px-3 py-2">
-                  {meetingUrl}
+                  {guestUrl}
                 </p>
                 <button onClick={copyLink}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
@@ -75,11 +118,15 @@ export default function MeetingPage({ params }: { params: { groupId: string } })
 
             {/* Action buttons */}
             <div className="flex gap-3">
-              <button onClick={() => setJoined(true)}
-                className="flex-1 flex items-center justify-center gap-2 bg-green-700 hover:bg-green-800 text-white py-3 rounded-xl font-medium transition-colors">
-                <Video className="w-5 h-5" /> Join Meeting
+              <button
+                onClick={() => setJoined(true)}
+                disabled={loadingToken}
+                className="flex-1 flex items-center justify-center gap-2 bg-green-700 hover:bg-green-800 disabled:opacity-50 text-white py-3 rounded-xl font-medium transition-colors">
+                {loadingToken
+                  ? <><Loader2 className="w-5 h-5 animate-spin" /> Preparing…</>
+                  : <><Video className="w-5 h-5" /> Join Meeting</>}
               </button>
-              <a href={meetingUrl} target="_blank" rel="noreferrer"
+              <a href={guestUrl} target="_blank" rel="noreferrer"
                 className="flex items-center justify-center gap-2 border border-gray-200 text-gray-600 hover:bg-gray-50 px-4 py-3 rounded-xl transition-colors text-sm">
                 <ExternalLink className="w-4 h-4" /> Open in New Tab
               </a>
