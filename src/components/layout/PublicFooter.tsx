@@ -47,13 +47,7 @@ export function PublicFooter() {
                 { href: "/register", label: "Join Fellowship" },
               ].map((l) => (
                 <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    className="text-sm transition-colors duration-150 hover:text-gold-500"
-                    style={{ color: "#9A7B5C" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = "#C9A84C")}
-                    onMouseLeave={e => (e.currentTarget.style.color = "#9A7B5C")}
-                  >
+                  <Link href={l.href} className="link-gold-hover text-sm">
                     {l.label}
                   </Link>
                 </li>
@@ -77,15 +71,7 @@ export function PublicFooter() {
               </li>
               <li className="flex gap-2.5 text-sm">
                 <Mail className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#C9A84C" }} />
-                <a
-                  href="mailto:info@wecf.org"
-                  className="transition-colors"
-                  style={{ color: "#9A7B5C" }}
-                  onMouseEnter={e => (e.currentTarget.style.color = "#C9A84C")}
-                  onMouseLeave={e => (e.currentTarget.style.color = "#9A7B5C")}
-                >
-                  info@wecf.org
-                </a>
+                <a href="mailto:info@wecf.org" className="link-gold-hover">info@wecf.org</a>
               </li>
             </ul>
           </div>

@@ -93,29 +93,10 @@ export default async function HomePage() {
             </p>
 
             <div className="flex flex-wrap gap-4 animate-fade-up stagger-3">
-              <Link
-                href="/register"
-                className="font-semibold px-7 py-3.5 rounded-xl transition-all duration-200 hover:-translate-y-0.5"
-                style={{
-                  background: "#C9A84C",
-                  color: "#1C0F07",
-                  boxShadow: "0 4px 20px rgba(201,168,76,0.35)",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = "#DDB95A")}
-                onMouseLeave={e => (e.currentTarget.style.background = "#C9A84C")}
-              >
+              <Link href="/register" className="btn-gold font-semibold px-7 py-3.5 rounded-xl">
                 Join the Fellowship
               </Link>
-              <Link
-                href="/about"
-                className="font-medium px-7 py-3.5 rounded-xl transition-all duration-200"
-                style={{
-                  border: "1px solid rgba(201,168,76,0.30)",
-                  color: "#EDD090",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = "rgba(201,168,76,0.08)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-              >
+              <Link href="/about" className="btn-outline-gold font-medium px-7 py-3.5 rounded-xl">
                 Learn More →
               </Link>
             </div>
@@ -161,11 +142,7 @@ export default async function HomePage() {
                 belong. Whether you are visiting for the first time or looking for a spiritual home,
                 our doors — and our hearts — are open.
               </p>
-              <Link
-                href="/about"
-                className="inline-flex items-center gap-2 font-semibold transition-all hover:gap-3"
-                style={{ color: "#C9A84C" }}
-              >
+              <Link href="/about" className="inline-flex items-center gap-2 font-semibold transition-all hover:gap-3" style={{ color: "#C9A84C" }}>
                 Read our story <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -304,22 +281,10 @@ export default async function HomePage() {
             connect with your brothers and sisters in Christ.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/register"
-              className="font-bold px-8 py-4 rounded-xl transition-all duration-200 hover:-translate-y-0.5"
-              style={{ background: "#C9A84C", color: "#1C0F07", boxShadow: "0 4px 20px rgba(201,168,76,0.35)" }}
-              onMouseEnter={e => (e.currentTarget.style.background = "#DDB95A")}
-              onMouseLeave={e => (e.currentTarget.style.background = "#C9A84C")}
-            >
+            <Link href="/register" className="btn-gold font-bold px-8 py-4 rounded-xl">
               Create an Account
             </Link>
-            <Link
-              href="/visit"
-              className="font-medium px-8 py-4 rounded-xl transition-all duration-200"
-              style={{ border: "1px solid rgba(201,168,76,0.30)", color: "#EDD090" }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(201,168,76,0.08)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-            >
+            <Link href="/visit" className="btn-outline-gold font-medium px-8 py-4 rounded-xl">
               Visit Us First
             </Link>
           </div>

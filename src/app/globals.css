@@ -146,6 +146,47 @@
     @apply flex-1 h-px;
     background: rgba(201, 168, 76, 0.25);
   }
+
+  /* ── Hover helpers for server components ─────────────────── */
+  /* Gold button (solid) */
+  .btn-gold {
+    background: #C9A84C;
+    color: #1C0F07;
+    box-shadow: 0 4px 20px rgba(201,168,76,0.35);
+    transition: background 0.15s ease, transform 0.2s ease;
+  }
+  .btn-gold:hover {
+    background: #DDB95A;
+    transform: translateY(-1px);
+  }
+
+  /* Ghost button with gold border */
+  .btn-outline-gold {
+    border: 1px solid rgba(201,168,76,0.30);
+    color: #EDD090;
+    transition: background 0.15s ease;
+  }
+  .btn-outline-gold:hover {
+    background: rgba(201,168,76,0.08);
+  }
+
+  /* Muted text that turns gold on hover */
+  .link-gold-hover {
+    color: #9A7B5C;
+    transition: color 0.15s ease;
+  }
+  .link-gold-hover:hover { color: #C9A84C; }
+
+  /* Dashboard quick-action row */
+  .quick-action {
+    color: #7A5C3E;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .quick-action:hover {
+    background: rgba(201,168,76,0.07);
+    color: #C9A84C;
+    border-radius: 0.75rem;
+  }
 }
 
 @layer utilities {
