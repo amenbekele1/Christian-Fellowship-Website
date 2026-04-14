@@ -6,7 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard, Users, BookOpen, Calendar, Bell,
   ClipboardList, LogOut, Shield, UserCog, BookMarked,
-  ChevronRight, Church, UserCircle, Link2
+  ChevronRight, Church, UserCircle, Link2, MessageSquare
 } from "lucide-react";
 import { cn, getRoleLabel } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
@@ -18,7 +18,9 @@ const memberLinks = [
   { href: "/dashboard/bus-groups", label: "My BUS Group", icon: Users },
 ];
 
-const leaderLinks: { href: string; label: string; icon: any }[] = [];
+const leaderLinks: { href: string; label: string; icon: any }[] = [
+  { href: "/dashboard/bus-groups", label: "Group Hub", icon: MessageSquare },
+];
 
 const adminLinks = [
   { href: "/dashboard/attendance", label: "Record Attendance", icon: ClipboardList },
