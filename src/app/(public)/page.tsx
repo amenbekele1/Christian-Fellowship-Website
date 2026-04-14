@@ -52,14 +52,14 @@ export default async function HomePage() {
       <section className="relative overflow-hidden min-h-[92vh] flex items-center hero-gradient">
         {/* Decorative gold cross watermark */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-          <div
-            className="absolute top-10 right-14 text-[220px] font-serif leading-none"
-            style={{ color: "rgba(201,168,76,0.04)" }}
-          >✝</div>
-          <div
-            className="absolute bottom-16 left-8 text-[140px] font-serif leading-none"
-            style={{ color: "rgba(201,168,76,0.03)" }}
-          >✝</div>
+          <svg className="absolute top-10 right-14 w-56 h-56" viewBox="0 0 100 100" fill="rgba(201,168,76,0.04)" aria-hidden="true">
+            <rect x="42" y="5" width="16" height="90" rx="3"/>
+            <rect x="10" y="30" width="80" height="16" rx="3"/>
+          </svg>
+          <svg className="absolute bottom-16 left-8 w-36 h-36" viewBox="0 0 100 100" fill="rgba(201,168,76,0.03)" aria-hidden="true">
+            <rect x="42" y="5" width="16" height="90" rx="3"/>
+            <rect x="10" y="30" width="80" height="16" rx="3"/>
+          </svg>
           {/* Warm radial glow */}
           <div
             className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl"
@@ -74,7 +74,7 @@ export default async function HomePage() {
               className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-8 animate-fade-up"
               style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.25)" }}
             >
-              <span style={{ color: "#C9A84C" }}>✝</span>
+              <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 100 100" fill="#C9A84C" aria-hidden="true"><rect x="42" y="5" width="16" height="90" rx="3"/><rect x="10" y="30" width="80" height="16" rx="3"/></svg>
               <span className="text-sm font-medium tracking-wide" style={{ color: "#EDD090" }}>
                 Hebrews 10:24-25
               </span>
@@ -272,7 +272,7 @@ export default async function HomePage() {
           style={{ background: "radial-gradient(ellipse at center, rgba(201,168,76,0.08) 0%, transparent 70%)" }}
         />
         <div className="relative max-w-3xl mx-auto px-6 text-center">
-          <div className="text-5xl mb-6" style={{ color: "rgba(201,168,76,0.6)" }}>✝</div>
+          <svg className="w-12 h-12 mx-auto mb-6" viewBox="0 0 100 100" fill="rgba(201,168,76,0.6)" aria-hidden="true"><rect x="42" y="5" width="16" height="90" rx="3"/><rect x="10" y="30" width="80" height="16" rx="3"/></svg>
           <h2 className="font-display text-4xl font-bold mb-5" style={{ color: "#FAF7F0" }}>
             Ready to Join the Fellowship?
           </h2>

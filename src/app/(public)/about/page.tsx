@@ -71,7 +71,7 @@ export default function AboutContent() {
       {/* Header */}
       <section className="hero-gradient py-20 relative overflow-hidden">
         <div className="absolute left-0 top-0 bottom-0 w-1.5 eth-stripe" />
-        <div className="absolute right-20 top-10 text-gold-600 opacity-10 text-[150px] font-serif">✝</div>
+        <svg className="absolute right-20 top-10 w-36 h-36 opacity-10 text-gold-600" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true"><rect x="42" y="5" width="16" height="90" rx="3"/><rect x="10" y="30" width="80" height="16" rx="3"/></svg>
         <div className="max-w-4xl mx-auto px-6 text-center relative">
           <p className="text-amber-300 text-sm font-semibold uppercase tracking-widest mb-4">Who We Are</p>
           <h1 className="font-display text-5xl font-bold text-white mb-5">About Our Fellowship</h1>
@@ -111,7 +111,7 @@ export default function AboutContent() {
 
             {/* Verse block */}
             <div className="bg-brown-900 rounded-3xl p-10 text-center relative overflow-hidden">
-              <div className="absolute inset-0 opacity-5 text-[200px] font-serif text-white flex items-center justify-center select-none">✝</div>
+              <svg className="absolute inset-0 w-full h-full opacity-5 text-white" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true"><rect x="42" y="5" width="16" height="90" rx="3"/><rect x="10" y="30" width="80" height="16" rx="3"/></svg>
               <p className="text-amber-300 text-xs uppercase tracking-widest mb-6 font-bold">Our Foundation</p>
               <blockquote className="scripture text-white text-2xl leading-relaxed mb-6">
                 "And let us consider how we may spur one another on toward love and good deeds, not
