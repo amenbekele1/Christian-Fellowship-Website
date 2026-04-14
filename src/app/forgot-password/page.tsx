@@ -41,9 +41,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brown-800 text-amber-300 font-bold text-lg mb-4">
-            ✝
-          </div>
+          <img src="/logo.svg" alt="WECF" className="w-12 h-12 rounded-full mx-auto mb-4 shadow-warm" />
           <h1 className="font-display text-2xl font-bold text-brown-700">Warsaw Ethiopian</h1>
           <p className="text-gold-600 text-sm">Christian Fellowship</p>
         </div>

@@ -5,7 +5,7 @@ export default function NotFound() {
     <div className="min-h-screen bg-brown-50 flex items-center justify-center px-4">
       <div className="text-center max-w-md">
         <div className="text-7xl font-display font-bold text-brown-200 mb-2">404</div>
-        <div className="text-5xl mb-6">✝</div>
+        <svg className="w-12 h-12 mx-auto mb-6 text-brown-300" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true"><rect x="42" y="5" width="16" height="90" rx="3"/><rect x="10" y="30" width="80" height="16" rx="3"/></svg>
         <h1 className="font-display text-2xl font-bold text-gray-800 mb-3">
           Page Not Found
         </h1>
