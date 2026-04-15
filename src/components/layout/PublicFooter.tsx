@@ -13,7 +13,7 @@ export function PublicFooter() {
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-5">
-              <img src="/logo.png" alt="WECF" className="w-11 h-11 rounded-full shadow-md" />
+              <img src="/logo.svg" alt="WECF" className="h-14 w-auto shadow-md" />
               <div>
                 <p className="font-display font-bold text-lg leading-tight" style={{ color: "#FAF7F0" }}>
                   Warsaw Ethiopian Christian Fellowship
