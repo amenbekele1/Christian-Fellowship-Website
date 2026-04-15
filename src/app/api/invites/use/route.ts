@@ -18,8 +18,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid token" }, { status: 400 });
   }
 
+  // A guardian can manually disable a token by marking it used
   if (inviteToken.used) {
-    return NextResponse.json({ error: "Token already used" }, { status: 400 });
+    return NextResponse.json({ error: "This invite link has been disabled" }, { status: 400 });
   }
 
   const now = new Date();
@@ -27,11 +28,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Token expired" }, { status: 400 });
   }
 
-  // Mark token as used
+  // Record latest use time but keep token active for multiple registrations
   await prisma.inviteToken.update({
     where: { token },
-    data: { used: true, usedAt: now },
+    data: { usedAt: now },
   });
 
-  return NextResponse.json({ message: "Token used" });
+  return NextResponse.json({ message: "Token valid" });
 }
