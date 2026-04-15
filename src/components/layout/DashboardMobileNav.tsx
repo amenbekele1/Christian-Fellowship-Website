@@ -12,7 +12,7 @@ export function DashboardMobileNav() {
       {/* Mobile top bar — dark brown, no white space */}
       <div className="lg:hidden flex items-center justify-between px-4 py-3" style={{ background: "#1C0F07", borderBottom: "1px solid rgba(201,168,76,0.12)" }}>
         <div className="flex items-center gap-2">
-          <img src="/logo.svg" alt="WECF" className="w-7 h-7" />
+          <img src="/logo.png" alt="WECF" className="w-7 h-7" />
           <span className="font-display font-bold text-sm" style={{ color: "#FAF7F0" }}>WECF Member Portal</span>
         </div>
         <button
