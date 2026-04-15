@@ -53,7 +53,7 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
       {/* Logo */}
       <div className="px-5 py-5" style={{ borderBottom: "1px solid rgba(201,168,76,0.12)" }}>
         <Link href="/" className="flex items-center gap-3 group">
-          <img src="/logo.svg" alt="WECF" className="w-8 h-8 transition-transform duration-200 group-hover:scale-105" />
+          <img src="/logo.png" alt="WECF" className="w-8 h-8 transition-transform duration-200 group-hover:scale-105" />
           <div>
             <p className="font-display font-bold text-xs leading-tight" style={{ color: "#FAF7F0" }}>
               Warsaw Ethiopian

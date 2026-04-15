@@ -43,7 +43,7 @@ function LoginForm() {
     <div className="min-h-screen bg-brown-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img src="/logo.svg" alt="WECF" className="w-20 h-20 mx-auto mb-4" />
+          <img src="/logo.png" alt="WECF" className="w-20 h-20 mx-auto mb-4" />
           <h1 className="font-display text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
           <p className="text-gray-500 text-sm">Sign in to your member account</p>
         </div>
