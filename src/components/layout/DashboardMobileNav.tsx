@@ -9,15 +9,17 @@ export function DashboardMobileNav() {
 
   return (
     <>
-      {/* Mobile top bar */}
-      <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-brown-200">
+      {/* Mobile top bar — dark brown, no white space */}
+      <div className="lg:hidden flex items-center justify-between px-4 py-3" style={{ background: "#1C0F07", borderBottom: "1px solid rgba(201,168,76,0.12)" }}>
         <div className="flex items-center gap-2">
-          <img src="/logo.svg" alt="WECF" className="w-7 h-7 rounded-full" />
-          <span className="font-display font-bold text-brown-700 text-sm">WECF Member Portal</span>
+          <img src="/logo.svg" alt="WECF" className="w-7 h-7" />
+          <span className="font-display font-bold text-sm" style={{ color: "#FAF7F0" }}>WECF Member Portal</span>
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="p-2 rounded-lg text-gray-600 hover:bg-brown-50"
+          className="p-2 rounded-lg"
+          style={{ color: "#C9A84C" }}
+          aria-label="Open menu"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -26,14 +28,18 @@ export function DashboardMobileNav() {
       {/* Mobile drawer */}
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-xl">
-            <div className="flex justify-end p-4">
-              <button onClick={() => setOpen(false)} className="p-2 text-gray-500 hover:text-gray-700">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 top-0 bottom-0 w-72 flex flex-col overflow-hidden shadow-xl" style={{ background: "#1C0F07" }}>
+            {/* Close button row */}
+            <div className="flex justify-end px-4 py-3 shrink-0" style={{ borderBottom: "1px solid rgba(201,168,76,0.12)" }}>
+              <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg" style={{ color: "#C9A84C" }}>
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <DashboardSidebar />
+            {/* Scrollable sidebar content */}
+            <div className="flex-1 overflow-y-auto">
+              <DashboardSidebar onClose={() => setOpen(false)} />
+            </div>
           </div>
         </div>
       )}
