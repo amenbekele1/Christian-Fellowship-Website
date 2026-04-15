@@ -43,7 +43,20 @@ function LoginForm() {
     <div className="min-h-screen bg-brown-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img src="/logo.svg" alt="WECF" className="h-28 w-auto mx-auto mb-4" />
+          {/* 3-D "laying on the page" logo — no background, brown design */}
+          <div className="flex justify-center mb-5">
+            <img
+              src="/logo-login.svg"
+              alt="WECF"
+              className="h-32 w-auto"
+              style={{
+                transform: "perspective(600px) rotateX(12deg) rotateZ(-1deg)",
+                filter:
+                  "drop-shadow(0 6px 3px rgba(45,18,8,0.18)) drop-shadow(0 12px 18px rgba(45,18,8,0.13))",
+                transformOrigin: "center bottom",
+              }}
+            />
+          </div>
           <h1 className="font-display text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
           <p className="text-gray-500 text-sm">Sign in to your member account</p>
         </div>
