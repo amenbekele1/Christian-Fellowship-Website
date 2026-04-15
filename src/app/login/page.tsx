@@ -43,7 +43,7 @@ function LoginForm() {
     <div className="min-h-screen bg-brown-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img src="/logo.svg" alt="WECF" className="w-20 h-20 rounded-full mx-auto mb-4 shadow-warm" />
+          <img src="/logo.svg" alt="WECF" className="w-20 h-20 mx-auto mb-4" />
           <h1 className="font-display text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
           <p className="text-gray-500 text-sm">Sign in to your member account</p>
         </div>
@@ -118,16 +118,6 @@ function LoginForm() {
               </Link>
             </div>
           </form>
-
-          {/* Demo credentials */}
-          <div className="mt-5 p-3 bg-amber-50 border border-amber-100 rounded-lg">
-            <p className="text-xs text-amber-700 font-semibold mb-2">Demo Accounts:</p>
-            <div className="space-y-1 text-xs text-amber-600">
-              <p>Guardian: admin@wecf.org / Guardian@2024</p>
-              <p>BUS Leader: leader@wecf.org / Leader@2024</p>
-              <p>Member: member@wecf.org / Member@2024</p>
-            </div>
-          </div>
 
           <p className="text-center text-sm text-gray-500 mt-5">
             Don't have an account?{" "}

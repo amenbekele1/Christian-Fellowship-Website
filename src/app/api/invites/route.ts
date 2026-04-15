@@ -56,15 +56,22 @@ export async function POST(req: NextRequest) {
   const inviteUrl = `${process.env.NEXTAUTH_URL}/register?invite=${token}`;
 
   // Send email if recipient address was provided
+  let emailSent = false;
+  let emailError: string | undefined;
   if (email) {
-    sendEmail({
+    const result = await sendEmail({
       to: email,
       subject: "You're invited to join Warsaw Ethiopian Christian Fellowship",
       html: inviteEmail(inviteUrl, session.user.name ?? "A fellowship guardian"),
-    }).catch(console.error);
+    });
+    emailSent = result.success;
+    if (!result.success) {
+      emailError = String((result as any).error ?? "Email send failed");
+      console.error("Invite email error:", emailError);
+    }
   }
 
-  return NextResponse.json({ inviteToken, inviteUrl }, { status: 201 });
+  return NextResponse.json({ inviteToken, inviteUrl, emailSent, emailError }, { status: 201 });
 }
 
 export async function DELETE(req: NextRequest) {

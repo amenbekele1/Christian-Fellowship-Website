@@ -81,7 +81,7 @@ export default async function DashboardPage() {
         <div
           className="absolute right-4 top-0 select-none pointer-events-none"
           style={{ color: "rgba(201,168,76,0.04)" }}
-        ><svg className="w-28 h-28" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true"><rect x="42" y="5" width="16" height="90" rx="3"/><rect x="10" y="30" width="80" height="16" rx="3"/></svg></div>
+        ><svg className="w-28 h-28" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true"><path d="M42,5 H58 V30 H90 V46 H58 V95 H42 V46 H10 V30 H42 Z"/></svg></div>
         <p className="section-label mb-3">✦ Verse of the Day</p>
         <blockquote className="scripture text-lg leading-relaxed mb-3" style={{ color: "#FAF7F0" }}>
           "{verse.text}"
