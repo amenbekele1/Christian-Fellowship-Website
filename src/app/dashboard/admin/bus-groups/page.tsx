@@ -21,6 +21,8 @@ export default function AdminBusGroupsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [editLeaderGroup, setEditLeaderGroup] = useState<BUSGroup | null>(null);
+  const [newLeaderId, setNewLeaderId] = useState("");
 
   useEffect(() => { fetchData(); }, []);
 
@@ -57,6 +59,27 @@ export default function AdminBusGroupsPage() {
     if (!confirm("Delete this BUS group? Members will be unassigned.")) return;
     await fetch(`/api/bus-groups?id=${id}`, { method: "DELETE" });
     fetchData();
+  };
+
+  const changeLeader = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editLeaderGroup || !newLeaderId) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/bus-groups?id=${editLeaderGroup.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leaderId: newLeaderId }),
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+      setEditLeaderGroup(null);
+      setNewLeaderId("");
+      fetchData();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const removeMember = async (groupId: string, memberId: string) => {
@@ -149,10 +172,19 @@ export default function AdminBusGroupsPage() {
             </div>
 
             {/* Leader */}
-            <div className="px-5 py-3 bg-brown-50 border-b border-brown-200 flex items-center gap-2">
-              <span className="text-xs text-gold-600 font-bold">Leader:</span>
-              <span className="text-sm text-gray-700">{group.leader.name}</span>
-              <span className="text-xs text-gray-400">· {group.leader.email}</span>
+            <div className="px-5 py-3 bg-brown-50 border-b border-brown-200 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs text-gold-600 font-bold shrink-0">Leader:</span>
+                <span className="text-sm text-gray-700 truncate">{group.leader.name}</span>
+                <span className="text-xs text-gray-400 truncate hidden sm:inline">· {group.leader.email}</span>
+              </div>
+              <button
+                onClick={() => { setEditLeaderGroup(group); setNewLeaderId(group.leader.id); setError(""); }}
+                className="text-gray-400 hover:text-gold-600 transition-colors shrink-0 p-1"
+                title="Change leader"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </button>
             </div>
 
             {/* Members list */}
@@ -188,6 +220,55 @@ export default function AdminBusGroupsPage() {
           </div>
         )}
       </div>
+
+      {/* Change Leader modal */}
+      {editLeaderGroup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="font-display font-bold text-gray-800 text-xl">Change Leader</h2>
+                <p className="text-sm text-gray-500 mt-0.5">{editLeaderGroup.name}</p>
+              </div>
+              <button onClick={() => { setEditLeaderGroup(null); setError(""); }} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5"/>
+              </button>
+            </div>
+            {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm mb-4">{error}</div>}
+            <form onSubmit={changeLeader} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">New Group Leader *</label>
+                <select
+                  required
+                  value={newLeaderId}
+                  onChange={e => setNewLeaderId(e.target.value)}
+                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+                >
+                  <option value="">Select a leader...</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.email}){u.id === editLeaderGroup.leader.id ? " — current" : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1.5">
+                  The previous leader will be reverted to a regular member automatically.
+                </p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => { setEditLeaderGroup(null); setError(""); }}
+                  className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50">
+                  Cancel
+                </button>
+                <button type="submit" disabled={saving || newLeaderId === editLeaderGroup.leader.id}
+                  className="flex-1 bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-900 disabled:opacity-50">
+                  {saving ? "Saving..." : "Update Leader"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
