@@ -28,9 +28,10 @@ export default function AdminBusGroupsPage() {
 
   const fetchData = async () => {
     setLoading(true);
-    const [g, u] = await Promise.all([fetch("/api/bus-groups"), fetch("/api/members")]);
+    const [g, u] = await Promise.all([fetch("/api/bus-groups"), fetch("/api/members?limit=500")]);
     setGroups(await g.json());
-    setUsers(await u.json());
+    const uData = await u.json();
+    setUsers(Array.isArray(uData) ? uData : (uData.data ?? []));
     setLoading(false);
   };
 
