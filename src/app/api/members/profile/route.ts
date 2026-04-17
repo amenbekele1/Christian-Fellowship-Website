@@ -11,10 +11,15 @@ const profileUpdateSchema = z.object({
   phoneNumber: z.string().optional(),
 });
 
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{10,}$/;
+
 const passwordChangeSchema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z.string().min(6),
-  confirmPassword: z.string().min(6),
+  newPassword: z
+    .string()
+    .min(10, "Password must be at least 10 characters")
+    .regex(PASSWORD_REGEX, "Password must contain uppercase, lowercase, and a number"),
+  confirmPassword: z.string().min(10),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],

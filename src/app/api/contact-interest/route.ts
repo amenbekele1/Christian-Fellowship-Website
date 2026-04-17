@@ -2,11 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 
+// Rate limiter: 10 submissions per IP per hour
+const rateMap = new Map<string, { count: number; resetAt: number }>();
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateMap.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 });
+    return false;
+  }
+  if (entry.count >= 10) return true;
+  entry.count++;
+  return false;
+}
+
 export async function POST(req: NextRequest) {
   try {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      req.headers.get("x-real-ip") ||
+      "unknown";
+    if (isRateLimited(ip)) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+
     const { name, email, message } = await req.json();
-    if (!name || !email) {
+    if (!name?.trim() || !email?.trim()) {
       return NextResponse.json({ error: "Name and email are required" }, { status: 400 });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
     }
 
     // Get all guardian emails to notify
