@@ -1,9 +1,32 @@
-import { Metadata } from "next";
-import { MapPin, Clock, Phone, Mail, Bus, Train } from "lucide-react";
+"use client";
 
-export const metadata: Metadata = { title: "Visit Us" };
+import { useState } from "react";
+import { MapPin, Clock, Phone, Mail, Bus, Train, Send, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function VisitPage() {
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("sending");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send");
+      setStatus("sent");
+      setForm({ name: "", email: "", subject: "", message: "" });
+    } catch (err: any) {
+      setErrorMsg(err.message);
+      setStatus("error");
+    }
+  };
   return (
     <>
       <section className="hero-gradient py-20 relative overflow-hidden">
@@ -128,6 +151,109 @@ export default function VisitPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Contact Form */}
+      <section className="py-16 bg-brown-50">
+        <div className="max-w-3xl mx-auto px-6">
+          <div className="text-center mb-10">
+            <p className="text-gold-600 text-sm font-semibold uppercase tracking-widest mb-3">Get In Touch</p>
+            <h2 className="font-display text-3xl font-bold text-gray-800 mb-3">Send Us a Message</h2>
+            <p className="text-gray-500 max-w-lg mx-auto">
+              Have a question or want to know more about our fellowship? Our leaders will get back to you personally.
+            </p>
+          </div>
+
+          {status === "sent" ? (
+            <div className="bg-white border border-green-200 rounded-2xl p-10 text-center shadow-sm">
+              <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-4" />
+              <h3 className="font-display font-bold text-gray-800 text-xl mb-2">Message Sent!</h3>
+              <p className="text-gray-500 text-sm max-w-sm mx-auto">
+                Thank you for reaching out. One of our leaders will reply to you shortly. Check your inbox for a confirmation.
+              </p>
+              <button
+                onClick={() => setStatus("idle")}
+                className="mt-6 text-sm text-gold-600 hover:text-gold-700 font-medium underline underline-offset-2"
+              >
+                Send another message
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-brown-200 shadow-sm p-8">
+              {status === "error" && (
+                <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-6 text-sm">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Your Name *</label>
+                    <input
+                      type="text" required
+                      value={form.name}
+                      onChange={e => setForm({ ...form, name: e.target.value })}
+                      placeholder="Full name"
+                      className="w-full h-11 rounded-xl border border-gray-200 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address *</label>
+                    <input
+                      type="email" required
+                      value={form.email}
+                      onChange={e => setForm({ ...form, email: e.target.value })}
+                      placeholder="your@email.com"
+                      className="w-full h-11 rounded-xl border border-gray-200 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Subject *</label>
+                  <input
+                    type="text" required
+                    value={form.subject}
+                    onChange={e => setForm({ ...form, subject: e.target.value })}
+                    placeholder="What is this about?"
+                    className="w-full h-11 rounded-xl border border-gray-200 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Message *</label>
+                  <textarea
+                    required rows={5}
+                    value={form.message}
+                    onChange={e => setForm({ ...form, message: e.target.value })}
+                    placeholder="Write your message here..."
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={status === "sending"}
+                  className="w-full flex items-center justify-center gap-2 h-12 rounded-xl text-sm font-semibold transition-all disabled:opacity-60"
+                  style={{ background: "#1C0F07", color: "#FAF7F0" }}
+                >
+                  {status === "sending" ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      </svg>
+                      Sending…
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      Send Message
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </section>
 
