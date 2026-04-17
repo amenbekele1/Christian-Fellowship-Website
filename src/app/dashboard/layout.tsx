@@ -15,11 +15,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <DashboardSidebar />
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile top nav */}
         <DashboardMobileNav />
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8">
           {children}
         </main>
       </div>

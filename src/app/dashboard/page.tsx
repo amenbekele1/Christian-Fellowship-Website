@@ -54,18 +54,18 @@ export default async function DashboardPage() {
     <div className="max-w-6xl mx-auto">
 
       {/* ── Welcome header ──────────────────────────────────── */}
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold" style={{ color: "#2C1A0E" }}>
+      <div className="mb-8 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold truncate" style={{ color: "#2C1A0E" }}>
             {greeting()}, {session.user.name?.split(" ")[0]} 👋
           </h1>
-          <p className="mt-1" style={{ color: "#9A7B5C" }}>
+          <p className="mt-1 text-sm" style={{ color: "#9A7B5C" }}>
             {getRoleLabel(session.user.role)} ·{" "}
             {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
           </p>
         </div>
         <span
-          className="text-xs font-semibold px-3 py-1.5 rounded-full border shrink-0"
+          className="text-xs font-semibold px-3 py-1.5 rounded-full border shrink-0 hidden sm:inline-flex"
           style={{ background: "rgba(201,168,76,0.10)", color: "#C9A84C", borderColor: "rgba(201,168,76,0.25)" }}
         >
           {getRoleLabel(session.user.role)}
