@@ -79,7 +79,7 @@ export default function VisitPage() {
                 <ul className="space-y-3">
                   <li className="flex items-center gap-2.5 text-sm text-gray-600">
                     <Mail className="w-4 h-4 text-gray-400" />
-                    <a href="mailto:info@wecf.org" className="hover:text-gold-500 transition-colors">info@wecf.org</a>
+                    <a href="mailto:info@wetcf.com" className="hover:text-gold-500 transition-colors">info@wetcf.com</a>
                   </li>
                   <li className="flex items-center gap-2.5 text-sm text-gray-600">
                     <Phone className="w-4 h-4 text-gray-400" />

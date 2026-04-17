@@ -66,7 +66,7 @@ export function PublicFooter() {
               </li>
               <li className="flex gap-2.5 text-sm">
                 <Mail className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#C9A84C" }} />
-                <a href="mailto:info@wecf.org" className="link-gold-hover">info@wecf.org</a>
+                <a href="mailto:info@wetcf.com" className="link-gold-hover">info@wetcf.com</a>
               </li>
             </ul>
           </div>
