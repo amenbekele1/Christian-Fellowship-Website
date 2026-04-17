@@ -88,9 +88,9 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
 
-        {/* Member section */}
+        {/* Beloved section */}
         <p className="px-4 py-2 text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(201,168,76,0.45)" }}>
-          Member
+          Beloved
         </p>
         {memberLinks
           .filter(link => !(isGuardian && link.href === "/dashboard/bus-groups"))
@@ -106,12 +106,12 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
           </Link>
         ))}
 
-        {/* Leader section */}
+        {/* Guardian section */}
         {isLeader && (
           <>
             <div className="pt-4">
               <p className="px-4 py-2 text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(201,168,76,0.45)" }}>
-                Leadership
+                Guardian
               </p>
             </div>
             {leaderLinks.map((link) => (
@@ -128,12 +128,12 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
           </>
         )}
 
-        {/* Guardian / Admin section */}
+        {/* Leader / Admin section */}
         {isGuardian && (
           <>
             <div className="pt-4">
               <p className="px-4 py-2 text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(201,168,76,0.45)" }}>
-                Guardian
+                Leader
               </p>
             </div>
             {adminLinks.map((link) => (

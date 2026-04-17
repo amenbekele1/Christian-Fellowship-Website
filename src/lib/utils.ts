@@ -61,10 +61,10 @@ export function getRoleBadgeColor(role: string): string {
 export function getRoleLabel(role: string): string {
   switch (role) {
     case "GUARDIAN":
-      return "Guardian";
+      return "Leader";
     case "BUS_LEADER":
-      return "BUS Leader";
+      return "Guardian";
     default:
-      return "Member";
+      return "Beloved";
   }
 }

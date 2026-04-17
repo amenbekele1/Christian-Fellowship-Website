@@ -199,9 +199,9 @@ export default function AdminMembersPage() {
                       disabled={updating === member.id}
                       className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white cursor-pointer disabled:opacity-50"
                     >
-                      <option value="MEMBER">Member</option>
-                      <option value="BUS_LEADER">BUS Leader</option>
-                      <option value="GUARDIAN">Guardian</option>
+                      <option value="MEMBER">Beloved</option>
+                      <option value="BUS_LEADER">Guardian</option>
+                      <option value="GUARDIAN">Leader</option>
                     </select>
                   </td>
                   <td className="px-5 py-3.5">
