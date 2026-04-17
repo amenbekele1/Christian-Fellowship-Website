@@ -7,18 +7,32 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  themeColor: "#1C0F07",
 };
 
 export const metadata: Metadata = {
   title: {
-    default: "Warsaw Ethiopian Christian Fellowship",
-    template: "%s | Warsaw Ethiopian Christian Fellowship",
+    default: "WETCF",
+    template: "%s | WETCF",
   },
   description:
-    "A Christ-centred community in Warsaw, Poland — worshipping, growing, and serving together. Hebrews 10:24-25.",
+    "Member portal for Warsaw Ethiopian Christian Fellowship — worshipping, growing, and serving together.",
   keywords: ["Ethiopian church", "Warsaw", "Christian fellowship", "Ethiopia", "worship"],
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "WETCF",
+    startupImage: "/icons/icon-512x512.png",
+  },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
