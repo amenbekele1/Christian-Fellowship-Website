@@ -99,6 +99,29 @@ export async function PATCH(req: NextRequest) {
   }
 
   const data = busGroupSchema.partial().parse(body);
+
+  // When changing the leader, demote the old one and promote the new one
+  if (data.leaderId) {
+    const current = await prisma.bUSGroup.findUnique({
+      where: { id },
+      select: { leaderId: true },
+    });
+    if (current && current.leaderId !== data.leaderId) {
+      await prisma.$transaction([
+        // Demote old leader back to MEMBER
+        prisma.user.update({
+          where: { id: current.leaderId },
+          data: { role: "MEMBER" },
+        }),
+        // Promote new leader to BUS_LEADER
+        prisma.user.update({
+          where: { id: data.leaderId },
+          data: { role: "BUS_LEADER" },
+        }),
+      ]);
+    }
+  }
+
   const group = await prisma.bUSGroup.update({
     where: { id },
     data,
