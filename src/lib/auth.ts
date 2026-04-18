@@ -58,6 +58,12 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = (user as any).role;
         token.id = user.id;
+        // Fetch service teams on sign-in and embed in the token
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          include: { serviceTeams: { include: { team: true } } },
+        });
+        token.serviceTeams = dbUser?.serviceTeams.map((m) => m.team.name) ?? [];
       }
       return token;
     },
@@ -65,6 +71,7 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.role = token.role as string;
         session.user.id = token.id as string;
+        session.user.serviceTeams = (token.serviceTeams as string[]) ?? [];
       }
       return session;
     },

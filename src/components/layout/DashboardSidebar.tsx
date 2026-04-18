@@ -42,8 +42,10 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
 
   if (!session) return null;
 
-  const isLeader   = session.user.role === "BUS_LEADER";
-  const isGuardian = session.user.role === "GUARDIAN";
+  const isLeader    = session.user.role === "BUS_LEADER";
+  const isGuardian  = session.user.role === "GUARDIAN";
+  const teams       = session.user.serviceTeams ?? [];
+  const isLibrarian = teams.includes("LIBRARIAN");
 
   return (
     <aside
@@ -105,6 +107,27 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
             {link.label}
           </Link>
         ))}
+
+        {/* Serving section — shown for any service team member */}
+        {isLibrarian && (
+          <>
+            <div className="pt-4">
+              <p className="px-4 py-2 text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(201,168,76,0.45)" }}>
+                Serving
+              </p>
+            </div>
+            {isLibrarian && (
+              <Link
+                href="/dashboard/admin/books"
+                onClick={onClose}
+                className={cn("sidebar-link", isActive("/dashboard/admin/books") && "active")}
+              >
+                <BookMarked className="w-4 h-4 shrink-0" />
+                Library Books
+              </Link>
+            )}
+          </>
+        )}
 
         {/* Guardian section */}
         {isLeader && (

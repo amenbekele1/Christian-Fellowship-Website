@@ -44,9 +44,16 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(books);
 }
 
+function canManageLibrary(session: any): boolean {
+  return (
+    session?.user?.role === "GUARDIAN" ||
+    (session?.user?.serviceTeams ?? []).includes("LIBRARIAN")
+  );
+}
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "GUARDIAN") {
+  if (!session || !canManageLibrary(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -62,7 +69,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "GUARDIAN") {
+  if (!session || !canManageLibrary(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -79,7 +86,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "GUARDIAN") {
+  if (!session || !canManageLibrary(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

@@ -53,6 +53,7 @@ export async function GET(req: NextRequest) {
         isActive: true,
         joinedAt: true,
         busGroup: { select: { id: true, name: true } },
+        serviceTeams: { select: { team: { select: { name: true } } } },
       },
       orderBy: { name: "asc" },
       skip: (page - 1) * limit,

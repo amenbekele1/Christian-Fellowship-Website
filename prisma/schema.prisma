@@ -64,7 +64,34 @@ model User {
   createdTasks   GroupTask[]    @relation("CreatedTasks")
   assignedTasks  GroupTask[]    @relation("AssignedTasks")
 
+  // Service teams (librarian, worship, etc.)
+  serviceTeams   UserServiceTeam[]
+
   @@map("users")
+}
+
+model ServiceTeam {
+  id          String   @id @default(cuid())
+  name        String   @unique   // e.g. "LIBRARIAN"
+  label       String             // Display name, e.g. "Librarian"
+  description String?
+  createdAt   DateTime @default(now())
+
+  members     UserServiceTeam[]
+
+  @@map("service_teams")
+}
+
+model UserServiceTeam {
+  userId     String
+  teamId     String
+  assignedAt DateTime @default(now())
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team ServiceTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@id([userId, teamId])
+  @@map("user_service_teams")
 }
 
 model Account {

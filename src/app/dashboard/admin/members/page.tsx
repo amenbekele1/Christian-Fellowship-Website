@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Search, Users, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
+import { Search, Users, ChevronLeft, ChevronRight, AlertCircle, X } from "lucide-react";
 import { getRoleLabel, getRoleBadgeColor, formatDate } from "@/lib/utils";
 
 interface Member {
@@ -11,8 +11,13 @@ interface Member {
   role: string; isActive: boolean; joinedAt: string;
   busGroup: { id: string; name: string } | null;
   busGroupId?: string | null;
+  serviceTeams?: string[]; // team names e.g. ["LIBRARIAN"]
 }
 interface BUSGroup { id: string; name: string; }
+interface ServiceTeam {
+  id: string; name: string; label: string; description: string | null;
+  members: { user: { id: string; name: string } }[];
+}
 
 const PAGE_SIZE = 20;
 
@@ -21,6 +26,7 @@ export default function AdminMembersPage() {
   const router = useRouter();
   const [members, setMembers] = useState<Member[]>([]);
   const [busGroups, setBusGroups] = useState<BUSGroup[]>([]);
+  const [serviceTeams, setServiceTeams] = useState<ServiceTeam[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -28,10 +34,13 @@ export default function AdminMembersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [teamsModal, setTeamsModal] = useState<Member | null>(null);
+  const [teamUpdating, setTeamUpdating] = useState(false);
 
   useEffect(() => {
     if (session?.user.role !== "GUARDIAN") { router.push("/dashboard"); return; }
     fetchBusGroups();
+    fetchServiceTeams();
   }, [session]);
 
   useEffect(() => {
@@ -46,7 +55,49 @@ export default function AdminMembersPage() {
       const data = await res.json();
       setBusGroups(Array.isArray(data) ? data : []);
     } catch {
-      // non-critical, keep empty
+      // non-critical
+    }
+  };
+
+  const fetchServiceTeams = async () => {
+    try {
+      const res = await fetch("/api/service-teams");
+      if (!res.ok) return;
+      const data = await res.json();
+      setServiceTeams(Array.isArray(data) ? data : []);
+    } catch {
+      // non-critical
+    }
+  };
+
+  const toggleTeam = async (member: Member, teamName: string) => {
+    setTeamUpdating(true);
+    const alreadyIn = (member.serviceTeams ?? []).includes(teamName);
+    try {
+      await fetch("/api/service-teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: alreadyIn ? "remove" : "assign",
+          userId: member.id,
+          teamName,
+        }),
+      });
+      // Update local state for modal
+      setTeamsModal(prev => {
+        if (!prev) return prev;
+        const teams = prev.serviceTeams ?? [];
+        return {
+          ...prev,
+          serviceTeams: alreadyIn
+            ? teams.filter(t => t !== teamName)
+            : [...teams, teamName],
+        };
+      });
+      // Refresh the full list so badges update
+      await fetchMembers();
+    } finally {
+      setTeamUpdating(false);
     }
   };
 
@@ -62,7 +113,13 @@ export default function AdminMembersPage() {
       const res = await fetch(`/api/members?${params}`);
       if (!res.ok) throw new Error("Failed to load members");
       const json = await res.json();
-      setMembers(Array.isArray(json) ? json : (json.data ?? []));
+      const raw: any[] = Array.isArray(json) ? json : (json.data ?? []);
+      // Flatten serviceTeams relation: [{team:{name}}] -> ["LIBRARIAN",...]
+      const normalised = raw.map((m: any) => ({
+        ...m,
+        serviceTeams: (m.serviceTeams ?? []).map((st: any) => st.team?.name ?? st),
+      }));
+      setMembers(normalised);
       setTotal(json.total ?? json.length ?? 0);
     } catch (err: any) {
       setError(err.message ?? "Something went wrong");
@@ -174,6 +231,7 @@ export default function AdminMembersPage() {
                 <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Member</th>
                 <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Role</th>
                 <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">BUS Group</th>
+                <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Teams</th>
                 <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Joined</th>
                 <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
               </tr>
@@ -214,6 +272,22 @@ export default function AdminMembersPage() {
                       <option value="">Unassigned</option>
                       {busGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                     </select>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {(member.serviceTeams ?? []).map(t => (
+                        <span key={t} className="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded-full font-medium">
+                          {t === "LIBRARIAN" ? "Librarian" : t}
+                        </span>
+                      ))}
+                      <button
+                        onClick={() => setTeamsModal(member)}
+                        className="text-xs text-gray-300 hover:text-gold-500 transition-colors px-1"
+                        title="Edit service teams"
+                      >
+                        {(member.serviceTeams ?? []).length === 0 ? "+ assign" : "✎"}
+                      </button>
+                    </div>
                   </td>
                   <td className="px-5 py-3.5">
                     <p className="text-xs text-gray-500">{formatDate(member.joinedAt)}</p>
@@ -269,6 +343,60 @@ export default function AdminMembersPage() {
           </div>
         )}
       </div>
+
+      {/* Service Team Assignment Modal */}
+      {teamsModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="font-display font-bold text-gray-800 text-lg">Service Teams</h2>
+                <p className="text-sm text-gray-500">{teamsModal.name}</p>
+              </div>
+              <button onClick={() => setTeamsModal(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mb-4">
+              Toggle which service teams this member belongs to. Changes take effect immediately. The member must sign out and back in to see updated permissions.
+            </p>
+            <div className="space-y-2">
+              {serviceTeams.map(team => {
+                const assigned = (teamsModal.serviceTeams ?? []).includes(team.name);
+                return (
+                  <button
+                    key={team.id}
+                    onClick={() => toggleTeam(teamsModal, team.name)}
+                    disabled={teamUpdating}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all disabled:opacity-50 ${
+                      assigned
+                        ? "bg-amber-50 border-amber-200 text-amber-800"
+                        : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-amber-50 hover:border-amber-200"
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-sm">{team.label}</p>
+                      {team.description && <p className="text-xs opacity-70 mt-0.5">{team.description}</p>}
+                    </div>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${assigned ? "bg-amber-200 text-amber-800" : "bg-gray-200 text-gray-500"}`}>
+                      {assigned ? "Assigned" : "Not assigned"}
+                    </span>
+                  </button>
+                );
+              })}
+              {serviceTeams.length === 0 && (
+                <p className="text-center text-sm text-gray-400 py-4">No service teams configured yet.</p>
+              )}
+            </div>
+            <button
+              onClick={() => setTeamsModal(null)}
+              className="w-full mt-4 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

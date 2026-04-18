@@ -16,9 +16,16 @@ const ALLOWED_CONTENT_TYPES = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ];
 
+function canUpload(session: any): boolean {
+  return (
+    session?.user?.role === "GUARDIAN" ||
+    (session?.user?.serviceTeams ?? []).includes("LIBRARIAN")
+  );
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "GUARDIAN") {
+  if (!session || !canUpload(session)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 

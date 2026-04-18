@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Plus, BookMarked, Trash2, X, BookOpen, Pencil, AlertCircle } from "lucide-react";
 import { upload } from "@vercel/blob/client";
 
@@ -22,6 +24,8 @@ const EMPTY_FORM = {
 };
 
 export default function AdminBooksPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -34,7 +38,13 @@ export default function AdminBooksPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    if (!session) return;
+    const teams = session.user.serviceTeams ?? [];
+    const allowed = session.user.role === "GUARDIAN" || teams.includes("LIBRARIAN");
+    if (!allowed) { router.push("/dashboard"); return; }
+    fetchData();
+  }, [session]);
 
   const fetchData = async () => {
     setLoading(true);
