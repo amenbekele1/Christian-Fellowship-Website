@@ -183,6 +183,7 @@ model Book {
   id              String   @id @default(cuid())
   title           String
   author          String
+  translatedBy    String?
   description     String?  @db.Text
   coverImage      String?
   imageUrl        String?

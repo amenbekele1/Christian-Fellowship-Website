@@ -7,6 +7,7 @@ import { z } from "zod";
 const bookSchema = z.object({
   title: z.string().min(1),
   author: z.string().min(1),
+  translatedBy: z.string().optional(),
   description: z.string().optional(),
   coverImage: z.string().optional(),
   imageUrl: z.string().optional(),
@@ -28,6 +29,7 @@ export async function GET(req: NextRequest) {
     where.OR = [
       { title: { contains: search, mode: "insensitive" } },
       { author: { contains: search, mode: "insensitive" } },
+      { translatedBy: { contains: search, mode: "insensitive" } },
     ];
   }
 
