@@ -7,7 +7,16 @@ export default withAuth(
     const path = req.nextUrl.pathname;
 
     // Guardian-only admin routes
-    if (path.startsWith("/dashboard/admin") && token?.role !== "GUARDIAN") {
+    // Exception: Librarians may access the library management page
+    const serviceTeams = (token?.serviceTeams as string[]) ?? [];
+    const isLibrarian = serviceTeams.includes("LIBRARIAN");
+    const isLibraryRoute = path.startsWith("/dashboard/admin/books");
+
+    if (
+      path.startsWith("/dashboard/admin") &&
+      token?.role !== "GUARDIAN" &&
+      !(isLibrarian && isLibraryRoute)
+    ) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
