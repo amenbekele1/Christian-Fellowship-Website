@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const blob = await put(file.name, file, { access: "public" });
+    const blob = await put(file.name, file, { access: "public", addRandomSuffix: true });
     return NextResponse.json({ url: blob.url });
   } catch (error) {
     console.error("Upload error:", error);
