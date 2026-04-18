@@ -196,7 +196,7 @@ export default function LibraryPage() {
               </svg>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
               {books.map((book) => {
                 const alreadyReserved = activeRentalIds.includes(book.id);
                 return (
@@ -210,47 +210,44 @@ export default function LibraryPage() {
                         <img src={book.imageUrl} alt={book.title} className="w-full h-full object-contain" />
                       ) : (
                         <div className="text-center">
-                          <BookOpen className="w-10 h-10 text-white/30 mx-auto mb-1" />
-                          <p className="text-white/50 text-xs">📖</p>
+                          <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-white/30 mx-auto mb-1" />
                         </div>
                       )}
                     </div>
 
-                    <div className="p-5 flex flex-col flex-1">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <div className="flex-1">
-                          <h3 className="font-display font-bold text-gray-800 leading-tight">{book.title}</h3>
-                          <p className="text-sm text-gold-600 mt-0.5">{book.author}</p>
-                          {book.translatedBy && (
-                            <p className="text-xs text-gray-400 mt-0.5 italic">Trans. {book.translatedBy}</p>
-                          )}
-                        </div>
+                    <div className="p-3 sm:p-5 flex flex-col flex-1">
+                      <div className="mb-2">
+                        <h3 className="font-display font-bold text-gray-800 text-xs sm:text-base leading-tight line-clamp-2">{book.title}</h3>
+                        <p className="text-xs text-gold-600 mt-0.5 line-clamp-1">{book.author}</p>
+                        {book.translatedBy && (
+                          <p className="text-xs text-gray-400 mt-0.5 italic line-clamp-1">Trans. {book.translatedBy}</p>
+                        )}
                         {book.category && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${categoryColors[book.category] || "bg-gray-100 text-gray-600"}`}>
+                          <span className={`inline-block text-xs px-1.5 py-0.5 rounded-full font-medium mt-1 ${categoryColors[book.category] || "bg-gray-100 text-gray-600"}`}>
                             {book.category}
                           </span>
                         )}
                       </div>
 
                       {book.description && (
-                        <p className="text-xs text-gray-500 leading-relaxed mb-4 line-clamp-3 flex-1">
+                        <p className="hidden sm:block text-xs text-gray-500 leading-relaxed mb-3 line-clamp-3 flex-1">
                           {book.description}
                         </p>
                       )}
 
-                      <div className="flex items-center justify-between mt-auto">
-                        <div className="flex items-center gap-1.5">
-                          <div className={`w-2 h-2 rounded-full ${book.availableQty > 0 ? "bg-gold-500" : "bg-red-400"}`} />
+                      <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+                        <div className="flex items-center gap-1">
+                          <div className={`w-1.5 h-1.5 rounded-full ${book.availableQty > 0 ? "bg-gold-500" : "bg-red-400"}`} />
                           <span className="text-xs text-gray-500">
-                            {book.availableQty > 0 ? `${book.availableQty} available` : "Unavailable"}
+                            {book.availableQty > 0 ? `${book.availableQty}` : "Out"}
                           </span>
                         </div>
                         <button
                           onClick={() => openDatePicker(book.id)}
                           disabled={book.availableQty === 0 || alreadyReserved || reserving === book.id}
-                          className="text-xs bg-brown-800 text-white px-3 py-1.5 rounded-lg hover:bg-brown-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                          className="text-xs bg-brown-800 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg hover:bg-brown-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-medium"
                         >
-                          {reserving === book.id ? "..." : alreadyReserved ? "Reserved ✓" : book.availableQty === 0 ? "Unavailable" : "Reserve"}
+                          {reserving === book.id ? "..." : alreadyReserved ? "✓" : book.availableQty === 0 ? "Out" : "Reserve"}
                         </button>
                       </div>
                     </div>
@@ -258,7 +255,7 @@ export default function LibraryPage() {
                 );
               })}
               {books.length === 0 && !loading && (
-                <div className="col-span-3 text-center py-16 text-gray-400">
+                <div className="col-span-2 lg:col-span-3 text-center py-16 text-gray-400">
                   <Book className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p>No books found. Try a different search.</p>
                 </div>

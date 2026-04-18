@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, BookMarked, Trash2, X, BookOpen, Pencil } from "lucide-react";
+import { Plus, BookMarked, Trash2, X, BookOpen, Pencil, AlertCircle } from "lucide-react";
+import { upload } from "@vercel/blob/client";
 
 interface Book {
   id: string; title: string; author: string; translatedBy: string | null;
@@ -29,6 +30,7 @@ export default function AdminBooksPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
@@ -74,12 +76,15 @@ export default function AdminBooksPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
+    setUploadError(null);
     try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      if (res.ok) setForm(f => ({ ...f, imageUrl: data.url }));
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+      });
+      setForm(f => ({ ...f, imageUrl: blob.url }));
+    } catch (err: any) {
+      setUploadError(err?.message || "Upload failed. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -215,6 +220,12 @@ export default function AdminBooksPage() {
                   <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading}
                     className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-brown-100 file:text-gold-500 hover:file:bg-brown-100"/>
                   {uploading && <p className="text-xs text-gold-600">Uploading...</p>}
+                  {uploadError && (
+                    <div className="flex items-center gap-1.5 text-xs text-red-600">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0"/>
+                      {uploadError}
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
@@ -243,7 +254,7 @@ export default function AdminBooksPage() {
       {loading ? (
         <div className="flex justify-center py-16"><svg className="animate-spin w-8 h-8 text-gold-600" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>
       ) : activeTab === "books" ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {books.map(book => (
             <div key={book.id} className="bg-white border border-brown-200 rounded-2xl shadow-sm overflow-hidden">
               <div
@@ -256,8 +267,8 @@ export default function AdminBooksPage() {
                   <BookOpen className="w-8 h-8 text-white/30"/>
                 )}
               </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-800 text-sm leading-tight">{book.title}</h3>
+              <div className="p-3 sm:p-4">
+                <h3 className="font-semibold text-gray-800 text-xs sm:text-sm leading-tight">{book.title}</h3>
                 <p className="text-xs text-gold-600 mt-0.5">{book.author}</p>
                 {book.translatedBy && <p className="text-xs text-gray-400 mt-0.5 italic">Trans. {book.translatedBy}</p>}
                 {book.category && <p className="text-xs text-gray-400 mt-0.5">{book.category}</p>}
