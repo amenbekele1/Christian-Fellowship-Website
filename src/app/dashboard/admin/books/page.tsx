@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { Plus, BookMarked, Trash2, X, BookOpen, Pencil } from "lucide-react";
 
 interface Book {
-  id: string; title: string; author: string; description: string | null;
-  totalQuantity: number; availableQty: number; category: string | null;
-  publishedYear: number | null; isActive: boolean; imageUrl: string | null;
+  id: string; title: string; author: string; translatedBy: string | null;
+  description: string | null; totalQuantity: number; availableQty: number;
+  category: string | null; publishedYear: number | null; isActive: boolean;
+  imageUrl: string | null;
 }
 interface Rental {
   id: string; status: string; reservedAt: string; dueDate: string | null;
@@ -15,8 +16,8 @@ interface Rental {
 }
 
 const EMPTY_FORM = {
-  title: "", author: "", description: "", category: "", publishedYear: "",
-  totalQuantity: "1", imageUrl: "",
+  title: "", author: "", translatedBy: "", description: "", category: "",
+  publishedYear: "", totalQuantity: "1", imageUrl: "",
 };
 
 export default function AdminBooksPage() {
@@ -29,6 +30,7 @@ export default function AdminBooksPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -52,6 +54,7 @@ export default function AdminBooksPage() {
     setForm({
       title: book.title,
       author: book.author,
+      translatedBy: book.translatedBy || "",
       description: book.description || "",
       category: book.category || "",
       publishedYear: book.publishedYear?.toString() || "",
@@ -168,6 +171,11 @@ export default function AdminBooksPage() {
                 <input type="text" required value={form.author} onChange={e => setForm({...form, author: e.target.value})}
                   placeholder="Author name" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"/>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Translated by</label>
+                <input type="text" value={form.translatedBy} onChange={e => setForm({...form, translatedBy: e.target.value})}
+                  placeholder="Translator name (if applicable)" className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"/>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
@@ -220,15 +228,30 @@ export default function AdminBooksPage() {
         </div>
       )}
 
+      {/* Cover image lightbox */}
+      {coverPreview && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setCoverPreview(null)}>
+          <div className="relative max-h-[90vh] max-w-sm w-full">
+            <img src={coverPreview} alt="Book cover" className="w-full h-full object-contain rounded-xl shadow-2xl" />
+            <button onClick={() => setCoverPreview(null)} className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80">
+              <X className="w-4 h-4"/>
+            </button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-16"><svg className="animate-spin w-8 h-8 text-gold-600" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>
       ) : activeTab === "books" ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {books.map(book => (
             <div key={book.id} className="bg-white border border-brown-200 rounded-2xl shadow-sm overflow-hidden">
-              <div className="h-40 bg-gradient-to-br from-brown-800 to-brown-900 flex items-center justify-center overflow-hidden">
+              <div
+                className="aspect-[2/3] bg-gradient-to-br from-brown-800 to-brown-900 flex items-center justify-center overflow-hidden cursor-pointer"
+                onClick={() => book.imageUrl && setCoverPreview(book.imageUrl)}
+              >
                 {book.imageUrl ? (
-                  <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover" />
+                  <img src={book.imageUrl} alt={book.title} className="w-full h-full object-contain" />
                 ) : (
                   <BookOpen className="w-8 h-8 text-white/30"/>
                 )}
@@ -236,6 +259,7 @@ export default function AdminBooksPage() {
               <div className="p-4">
                 <h3 className="font-semibold text-gray-800 text-sm leading-tight">{book.title}</h3>
                 <p className="text-xs text-gold-600 mt-0.5">{book.author}</p>
+                {book.translatedBy && <p className="text-xs text-gray-400 mt-0.5 italic">Trans. {book.translatedBy}</p>}
                 {book.category && <p className="text-xs text-gray-400 mt-0.5">{book.category}</p>}
                 <div className="flex items-center justify-between mt-3">
                   <div className="flex items-center gap-1.5">

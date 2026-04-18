@@ -7,6 +7,7 @@ interface Book {
   id: string;
   title: string;
   author: string;
+  translatedBy: string | null;
   description: string;
   coverImage: string | null;
   imageUrl: string | null;
@@ -44,6 +45,7 @@ export default function LibraryPage() {
   const [showDatePicker, setShowDatePicker] = useState<string | null>(null);
   const [pickupDate, setPickupDate] = useState<string>("");
   const [returnDate, setReturnDate] = useState<string>("");
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBooks();
@@ -200,9 +202,12 @@ export default function LibraryPage() {
                 return (
                   <div key={book.id} className="bg-white rounded-2xl border border-brown-200 shadow-sm overflow-hidden flex flex-col card-hover">
                     {/* Book cover image or placeholder */}
-                    <div className="h-48 bg-gradient-to-br from-brown-800 to-brown-900 flex items-center justify-center overflow-hidden">
+                    <div
+                      className="aspect-[2/3] bg-gradient-to-br from-brown-800 to-brown-900 flex items-center justify-center overflow-hidden cursor-pointer"
+                      onClick={() => book.imageUrl && setCoverPreview(book.imageUrl)}
+                    >
                       {book.imageUrl ? (
-                        <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover" />
+                        <img src={book.imageUrl} alt={book.title} className="w-full h-full object-contain" />
                       ) : (
                         <div className="text-center">
                           <BookOpen className="w-10 h-10 text-white/30 mx-auto mb-1" />
@@ -216,6 +221,9 @@ export default function LibraryPage() {
                         <div className="flex-1">
                           <h3 className="font-display font-bold text-gray-800 leading-tight">{book.title}</h3>
                           <p className="text-sm text-gold-600 mt-0.5">{book.author}</p>
+                          {book.translatedBy && (
+                            <p className="text-xs text-gray-400 mt-0.5 italic">Trans. {book.translatedBy}</p>
+                          )}
                         </div>
                         {book.category && (
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${categoryColors[book.category] || "bg-gray-100 text-gray-600"}`}>
@@ -255,6 +263,18 @@ export default function LibraryPage() {
                   <p>No books found. Try a different search.</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Cover image lightbox */}
+          {coverPreview && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setCoverPreview(null)}>
+              <div className="relative max-h-[90vh] max-w-sm w-full">
+                <img src={coverPreview} alt="Book cover" className="w-full h-full object-contain rounded-xl shadow-2xl" />
+                <button onClick={() => setCoverPreview(null)} className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
 
