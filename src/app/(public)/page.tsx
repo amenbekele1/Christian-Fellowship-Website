@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Calendar, ArrowRight, ChevronDown, MapPin } from "lucide-react";
+import { getPageContent } from "@/lib/page-content";
 
 async function getVerseOfDay() {
   try {
@@ -44,7 +45,11 @@ function formatEventTime(date: string) {
 }
 
 export default async function HomePage() {
-  const [verse, events] = await Promise.all([getVerseOfDay(), getUpcomingEvents()]);
+  const [verse, events, c] = await Promise.all([
+    getVerseOfDay(),
+    getUpcomingEvents(),
+    getPageContent("home"),
+  ]);
 
   return (
     <>
@@ -86,8 +91,7 @@ export default async function HomePage() {
 
             <p className="text-lg sm:text-xl leading-relaxed max-w-2xl mb-10 animate-fade-up stagger-2"
               style={{ color: "#C4A882" }}>
-              A Christ-centred community in the heart of Warsaw, united by faith, love, and the Holy
-              Spirit. Worshipping, growing, and serving together.
+              {c.hero_subtitle ?? "A Christ-centred community in the heart of Warsaw, united by faith, love, and the Holy Spirit. Worshipping, growing, and serving together."}
             </p>
 
             <div className="flex flex-wrap gap-4 animate-fade-up stagger-3">
@@ -128,17 +132,14 @@ export default async function HomePage() {
             <div className="animate-fade-up">
               <p className="section-label mb-3">Welcome Home</p>
               <h2 className="font-display text-4xl font-bold mb-5 leading-tight" style={{ color: "#2C1A0E" }}>
-                You Are Welcome Here
+                {c.welcome_title ?? "You Are Welcome Here"}
               </h2>
               <div className="gold-bar mb-7" />
               <p className="text-lg leading-relaxed mb-5" style={{ color: "#7A5C3E" }}>
-                The Warsaw Ethiopian Christian Fellowship is a vibrant, Spirit-filled community
-                serving the Ethiopian and broader Christian diaspora in Warsaw, Poland.
+                {c.welcome_body_1 ?? "The Warsaw Ethiopian Christian Fellowship is a vibrant, Spirit-filled community serving the Ethiopian and broader Christian diaspora in Warsaw, Poland."}
               </p>
               <p className="leading-relaxed mb-8" style={{ color: "#9A7B5C" }}>
-                We believe every person is created in the image of God and deserves a place to
-                belong. Whether you are visiting for the first time or looking for a spiritual home,
-                our doors — and our hearts — are open.
+                {c.welcome_body_2 ?? "We believe every person is created in the image of God and deserves a place to belong. Whether you are visiting for the first time or looking for a spiritual home, our doors — and our hearts — are open."}
               </p>
               <Link href="/about" className="inline-flex items-center gap-2 font-semibold transition-all hover:gap-3" style={{ color: "#C9A84C" }}>
                 Read our story <ArrowRight className="w-4 h-4" />
@@ -272,11 +273,10 @@ export default async function HomePage() {
         <div className="relative max-w-3xl mx-auto px-6 text-center">
           <svg className="w-12 h-12 mx-auto mb-6" viewBox="0 0 100 100" fill="rgba(201,168,76,0.6)" aria-hidden="true"><rect x="42" y="5" width="16" height="90" rx="3"/><rect x="10" y="30" width="80" height="16" rx="3"/></svg>
           <h2 className="font-display text-4xl font-bold mb-5" style={{ color: "#FAF7F0" }}>
-            Ready to Join the Fellowship?
+            {c.cta_title ?? "Ready to Join the Fellowship?"}
           </h2>
           <p className="text-lg mb-10 leading-relaxed" style={{ color: "#C4A882" }}>
-            Become part of a growing community of believers. Create your member account today and
-            connect with your brothers and sisters in Christ.
+            {c.cta_body ?? "Become part of a growing community of believers. Create your member account today and connect with your brothers and sisters in Christ."}
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/register" className="btn-gold font-bold px-8 py-4 rounded-xl">

@@ -42,10 +42,12 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
 
   if (!session) return null;
 
-  const isLeader    = session.user.role === "BUS_LEADER";
-  const isGuardian  = session.user.role === "GUARDIAN";
-  const teams       = session.user.serviceTeams ?? [];
-  const isLibrarian = teams.includes("LIBRARIAN");
+  const isLeader        = session.user.role === "BUS_LEADER";
+  const isGuardian      = session.user.role === "GUARDIAN";
+  const teams           = session.user.serviceTeams ?? [];
+  const isLibrarian     = teams.includes("LIBRARIAN");
+  const isWebsiteEditor = teams.includes("WEBSITE_EDITOR");
+  const isServing       = isLibrarian || isWebsiteEditor;
 
   return (
     <aside
@@ -109,7 +111,7 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
         ))}
 
         {/* Serving section — shown for any service team member */}
-        {isLibrarian && (
+        {isServing && (
           <>
             <div className="pt-4">
               <p className="px-4 py-2 text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(201,168,76,0.45)" }}>
@@ -117,14 +119,35 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
               </p>
             </div>
             {isLibrarian && (
-              <Link
-                href="/dashboard/admin/books"
-                onClick={onClose}
-                className={cn("sidebar-link", isActive("/dashboard/admin/books") && "active")}
-              >
+              <Link href="/dashboard/admin/books" onClick={onClose}
+                className={cn("sidebar-link", isActive("/dashboard/admin/books") && "active")}>
                 <BookMarked className="w-4 h-4 shrink-0" />
                 Library Books
               </Link>
+            )}
+            {isWebsiteEditor && (
+              <>
+                <Link href="/dashboard/admin/content" onClick={onClose}
+                  className={cn("sidebar-link", isActive("/dashboard/admin/content") && "active")}>
+                  <BookOpen className="w-4 h-4 shrink-0" />
+                  Page Content
+                </Link>
+                <Link href="/dashboard/admin/events" onClick={onClose}
+                  className={cn("sidebar-link", isActive("/dashboard/admin/events") && "active")}>
+                  <Calendar className="w-4 h-4 shrink-0" />
+                  Events
+                </Link>
+                <Link href="/dashboard/admin/programs" onClick={onClose}
+                  className={cn("sidebar-link", isActive("/dashboard/admin/programs") && "active")}>
+                  <BookOpen className="w-4 h-4 shrink-0" />
+                  Programs
+                </Link>
+                <Link href="/dashboard/admin/announcements" onClick={onClose}
+                  className={cn("sidebar-link", isActive("/dashboard/admin/announcements") && "active")}>
+                  <Bell className="w-4 h-4 shrink-0" />
+                  Announcements
+                </Link>
+              </>
             )}
           </>
         )}

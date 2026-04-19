@@ -4,6 +4,14 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
+function canEditContent(session: any): boolean {
+  return (
+    session?.user?.role === "GUARDIAN" ||
+    (session?.user?.serviceTeams ?? []).includes("WEBSITE_EDITOR")
+  );
+}
+
+
 const announcementSchema = z.object({
   title: z.string().min(2),
   content: z.string().min(5),
@@ -33,7 +41,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "GUARDIAN") {
+  if (!session || !canEditContent(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -52,7 +60,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "GUARDIAN") {
+  if (!session || !canEditContent(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -76,7 +84,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "GUARDIAN") {
+  if (!session || !canEditContent(session)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

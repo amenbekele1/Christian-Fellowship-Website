@@ -6,16 +6,27 @@ export default withAuth(
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
 
-    // Guardian-only admin routes
-    // Exception: Librarians may access the library management page
+    // Guardian-only admin routes — service teams get specific sub-routes
     const serviceTeams = (token?.serviceTeams as string[]) ?? [];
-    const isLibrarian = serviceTeams.includes("LIBRARIAN");
-    const isLibraryRoute = path.startsWith("/dashboard/admin/books");
+    const isLibrarian     = serviceTeams.includes("LIBRARIAN");
+    const isWebsiteEditor = serviceTeams.includes("WEBSITE_EDITOR");
+
+    const librarianRoutes     = ["/dashboard/admin/books"];
+    const websiteEditorRoutes = [
+      "/dashboard/admin/content",
+      "/dashboard/admin/events",
+      "/dashboard/admin/programs",
+      "/dashboard/admin/announcements",
+    ];
+
+    const isAllowedLibrarian     = isLibrarian     && librarianRoutes.some(r => path.startsWith(r));
+    const isAllowedWebsiteEditor = isWebsiteEditor && websiteEditorRoutes.some(r => path.startsWith(r));
 
     if (
       path.startsWith("/dashboard/admin") &&
       token?.role !== "GUARDIAN" &&
-      !(isLibrarian && isLibraryRoute)
+      !isAllowedLibrarian &&
+      !isAllowedWebsiteEditor
     ) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }

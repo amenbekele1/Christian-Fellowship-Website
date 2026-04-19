@@ -330,3 +330,15 @@ model InviteToken {
 
   @@map("invite_tokens")
 }
+
+model PageContent {
+  id        String   @id @default(cuid())
+  pageKey   String   // "home" | "about"
+  fieldKey  String   // e.g. "welcome_title"
+  label     String   // Human-readable label shown in the editor
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@unique([pageKey, fieldKey])
+  @@map("page_contents")
+}

@@ -14,28 +14,16 @@ interface Leader {
   isActive: boolean;
 }
 
-const values = [
-  {
-    icon: BookOpen,
-    title: "Rooted in Scripture",
-    desc: "The Bible is our foundation. Every teaching, decision, and direction we take is anchored in the living Word of God.",
-  },
-  {
-    icon: Heart,
-    title: "Love in Action",
-    desc: "We are called to love one another as Christ loved us — practically, sacrificially, and with open hearts.",
-  },
-  {
-    icon: Users,
-    title: "Community First",
-    desc: "We believe God designed us for relationship. Through BUS groups and fellowship, nobody walks alone.",
-  },
-  {
-    icon: Star,
-    title: "Spirit-Led Worship",
-    desc: "Our worship is authentic, vibrant, and Spirit-filled — rooted in Ethiopian tradition and alive in the Holy Spirit.",
-  },
+const valueIcons = [BookOpen, Heart, Users, Star];
+
+const DEFAULT_VALUES = [
+  { title: "Rooted in Scripture", desc: "The Bible is our foundation. Every teaching, decision, and direction we take is anchored in the living Word of God." },
+  { title: "Love in Action",      desc: "We are called to love one another as Christ loved us — practically, sacrificially, and with open hearts." },
+  { title: "Community First",     desc: "We believe God designed us for relationship. Through BUS groups and fellowship, nobody walks alone." },
+  { title: "Spirit-Led Worship",  desc: "Our worship is authentic, vibrant, and Spirit-filled — rooted in Ethiopian tradition and alive in the Holy Spirit." },
 ];
+
+type ContentMap = Record<string, string>;
 
 const DEFAULT_LEADERSHIP: Leader[] = [
   { id: "default-1", name: "Ato Bekele Tadesse", title: "Senior Pastor", bio: null, imageUrl: null, order: 0, isActive: true },
@@ -46,22 +34,28 @@ const DEFAULT_LEADERSHIP: Leader[] = [
 export default function AboutContent() {
   const [leaders, setLeaders] = useState<Leader[]>([]);
   const [loading, setLoading] = useState(true);
+  const [content, setContent] = useState<ContentMap>({});
 
   useEffect(() => {
-    const fetchLeaders = async () => {
+    const fetchAll = async () => {
       try {
-        const res = await fetch("/api/leaders");
-        if (!res.ok) throw new Error("Failed to fetch");
-        const data = await res.json();
-        setLeaders(data.length > 0 ? data : []);
-      } catch (error) {
+        const [leadersRes, contentRes] = await Promise.all([
+          fetch("/api/leaders"),
+          fetch("/api/page-content?page=about"),
+        ]);
+        const leadersData = await leadersRes.json();
+        setLeaders(Array.isArray(leadersData) && leadersData.length > 0 ? leadersData : []);
+        const contentRows: { fieldKey: string; value: string }[] = await contentRes.json();
+        const map: ContentMap = {};
+        for (const row of contentRows) map[row.fieldKey] = row.value;
+        setContent(map);
+      } catch {
         setLeaders([]);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchLeaders();
+    fetchAll();
   }, []);
 
   const displayLeaders = leaders.length > 0 ? leaders : DEFAULT_LEADERSHIP;
@@ -76,8 +70,7 @@ export default function AboutContent() {
           <p className="text-amber-300 text-sm font-semibold uppercase tracking-widest mb-4">Who We Are</p>
           <h1 className="font-display text-5xl font-bold text-white mb-5">About Our Fellowship</h1>
           <p className="text-brown-100 text-lg max-w-2xl mx-auto leading-relaxed">
-            A community of Ethiopian believers and friends in Warsaw, bound together by the love of
-            Christ and a shared hunger for God.
+            {content.header_subtitle ?? "A community of Ethiopian believers and friends in Warsaw, bound together by the love of Christ and a shared hunger for God."}
           </p>
         </div>
       </section>
@@ -89,23 +82,17 @@ export default function AboutContent() {
             <div>
               <p className="text-gold-600 text-sm font-semibold uppercase tracking-widest mb-3">Our Mission</p>
               <h2 className="font-display text-4xl font-bold text-gray-800 mb-5">
-                Inspiring Lives for the Glory of God
+                {content.mission_title ?? "Inspiring Lives for the Glory of God"}
               </h2>
               <div className="gold-bar mb-7" />
               <p className="text-gray-600 leading-relaxed mb-5 text-lg">
-                The Warsaw Ethiopian Christian Fellowship exists to glorify God by making disciples,
-                nurturing authentic community, and serving the Ethiopian diaspora and wider body of
-                Christ in Poland.
+                {content.mission_body_1 ?? "The Warsaw Ethiopian Christian Fellowship exists to glorify God by making disciples, nurturing authentic community, and serving the Ethiopian diaspora and wider body of Christ in Poland."}
               </p>
               <p className="text-gray-600 leading-relaxed mb-5">
-                We are committed to reaching the lost, teaching the Word, equipping believers, and
-                sending workers into the harvest. Through worship, prayer, fellowship, and service,
-                we pursue an ever-deeper relationship with Jesus Christ.
+                {content.mission_body_2 ?? "We are committed to reaching the lost, teaching the Word, equipping believers, and sending workers into the harvest. Through worship, prayer, fellowship, and service, we pursue an ever-deeper relationship with Jesus Christ."}
               </p>
               <p className="text-gray-600 leading-relaxed">
-                Founded on the bedrock of Hebrews 10:24-25, we refuse to forsake the gathering of
-                believers — because we know that together, we are stronger, sharper, and more
-                effective for the Kingdom.
+                {content.mission_body_3 ?? "Founded on the bedrock of Hebrews 10:24-25, we refuse to forsake the gathering of believers — because we know that together, we are stronger, sharper, and more effective for the Kingdom."}
               </p>
             </div>
 
@@ -132,15 +119,20 @@ export default function AboutContent() {
             <h2 className="font-display text-4xl font-bold text-gray-800">Our Core Values</h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {values.map((val) => (
-              <div key={val.title} className="bg-white rounded-2xl p-7 border border-brown-200 card-hover">
-                <div className="w-12 h-12 rounded-xl bg-brown-50 flex items-center justify-center mb-5">
-                  <val.icon className="w-6 h-6 text-gold-600" />
+            {[1,2,3,4].map((n, i) => {
+              const Icon = valueIcons[i];
+              const title = content[`value_${n}_title`] ?? DEFAULT_VALUES[i].title;
+              const desc  = content[`value_${n}_desc`]  ?? DEFAULT_VALUES[i].desc;
+              return (
+                <div key={n} className="bg-white rounded-2xl p-7 border border-brown-200 card-hover">
+                  <div className="w-12 h-12 rounded-xl bg-brown-50 flex items-center justify-center mb-5">
+                    <Icon className="w-6 h-6 text-gold-600" />
+                  </div>
+                  <h3 className="font-display font-bold text-gray-800 text-lg mb-3">{title}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
                 </div>
-                <h3 className="font-display font-bold text-gray-800 text-lg mb-3">{val.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{val.desc}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
