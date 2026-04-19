@@ -38,6 +38,7 @@ export default function LibraryPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [myRentals, setMyRentals] = useState<Rental[]>([]);
   const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [reserving, setReserving] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -52,10 +53,13 @@ export default function LibraryPage() {
     fetchMyRentals();
   }, []);
 
-  const fetchBooks = async (q?: string) => {
+  const fetchBooks = async (q?: string, cat?: string) => {
     setLoading(true);
     try {
-      const url = q ? `/api/books?search=${encodeURIComponent(q)}` : "/api/books";
+      const params = new URLSearchParams();
+      if (q)   params.set("search",   q);
+      if (cat) params.set("category", cat);
+      const url = params.size ? `/api/books?${params}` : "/api/books";
       const res = await fetch(url);
       const data = await res.json();
       setBooks(data);
@@ -72,7 +76,13 @@ export default function LibraryPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchBooks(search);
+    fetchBooks(search, activeCategory);
+  };
+
+  const handleCategoryFilter = (cat: string) => {
+    const next = cat === activeCategory ? "" : cat;
+    setActiveCategory(next);
+    fetchBooks(search, next);
   };
 
   // Get next Saturday
@@ -172,14 +182,14 @@ export default function LibraryPage() {
       {activeTab === "browse" && (
         <>
           {/* Search */}
-          <form onSubmit={handleSearch} className="flex gap-3 mb-6">
+          <form onSubmit={handleSearch} className="flex gap-3 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by title or author..."
+                placeholder="Search by title, author or translator..."
                 className="w-full pl-10 pr-4 h-10 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
               />
             </div>
@@ -187,6 +197,33 @@ export default function LibraryPage() {
               Search
             </button>
           </form>
+
+          {/* Category filter chips */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            <button
+              onClick={() => handleCategoryFilter("")}
+              className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all border ${
+                activeCategory === ""
+                  ? "bg-brown-800 text-white border-brown-800"
+                  : "bg-white text-gray-500 border-gray-200 hover:border-brown-300"
+              }`}
+            >
+              All
+            </button>
+            {Object.keys(categoryColors).map(cat => (
+              <button
+                key={cat}
+                onClick={() => handleCategoryFilter(cat)}
+                className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all border ${
+                  activeCategory === cat
+                    ? `${categoryColors[cat]} border-transparent`
+                    : "bg-white text-gray-500 border-gray-200 hover:border-brown-300"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-16">
@@ -257,7 +294,19 @@ export default function LibraryPage() {
               {books.length === 0 && !loading && (
                 <div className="col-span-2 lg:col-span-3 text-center py-16 text-gray-400">
                   <Book className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p>No books found. Try a different search.</p>
+                  <p>
+                    {activeCategory
+                      ? `No ${activeCategory} books found.`
+                      : "No books found. Try a different search."}
+                  </p>
+                  {(search || activeCategory) && (
+                    <button
+                      onClick={() => { setSearch(""); setActiveCategory(""); fetchBooks(); }}
+                      className="mt-3 text-sm text-gold-600 hover:underline"
+                    >
+                      Clear filters
+                    </button>
+                  )}
                 </div>
               )}
             </div>
