@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Warsaw Ethiopian Christian Fellowship",
     short_name: "WETCF",
     description: "Member portal for Warsaw Ethiopian Christian Fellowship",
-    start_url: "/login",
+    start_url: "/dashboard",
     display: "standalone",
     orientation: "portrait",
     background_color: "#1C0F07",
