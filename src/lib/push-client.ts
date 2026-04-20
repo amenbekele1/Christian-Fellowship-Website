@@ -1,14 +1,15 @@
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
 
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToArrayBuffer(base64String: string): ArrayBuffer {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64  = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const raw     = window.atob(base64);
-  const output  = new Uint8Array(raw.length);
+  const buffer  = new ArrayBuffer(raw.length);
+  const view    = new DataView(buffer);
   for (let i = 0; i < raw.length; i++) {
-    output[i] = raw.charCodeAt(i);
+    view.setUint8(i, raw.charCodeAt(i));
   }
-  return output;
+  return buffer;
 }
 
 /** Register the service worker and return its registration. */
@@ -32,7 +33,7 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
   try {
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly:      true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      applicationServerKey: urlBase64ToArrayBuffer(VAPID_PUBLIC_KEY),
     });
 
     // Save to our server
