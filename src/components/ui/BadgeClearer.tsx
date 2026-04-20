@@ -11,7 +11,6 @@ export function BadgeClearer() {
   useEffect(() => {
     const clear = async () => {
       try {
-        // @ts-expect-error — Badging API is not yet in TS lib.dom
         if (navigator.clearAppBadge) await navigator.clearAppBadge();
 
         // Also close any lingering notifications so count stays accurate
