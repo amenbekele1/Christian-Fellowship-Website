@@ -1,5 +1,20 @@
 // WETCF Service Worker — handles push notifications
 
+async function updateBadge() {
+  try {
+    const notifications = await self.registration.getNotifications();
+    if (self.navigator.setAppBadge) {
+      if (notifications.length > 0) {
+        await self.navigator.setAppBadge(notifications.length);
+      } else if (self.navigator.clearAppBadge) {
+        await self.navigator.clearAppBadge();
+      }
+    }
+  } catch (e) {
+    // Badging API not supported — silently ignore
+  }
+}
+
 self.addEventListener("push", function (event) {
   if (!event.data) return;
 
@@ -16,7 +31,9 @@ self.addEventListener("push", function (event) {
     requireInteraction: false,
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    self.registration.showNotification(title, options).then(() => updateBadge())
+  );
 });
 
 self.addEventListener("notificationclick", function (event) {
@@ -24,13 +41,18 @@ self.addEventListener("notificationclick", function (event) {
   const url = event.notification.data?.url || "/dashboard";
 
   event.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then(function (clientList) {
-        for (const client of clientList) {
-          if ("focus" in client) return client.focus();
-        }
-        if (clients.openWindow) return clients.openWindow(url);
-      })
+    (async () => {
+      await updateBadge();
+      const clientList = await clients.matchAll({ type: "window", includeUncontrolled: true });
+      for (const client of clientList) {
+        if ("focus" in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })()
   );
+});
+
+// When a notification is dismissed (swiped away), update the badge
+self.addEventListener("notificationclose", function (event) {
+  event.waitUntil(updateBadge());
 });

@@ -5,6 +5,7 @@ import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { DashboardMobileNav } from "@/components/layout/DashboardMobileNav";
 import { InstallPrompt } from "@/components/ui/InstallPrompt";
 import { PushPrompt } from "@/components/ui/PushPrompt";
+import { BadgeClearer } from "@/components/ui/BadgeClearer";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
@@ -31,6 +32,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* Push notification prompt */}
       <PushPrompt />
+
+      {/* Clears the PWA icon badge when the dashboard is opened */}
+      <BadgeClearer />
     </div>
   );
 }
