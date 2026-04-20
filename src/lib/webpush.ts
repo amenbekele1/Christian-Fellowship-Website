@@ -1,8 +1,11 @@
 import webpush from "web-push";
 import { prisma } from "@/lib/prisma";
 
+const vapidEmail = process.env.VAPID_EMAIL!;
 webpush.setVapidDetails(
-  process.env.VAPID_EMAIL!,
+  vapidEmail.startsWith("mailto:") || vapidEmail.startsWith("https://")
+    ? vapidEmail
+    : `mailto:${vapidEmail}`,
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
 );
