@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { sendPushToAll } from "@/lib/webpush";
 
 function canEditContent(session: any): boolean {
   return (
@@ -58,6 +59,13 @@ export async function POST(req: NextRequest) {
       endDate: data.endDate ? new Date(data.endDate) : null,
     },
   });
+
+  // Fire push notification (non-blocking)
+  sendPushToAll({
+    title: "New Event",
+    body: event.title,
+    url: "/dashboard",
+  }).catch(() => {});
 
   return NextResponse.json(event, { status: 201 });
 }

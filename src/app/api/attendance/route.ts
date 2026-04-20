@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { sendEmail, sendBusLeaderAbsenceReport } from "@/lib/email";
+import { sendEmail, sendBusLeaderAbsenceReport, sendLeaderUnassignedAbsenceReport } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
 
 const recordSchema = z.object({
@@ -79,6 +79,8 @@ export async function POST(req: NextRequest) {
   const results = [];
   // Map: busGroupId -> { group, absentMembers[] }
   const absentByGroup = new Map<string, { group: any; members: Array<{ name: string; phone?: string }> }>();
+  // Members absent with no BUS group assigned
+  const unassignedAbsent: Array<{ name: string; phone?: string }> = [];
 
   for (const record of records) {
     const attendance = await prisma.attendance.upsert({
@@ -95,18 +97,26 @@ export async function POST(req: NextRequest) {
     });
     results.push(attendance);
 
-    if (record.status === "ABSENT" && record.busGroupId) {
-      if (!absentByGroup.has(record.busGroupId)) {
-        const grp = await prisma.bUSGroup.findUnique({
-          where: { id: record.busGroupId },
-          include: { leader: true },
+    if (record.status === "ABSENT") {
+      if (record.busGroupId) {
+        if (!absentByGroup.has(record.busGroupId)) {
+          const grp = await prisma.bUSGroup.findUnique({
+            where: { id: record.busGroupId },
+            include: { leader: true },
+          });
+          absentByGroup.set(record.busGroupId, { group: grp, members: [] });
+        }
+        absentByGroup.get(record.busGroupId)!.members.push({
+          name: attendance.user.name,
+          phone: attendance.user.phone || undefined,
         });
-        absentByGroup.set(record.busGroupId, { group: grp, members: [] });
+      } else {
+        // No BUS group — collect for leader follow-up
+        unassignedAbsent.push({
+          name: attendance.user.name,
+          phone: attendance.user.phone || undefined,
+        });
       }
-      absentByGroup.get(record.busGroupId)!.members.push({
-        name: attendance.user.name,
-        phone: attendance.user.phone || undefined,
-      });
     }
   }
 
@@ -121,6 +131,25 @@ export async function POST(req: NextRequest) {
           group.name,
           formatDate(attendanceDate),
           members
+        ),
+      }).catch(console.error);
+    }
+  }
+
+  // Send one email to each Leader (GUARDIAN) for unassigned absent members
+  if (unassignedAbsent.length > 0) {
+    const leaders = await prisma.user.findMany({
+      where: { role: "GUARDIAN", isActive: true },
+      select: { name: true, email: true },
+    });
+    for (const leader of leaders) {
+      sendEmail({
+        to: leader.email,
+        subject: `Follow-up Needed — Unassigned Absent Members (${formatDate(attendanceDate)})`,
+        html: sendLeaderUnassignedAbsenceReport(
+          leader.name,
+          formatDate(attendanceDate),
+          unassignedAbsent
         ),
       }).catch(console.error);
     }

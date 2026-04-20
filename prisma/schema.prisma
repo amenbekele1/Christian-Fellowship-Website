@@ -65,7 +65,8 @@ model User {
   assignedTasks  GroupTask[]    @relation("AssignedTasks")
 
   // Service teams (librarian, worship, etc.)
-  serviceTeams   UserServiceTeam[]
+  serviceTeams      UserServiceTeam[]
+  pushSubscriptions PushSubscription[]
 
   @@map("users")
 }
@@ -329,6 +330,19 @@ model InviteToken {
   createdById String
 
   @@map("invite_tokens")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
 }
 
 model PageContent {

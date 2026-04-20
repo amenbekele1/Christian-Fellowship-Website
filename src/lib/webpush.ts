@@ -1,0 +1,49 @@
+import webpush from "web-push";
+import { prisma } from "@/lib/prisma";
+
+webpush.setVapidDetails(
+  process.env.VAPID_EMAIL!,
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+  process.env.VAPID_PRIVATE_KEY!
+);
+
+export interface PushPayload {
+  title: string;
+  body:  string;
+  url?:  string;  // URL to open when notification is tapped
+}
+
+/**
+ * Send a push notification to every subscribed member.
+ * Silently removes subscriptions that are no longer valid.
+ */
+export async function sendPushToAll(payload: PushPayload): Promise<void> {
+  const subs = await prisma.pushSubscription.findMany();
+  if (subs.length === 0) return;
+
+  const results = await Promise.allSettled(
+    subs.map((sub) =>
+      webpush.sendNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        JSON.stringify(payload)
+      )
+    )
+  );
+
+  // Remove expired / invalid subscriptions
+  const toDelete: string[] = [];
+  results.forEach((result, i) => {
+    if (result.status === "rejected") {
+      const err = result.reason as any;
+      if (err?.statusCode === 404 || err?.statusCode === 410) {
+        toDelete.push(subs[i].endpoint);
+      }
+    }
+  });
+
+  if (toDelete.length > 0) {
+    await prisma.pushSubscription.deleteMany({
+      where: { endpoint: { in: toDelete } },
+    });
+  }
+}

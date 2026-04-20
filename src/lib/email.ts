@@ -192,6 +192,87 @@ export function sendBusLeaderAbsenceReport(
   `;
 }
 
+export function sendLeaderUnassignedAbsenceReport(
+  leaderName: string,
+  eventDate: string,
+  absentMembers: Array<{ name: string; phone?: string }>
+): string {
+  const memberRows = absentMembers
+    .map(
+      (member) =>
+        `<tr style="border-bottom: 1px solid #e5e7eb;">
+          <td style="padding: 12px; color: #374151;">${esc(member.name)}</td>
+          <td style="padding: 12px; color: #6b7280;">${member.phone ? esc(member.phone) : "—"}</td>
+        </tr>`
+    )
+    .join("");
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #1C0F07, #2C1A0E); padding: 40px; text-align: center; }
+        .header h1 { color: #fde047; margin: 0; font-size: 22px; letter-spacing: 0.5px; }
+        .header p { color: #d4b896; margin: 8px 0 0; font-size: 14px; }
+        .cross { font-size: 40px; margin-bottom: 12px; display: block; }
+        .body { padding: 40px; }
+        .body h2 { color: #2C1A0E; font-size: 20px; margin-top: 0; }
+        .body p { color: #374151; line-height: 1.7; }
+        .notice { background: #FFF8EC; border: 1px solid #C9A84C; padding: 16px; border-radius: 8px; margin: 20px 0; }
+        .notice strong { color: #1C0F07; display: block; margin-bottom: 4px; }
+        .notice p { margin: 0; font-size: 14px; color: #6b7280; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        table th { background: #f3f4f6; padding: 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #d1d5db; font-size: 13px; }
+        .footer { background: #FAF7F0; padding: 24px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #e5e7eb; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <span class="cross">✝</span>
+          <h1>Warsaw Ethiopian Christian Fellowship</h1>
+          <p>Unassigned Members — Follow-up Needed</p>
+        </div>
+        <div class="body">
+          <h2>Dear ${esc(leaderName)},</h2>
+          <p>The following members were recorded as absent at today's gathering but are not currently assigned to any BUS group. They need pastoral follow-up.</p>
+
+          <div class="notice">
+            <strong>Event Date: ${esc(eventDate)}</strong>
+            <p>Members without a BUS group: ${absentMembers.length}</p>
+          </div>
+
+          <p>Please reach out to each of these members to check on their wellbeing and consider assigning them to an appropriate BUS group:</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Member Name</th>
+                <th>Phone</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${memberRows}
+            </tbody>
+          </table>
+
+          <p>Your leadership and care ensure no one in our fellowship is overlooked. Thank you for your faithful service.</p>
+          <p>In His service,<br><strong>Warsaw Ethiopian Christian Fellowship</strong></p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+          <p><strong>Warsaw Ethiopian Christian Fellowship</strong> · Warsaw, Poland</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
 export function bookReminderEmail(
   memberName: string,
   bookTitle: string,

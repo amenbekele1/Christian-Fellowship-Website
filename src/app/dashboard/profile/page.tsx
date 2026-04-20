@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { AlertCircle, Check, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Check, Eye, EyeOff, Bell, BellOff } from "lucide-react";
+import {
+  subscribeToPush,
+  unsubscribeFromPush,
+  getPermissionState,
+  isSubscribed,
+  registerSW,
+} from "@/lib/push-client";
 
 interface UserProfile {
   id: string;
@@ -42,9 +49,46 @@ export default function ProfilePage() {
 
   const [passwordTab, setPasswordTab] = useState(false);
 
+  // Push notification state
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">("default");
+  const [pushLoading, setPushLoading] = useState(false);
+
   useEffect(() => {
     fetchProfile();
+    initPushState();
   }, []);
+
+  const initPushState = async () => {
+    registerSW();
+    const permission = getPermissionState();
+    setPushPermission(permission as NotificationPermission | "unsupported");
+    if (permission === "granted") {
+      const subbed = await isSubscribed();
+      setPushSubscribed(subbed);
+    }
+  };
+
+  const handlePushToggle = async () => {
+    setPushLoading(true);
+    try {
+      if (pushSubscribed) {
+        await unsubscribeFromPush();
+        setPushSubscribed(false);
+      } else {
+        const sub = await subscribeToPush();
+        if (sub) {
+          setPushSubscribed(true);
+          setPushPermission("granted");
+        } else {
+          // Permission denied
+          setPushPermission(Notification.permission as NotificationPermission);
+        }
+      }
+    } finally {
+      setPushLoading(false);
+    }
+  };
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -165,6 +209,46 @@ export default function ProfilePage() {
         <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex gap-3 items-start">
           <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
           <p className="text-red-700 text-sm">{error}</p>
+        </div>
+      )}
+
+      {/* Notifications card */}
+      {pushPermission !== "unsupported" && (
+        <div className="mb-6 bg-white rounded-2xl p-5 border border-brown-200 flex items-center gap-4">
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: "rgba(201,168,76,0.12)" }}
+          >
+            {pushSubscribed ? (
+              <Bell className="w-5 h-5" style={{ color: "#C9A84C" }} />
+            ) : (
+              <BellOff className="w-5 h-5 text-gray-400" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-800">Push Notifications</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {pushPermission === "denied"
+                ? "Notifications are blocked — enable them in your browser settings."
+                : pushSubscribed
+                ? "You'll be notified about new announcements and events."
+                : "Get notified about new announcements and upcoming events."}
+            </p>
+          </div>
+          {pushPermission !== "denied" && (
+            <button
+              onClick={handlePushToggle}
+              disabled={pushLoading}
+              className="shrink-0 text-xs font-semibold px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
+              style={
+                pushSubscribed
+                  ? { background: "#f3f4f6", color: "#374151" }
+                  : { background: "#C9A84C", color: "#1C0F07" }
+              }
+            >
+              {pushLoading ? "…" : pushSubscribed ? "Turn off" : "Turn on"}
+            </button>
+          )}
         </div>
       )}
 
