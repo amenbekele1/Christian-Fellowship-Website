@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { sendRefreshPush } from "@/lib/webpush";
 
 const busGroupSchema = z.object({
   name: z.string().min(2),
@@ -66,6 +67,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  sendRefreshPush("bus-groups").catch(() => {});
   return NextResponse.json(group, { status: 201 });
 }
 
@@ -87,6 +89,7 @@ export async function PATCH(req: NextRequest) {
       where: { id: body.addMemberId },
       data: { busGroupId: id },
     });
+    sendRefreshPush("bus-groups").catch(() => {});
     return NextResponse.json(updated);
   }
 
@@ -95,6 +98,7 @@ export async function PATCH(req: NextRequest) {
       where: { id: body.removeMemberId },
       data: { busGroupId: null },
     });
+    sendRefreshPush("bus-groups").catch(() => {});
     return NextResponse.json(updated);
   }
 
@@ -131,6 +135,7 @@ export async function PATCH(req: NextRequest) {
     },
   });
 
+  sendRefreshPush("bus-groups").catch(() => {});
   return NextResponse.json(group);
 }
 
@@ -149,5 +154,6 @@ export async function DELETE(req: NextRequest) {
     prisma.user.updateMany({ where: { busGroupId: id }, data: { busGroupId: null } }),
     prisma.bUSGroup.delete({ where: { id } }),
   ]);
+  sendRefreshPush("bus-groups").catch(() => {});
   return NextResponse.json({ message: "Deleted" });
 }

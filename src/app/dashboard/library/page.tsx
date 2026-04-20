@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { BookOpen, Search, Book, CheckCircle, Clock, AlertCircle, X } from "lucide-react";
+import { PullToRefresh } from "@/components/ui/PullToRefresh";
+import { useRefreshOnFocus } from "@/hooks/useRefreshOnFocus";
+import { usePushRefresh } from "@/hooks/usePushRefresh";
 
 interface Book {
   id: string;
@@ -52,6 +55,14 @@ export default function LibraryPage() {
     fetchBooks();
     fetchMyRentals();
   }, []);
+
+  const refreshAll = useCallback(async () => {
+    await Promise.all([fetchBooks(search, activeCategory), fetchMyRentals()]);
+  }, [search, activeCategory]);
+
+  // Refetch when the tab becomes visible and when an admin change fires a push
+  useRefreshOnFocus(refreshAll);
+  usePushRefresh("books", refreshAll);
 
   const fetchBooks = async (q?: string, cat?: string) => {
     setLoading(true);
@@ -148,6 +159,7 @@ export default function LibraryPage() {
   const activeRentalIds = myRentals.filter((r) => r.status === "ACTIVE").map((r) => r.book.id);
 
   return (
+    <PullToRefresh onRefresh={refreshAll}>
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
         <h1 className="font-display text-3xl font-bold text-gray-800">E-Library</h1>
@@ -429,5 +441,6 @@ export default function LibraryPage() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }

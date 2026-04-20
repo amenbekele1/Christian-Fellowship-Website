@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { sendPushToAll } from "@/lib/webpush";
+import { sendPushToAll, sendRefreshPush } from "@/lib/webpush";
 
 function canEditContent(session: any): boolean {
   return (
@@ -56,11 +56,12 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Fire push notification (non-blocking)
+  // Fire push notification + refresh ping (non-blocking)
   sendPushToAll({
     title: "New Announcement",
     body: announcement.title,
     url: "/dashboard",
+    topic: "announcements",
   }).catch(() => {});
 
   return NextResponse.json(announcement, { status: 201 });
@@ -87,6 +88,7 @@ export async function PATCH(req: NextRequest) {
     },
   });
 
+  sendRefreshPush("announcements").catch(() => {});
   return NextResponse.json(announcement);
 }
 
@@ -101,5 +103,6 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
   await prisma.announcement.delete({ where: { id } });
+  sendRefreshPush("announcements").catch(() => {});
   return NextResponse.json({ message: "Deleted" });
 }

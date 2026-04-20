@@ -5,6 +5,9 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Plus, BookMarked, Trash2, X, BookOpen, Pencil, AlertCircle } from "lucide-react";
 import { upload } from "@vercel/blob/client";
+import { PullToRefresh } from "@/components/ui/PullToRefresh";
+import { useRefreshOnFocus } from "@/hooks/useRefreshOnFocus";
+import { usePushRefresh } from "@/hooks/usePushRefresh";
 
 interface Book {
   id: string; title: string; author: string; translatedBy: string | null;
@@ -54,6 +57,9 @@ export default function AdminBooksPage() {
     setRentals(Array.isArray(rentalData) ? rentalData : []);
     setLoading(false);
   };
+
+  useRefreshOnFocus(fetchData);
+  usePushRefresh("books", fetchData);
 
   const openCreate = () => {
     setEditingBook(null);
@@ -144,6 +150,7 @@ export default function AdminBooksPage() {
   const activeRentals = rentals.filter(r => r.status === "ACTIVE" || r.status === "OVERDUE");
 
   return (
+    <PullToRefresh onRefresh={fetchData}>
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -331,5 +338,6 @@ export default function AdminBooksPage() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }

@@ -11,9 +11,11 @@ webpush.setVapidDetails(
 );
 
 export interface PushPayload {
-  title: string;
-  body:  string;
-  url?:  string;  // URL to open when notification is tapped
+  title?: string;
+  body?:  string;
+  url?:   string;  // URL to open when notification is tapped
+  type?:  "notification" | "refresh";
+  topic?: string;  // used for "refresh" type — matches usePushRefresh(topic, …)
 }
 
 /**
@@ -49,4 +51,13 @@ export async function sendPushToAll(payload: PushPayload): Promise<void> {
       where: { endpoint: { in: toDelete } },
     });
   }
+}
+
+/**
+ * Fire a silent "refresh" push. The service worker receives it and
+ * broadcasts to any open clients via postMessage so their UI can refetch.
+ * No notification is shown. Safe to call on every admin mutation.
+ */
+export async function sendRefreshPush(topic: string): Promise<void> {
+  await sendPushToAll({ type: "refresh", topic });
 }

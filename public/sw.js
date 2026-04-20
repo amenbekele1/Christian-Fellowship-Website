@@ -15,11 +15,24 @@ async function updateBadge() {
   }
 }
 
+async function broadcastRefresh(topic) {
+  const windows = await clients.matchAll({ type: "window", includeUncontrolled: true });
+  windows.forEach((w) => {
+    try { w.postMessage({ type: "refresh", topic }); } catch {}
+  });
+}
+
 self.addEventListener("push", function (event) {
   if (!event.data) return;
 
   let data = {};
   try { data = event.data.json(); } catch { data = { title: "WETCF", body: event.data.text() }; }
+
+  // Silent refresh — broadcast to open clients, do not show a notification
+  if (data.type === "refresh") {
+    event.waitUntil(broadcastRefresh(data.topic || "*"));
+    return;
+  }
 
   const title   = data.title || "WETCF";
   const options = {
@@ -32,7 +45,11 @@ self.addEventListener("push", function (event) {
   };
 
   event.waitUntil(
-    self.registration.showNotification(title, options).then(() => updateBadge())
+    self.registration
+      .showNotification(title, options)
+      .then(() => updateBadge())
+      // Also nudge open clients to refetch the relevant topic
+      .then(() => broadcastRefresh(data.topic || "notifications"))
   );
 });
 
