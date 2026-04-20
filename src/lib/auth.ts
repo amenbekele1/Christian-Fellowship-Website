@@ -4,12 +4,27 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
+const THIRTY_DAYS = 30 * 24 * 60 * 60; // seconds
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,    // 30 days
-    updateAge: 24 * 60 * 60,       // refresh token once per day at most
+    maxAge: THIRTY_DAYS,
+    updateAge: 24 * 60 * 60,
+  },
+  // Explicitly configure the session cookie so iOS PWA persists it across app closes
+  cookies: {
+    sessionToken: {
+      name: "__Secure-next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax" as const,
+        path: "/",
+        secure: true,
+        maxAge: THIRTY_DAYS,
+      },
+    },
   },
   pages: {
     signIn: "/login",
