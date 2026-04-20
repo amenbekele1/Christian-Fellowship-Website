@@ -6,8 +6,8 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 const profileUpdateSchema = z.object({
-  firstName: z.string().min(1).optional(),
-  lastName: z.string().min(1).optional(),
+  firstName: z.string().min(1, "First name cannot be empty").optional(),
+  lastName:  z.string().optional(),   // last name is optional — can be blank
   phoneNumber: z.string().optional(),
 });
 
@@ -106,13 +106,21 @@ export async function PATCH(req: NextRequest) {
   }
 
   // Profile update
-  const profileData = profileUpdateSchema.parse(body);
+  let profileData;
+  try {
+    profileData = profileUpdateSchema.parse(body);
+  } catch (err: any) {
+    const message = err.errors?.[0]?.message ?? "Invalid data";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+
   const updateData: any = {};
 
-  if (profileData.firstName || profileData.lastName) {
-    const firstName = profileData.firstName || "";
-    const lastName = profileData.lastName || "";
-    updateData.name = `${firstName} ${lastName}`.trim();
+  if (profileData.firstName !== undefined || profileData.lastName !== undefined) {
+    const firstName = profileData.firstName?.trim() ?? "";
+    const lastName  = profileData.lastName?.trim()  ?? "";
+    // Join only non-empty parts so a single first name stores cleanly
+    updateData.name = [firstName, lastName].filter(Boolean).join(" ");
   }
 
   if (profileData.phoneNumber !== undefined) {
