@@ -135,12 +135,13 @@ model VerificationToken {
 }
 
 model BUSGroup {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  leaderId    String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String    @id @default(cuid())
+  name              String    @unique
+  description       String?
+  leaderId          String    @unique
+  lastMeetingPingAt DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   leader      User           @relation("GroupLeader", fields: [leaderId], references: [id])
   members     User[]         @relation("GroupMembers")
@@ -250,18 +251,20 @@ model BookRental {
 }
 
 model Event {
-  id          String   @id @default(cuid())
-  title       String
-  description String?  @db.Text
-  location    String?
-  startDate   DateTime
-  endDate     DateTime?
-  type        String?
-  imageUrl    String?
-  isPublic    Boolean  @default(true)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String   @id @default(cuid())
+  title             String
+  description       String?  @db.Text
+  location          String?
+  startDate         DateTime
+  endDate           DateTime?
+  type              String?
+  imageUrl          String?
+  isPublic          Boolean  @default(true)
+  isActive          Boolean  @default(true)
+  dayReminderSent   Boolean  @default(false)
+  hourReminderSent  Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@map("events")
 }

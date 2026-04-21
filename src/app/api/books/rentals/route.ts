@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { sendEmail, bookReminderEmail } from "@/lib/email";
-import { formatDate } from "@/lib/utils";
-import { addDays } from "date-fns";
 import { z } from "zod";
 
 const createRentalSchema = z.object({
@@ -137,63 +134,5 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
 }
 
-// Cron-style endpoint to send reminders (call via cron job or Vercel cron)
-export async function PUT(req: NextRequest) {
-  const cronSecret = req.headers.get("x-vercel-cron-secret");
-  const authHeader = req.headers.get("authorization");
-
-  const isValidCron = cronSecret === process.env.CRON_SECRET;
-  const isValidBearer = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-
-  if (!isValidCron && !isValidBearer) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const tomorrow = addDays(new Date(), 1);
-  const dayAfter = addDays(new Date(), 2);
-
-  // Find rentals due within 48 hours where reminder hasn't been sent
-  const dueRentals = await prisma.bookRental.findMany({
-    where: {
-      status: "ACTIVE",
-      reminderSent: false,
-      dueDate: { gte: tomorrow, lte: dayAfter },
-    },
-    include: {
-      user: true,
-      book: true,
-    },
-  });
-
-  const results = [];
-  for (const rental of dueRentals) {
-    const result = await sendEmail({
-      to: rental.user.email,
-      subject: `📚 Book Return Reminder: "${rental.book.title}"`,
-      html: bookReminderEmail(
-        rental.user.name,
-        rental.book.title,
-        formatDate(rental.dueDate!)
-      ),
-    });
-
-    if (result.success) {
-      await prisma.bookRental.update({
-        where: { id: rental.id },
-        data: { reminderSent: true },
-      });
-      results.push({ id: rental.id, sent: true });
-    }
-  }
-
-  // Mark overdue
-  await prisma.bookRental.updateMany({
-    where: {
-      status: "ACTIVE",
-      dueDate: { lt: new Date() },
-    },
-    data: { status: "OVERDUE" },
-  });
-
-  return NextResponse.json({ processed: results.length, results });
-}
+// Cron logic for reminders moved to GET /api/cron/book-reminders
+// (Vercel Cron only fires GET requests).

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { groupAuth, isAuthError } from "@/lib/group-auth";
 import { z } from "zod";
+import { sendPushToBusGroup } from "@/lib/webpush";
 
 const msgSchema = z.object({
   content: z.string().min(1).max(4000).optional(),
@@ -59,8 +60,28 @@ export async function POST(
       fileType: data.fileType,
       isAnnouncement: auth.isLeader,
     },
-    include: { sender: { select: { id: true, name: true } } },
+    include: {
+      sender:   { select: { id: true, name: true } },
+      busGroup: { select: { name: true } },
+    },
   });
+
+  // Fire push + refresh to group members except sender (non-blocking)
+  const preview = data.content
+    ? data.content.slice(0, 120)
+    : data.fileName
+      ? `📎 ${data.fileName}`
+      : "Attachment";
+  sendPushToBusGroup(
+    params.groupId,
+    {
+      title: `${message.sender.name} · ${message.busGroup.name}`,
+      body:  preview,
+      url:   `/dashboard/bus-groups/${params.groupId}/chat`,
+      topic: "group-messages",
+    },
+    auth.userId
+  ).catch(() => {});
 
   return NextResponse.json(serializeMsg(message), { status: 201 });
 }

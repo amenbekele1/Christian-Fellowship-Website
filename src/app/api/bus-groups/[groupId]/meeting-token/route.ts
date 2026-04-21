@@ -1,6 +1,43 @@
 import { NextResponse } from "next/server";
 import { SignJWT, importPKCS8 } from "jose";
 import { groupAuth, isAuthError } from "@/lib/group-auth";
+import { prisma } from "@/lib/prisma";
+import { sendPushToBusGroup } from "@/lib/webpush";
+
+const MEETING_PING_DEBOUNCE_MS = 15 * 60 * 1000; // don't re-notify within 15 min
+
+async function notifyMeetingStartedIfFirst(groupId: string, starterUserId: string) {
+  const group = await prisma.bUSGroup.findUnique({
+    where: { id: groupId },
+    select: { name: true, lastMeetingPingAt: true },
+  });
+  if (!group) return;
+
+  const now = new Date();
+  if (
+    group.lastMeetingPingAt &&
+    now.getTime() - group.lastMeetingPingAt.getTime() < MEETING_PING_DEBOUNCE_MS
+  ) {
+    return; // someone already notified recently
+  }
+
+  // Claim the ping window atomically-ish (best-effort)
+  await prisma.bUSGroup.update({
+    where: { id: groupId },
+    data:  { lastMeetingPingAt: now },
+  });
+
+  await sendPushToBusGroup(
+    groupId,
+    {
+      title: `📹 ${group.name} meeting is live`,
+      body:  "Tap to join the video chat.",
+      url:   `/dashboard/bus-groups/${groupId}/meeting`,
+      topic: "group-meeting",
+    },
+    starterUserId
+  ).catch(() => {});
+}
 
 export async function GET(
   _req: Request,
@@ -53,6 +90,10 @@ export async function GET(
       .setAudience("jitsi")
       .setSubject(appId)
       .sign(privateKey);
+
+    // Fire-and-forget: if this is the first token issued for this group in a while,
+    // notify the rest of the group that a meeting has started.
+    notifyMeetingStartedIfFirst(params.groupId, auth.userId).catch(() => {});
 
     return NextResponse.json({ token, roomName, appId });
   } catch (err: any) {
