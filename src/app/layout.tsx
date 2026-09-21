@@ -6,7 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: "#1C0F07",
 };
 
