@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
     // Email to Leaders
     await sendEmail({
       to: leaderEmails,
+      replyTo: `${name} <${email}>`,
       subject: `Contact Form: ${subject}`,
       html: `
         <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; background: #FAF7F0;">
