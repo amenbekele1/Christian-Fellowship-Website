@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "@/components/layout/Providers";
 import { Toaster } from "@/components/ui/toaster";
+import { DisablePinchZoom } from "@/components/layout/DisablePinchZoom";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>
+          <DisablePinchZoom />
           {children}
           <Toaster />
         </Providers>
