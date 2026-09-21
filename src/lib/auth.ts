@@ -11,7 +11,12 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
     maxAge: THIRTY_DAYS,
-    updateAge: 24 * 60 * 60,
+    // Set updateAge equal to maxAge so the JWT is only rotated once per session
+    // (just before it expires). Frequent rotation rewrites the cookie via an API
+    // response header, which Android Chrome in standalone mode sometimes fails to
+    // flush to persistent storage before the process is killed — causing the user
+    // to be logged out on the next app open.
+    updateAge: THIRTY_DAYS,
   },
   // Explicitly configure the session cookie so iOS PWA persists it across app closes
   cookies: {
