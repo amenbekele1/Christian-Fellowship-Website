@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { AlertCircle, Check, Eye, EyeOff, Bell, BellOff } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { AlertCircle, Check, Eye, EyeOff, Bell, BellOff, Trash2 } from "lucide-react";
 import {
   subscribeToPush,
   unsubscribeFromPush,
@@ -49,6 +49,12 @@ export default function ProfilePage() {
 
   const [passwordTab, setPasswordTab] = useState(false);
 
+  // Delete account state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
   // Push notification state
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">("default");
@@ -87,6 +93,22 @@ export default function ProfilePage() {
       }
     } finally {
       setPushLoading(false);
+    }
+  };
+
+  const deleteAccount = async () => {
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const res = await fetch("/api/members/profile", { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete account");
+      }
+      await signOut({ callbackUrl: "/" });
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "An error occurred");
+      setDeleting(false);
     }
   };
 
@@ -411,6 +433,74 @@ export default function ProfilePage() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Danger Zone */}
+      <div className="mt-8 border border-red-200 rounded-2xl p-5 bg-red-50">
+        <h2 className="text-sm font-semibold text-red-700 mb-1 flex items-center gap-2">
+          <Trash2 className="w-4 h-4" /> Danger Zone
+        </h2>
+        <p className="text-xs text-red-600 mb-4 leading-relaxed">
+          Deleting your account permanently removes all your personal data from our systems within 30 days,
+          in accordance with our{" "}
+          <a href="/privacy" target="_blank" className="underline font-medium">Privacy Policy</a>.
+          This action cannot be undone.
+        </p>
+        <button
+          onClick={() => { setShowDeleteModal(true); setDeleteConfirmText(""); setDeleteError(""); }}
+          className="text-sm font-semibold text-red-600 border border-red-300 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors"
+        >
+          Delete my account
+        </button>
+      </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-7">
+            <h2 className="font-display text-xl font-bold text-gray-900 mb-2">Delete Account</h2>
+            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+              This will permanently delete your account and all associated data. You will be signed out immediately.
+              To confirm, type <strong>DELETE</strong> below.
+            </p>
+            {deleteError && (
+              <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">
+                {deleteError}
+              </div>
+            )}
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder='Type "DELETE" to confirm'
+              className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 mb-4"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                className="flex-1 border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteAccount}
+                disabled={deleteConfirmText !== "DELETE" || deleting}
+                className="flex-1 bg-red-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                {deleting ? (
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {deleting ? "Deleting..." : "Delete account"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

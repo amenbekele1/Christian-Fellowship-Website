@@ -80,9 +80,14 @@ export function PublicFooter() {
           <p className="text-xs" style={{ color: "#5C3D20" }}>
             © {new Date().getFullYear()} Warsaw Ethiopian Christian Fellowship. All rights reserved.
           </p>
-          <p className="flex items-center gap-1.5 text-xs" style={{ color: "#5C3D20" }}>
-            Made with <Heart className="w-3 h-3" style={{ color: "#C9A84C" }} /> for the glory of God
-          </p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-xs hover:underline transition-colors" style={{ color: "#5C3D20" }}>
+              Privacy Policy
+            </Link>
+            <p className="flex items-center gap-1.5 text-xs" style={{ color: "#5C3D20" }}>
+              Made with <Heart className="w-3 h-3" style={{ color: "#C9A84C" }} /> for the glory of God
+            </p>
+          </div>
         </div>
       </div>
     </footer>

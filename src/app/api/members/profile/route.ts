@@ -142,3 +142,40 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json(updated);
 }
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const userId = session.user.id;
+
+  // Prevent the last Guardian from deleting themselves
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+  if (user?.role === "GUARDIAN") {
+    const guardianCount = await prisma.user.count({ where: { role: "GUARDIAN", isActive: true } });
+    if (guardianCount <= 1) {
+      return NextResponse.json(
+        { error: "You are the only Guardian. Please promote another member before deleting your account." },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Soft-delete: mark account inactive and scrub PII
+  // We keep a placeholder so relational data (attendance, loans, etc.) stays consistent
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      name: "[Deleted]",
+      email: `deleted_${userId}@wetcf.deleted`,
+      phone: null,
+      image: null,
+      password: null,
+      isActive: false,
+    },
+  });
+
+  return NextResponse.json({ success: true });
+}

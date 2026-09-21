@@ -71,6 +71,7 @@ function RegisterContent() {
   const inviteToken = searchParams.get("invite");
 
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", confirm: "" });
+  const [gdprConsent, setGdprConsent] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(!!inviteToken);
@@ -120,6 +121,7 @@ function RegisterContent() {
     if (form.name.trim().length < 2) errors.name = "Name must be at least 2 characters";
     if (!pwdValid) errors.password = "Password does not meet requirements";
     if (form.password !== form.confirm) errors.confirm = "Passwords do not match";
+    if (!gdprConsent) errors.gdpr = "You must accept the Privacy Policy to register";
     if (Object.keys(errors).length > 0) { setFieldErrors(errors); return; }
     setFieldErrors({});
 
@@ -329,6 +331,28 @@ function RegisterContent() {
                 <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
               )}
               {fieldErrors.confirm && <p className="text-xs text-red-600 mt-1">{fieldErrors.confirm}</p>}
+            </div>
+
+            <div className="pt-1">
+              <label className={`flex items-start gap-3 cursor-pointer ${fieldErrors.gdpr ? "text-red-600" : "text-gray-600"}`}>
+                <input
+                  type="checkbox"
+                  checked={gdprConsent}
+                  onChange={(e) => { setGdprConsent(e.target.checked); setFieldErrors(fe => ({ ...fe, gdpr: "" })); }}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-gold-600 focus:ring-gold-500 cursor-pointer"
+                />
+                <span className="text-sm leading-snug">
+                  I have read and agree to the{" "}
+                  <Link href="/privacy" target="_blank" className="text-gold-600 font-medium hover:underline">
+                    Privacy Policy
+                  </Link>
+                  . I consent to Warsaw Ethiopian Christian Fellowship storing and processing my personal data for fellowship membership purposes.{" "}
+                  <span className="text-red-500">*</span>
+                </span>
+              </label>
+              {fieldErrors.gdpr && (
+                <p className="text-xs text-red-600 mt-1.5 ml-7">{fieldErrors.gdpr}</p>
+              )}
             </div>
 
             <button
