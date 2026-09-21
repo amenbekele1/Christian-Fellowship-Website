@@ -4,7 +4,10 @@ const securityHeaders = [
   { key: "X-Frame-Options",          value: "SAMEORIGIN" },
   { key: "X-Content-Type-Options",   value: "nosniff" },
   { key: "Referrer-Policy",          value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy",       value: "camera=(), microphone=(), geolocation=()" },
+  // Block geolocation globally. Camera and microphone are NOT blocked here because
+  // the meeting page embeds Jitsi via iframe and needs them — browsers always ask
+  // the user for permission before granting access regardless of this header.
+  { key: "Permissions-Policy",       value: "geolocation=()" },
   {
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
