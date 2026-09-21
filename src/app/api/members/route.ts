@@ -102,3 +102,49 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json(member);
 }
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.user.role !== "GUARDIAN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "Member ID required" }, { status: 400 });
+
+  // Prevent self-deletion via this route (use profile page instead)
+  if (id === session.user.id) {
+    return NextResponse.json({ error: "Use your Profile page to delete your own account" }, { status: 400 });
+  }
+
+  // Prevent deleting the last Guardian
+  const target = await prisma.user.findUnique({ where: { id }, select: { role: true, name: true } });
+  if (!target) return NextResponse.json({ error: "Member not found" }, { status: 404 });
+
+  if (target.role === "GUARDIAN") {
+    const guardianCount = await prisma.user.count({ where: { role: "GUARDIAN", isActive: true } });
+    if (guardianCount <= 1) {
+      return NextResponse.json(
+        { error: "Cannot delete the only Guardian. Promote another member first." },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Soft-delete: scrub PII, mark inactive
+  await prisma.user.update({
+    where: { id },
+    data: {
+      name: "[Deleted]",
+      email: `deleted_${id}@wetcf.deleted`,
+      phone: null,
+      image: null,
+      password: `__DELETED__${Date.now()}`,
+      isActive: false,
+    },
+  });
+
+  return NextResponse.json({ success: true });
+}

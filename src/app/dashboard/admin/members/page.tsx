@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Search, Users, ChevronLeft, ChevronRight, AlertCircle, X } from "lucide-react";
+import { Search, Users, ChevronLeft, ChevronRight, AlertCircle, X, Trash2 } from "lucide-react";
 import { getRoleLabel, getRoleBadgeColor, formatDate } from "@/lib/utils";
 
 interface Member {
@@ -36,6 +36,10 @@ export default function AdminMembersPage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [teamsModal, setTeamsModal] = useState<Member | null>(null);
   const [teamUpdating, setTeamUpdating] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<Member | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     if (session?.user.role !== "GUARDIAN") { router.push("/dashboard"); return; }
@@ -155,6 +159,26 @@ export default function AdminMembersPage() {
     await updateMember(member.id, { isActive: !member.isActive });
   };
 
+  const deleteMember = async () => {
+    if (!deleteModal) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const res = await fetch(`/api/members?id=${deleteModal.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error ?? "Failed to delete member");
+      }
+      setDeleteModal(null);
+      setDeleteConfirmText("");
+      await fetchMembers();
+    } catch (err: any) {
+      setDeleteError(err.message ?? "Something went wrong");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
@@ -234,6 +258,7 @@ export default function AdminMembersPage() {
                 <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Teams</th>
                 <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Joined</th>
                 <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="px-5 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-brown-100">
@@ -305,6 +330,15 @@ export default function AdminMembersPage() {
                       {updating === member.id ? "..." : member.isActive ? "Active" : "Inactive"}
                     </button>
                   </td>
+                  <td className="px-3 py-3.5 text-right">
+                    <button
+                      onClick={() => { setDeleteModal(member); setDeleteConfirmText(""); setDeleteError(""); }}
+                      title="Delete account"
+                      className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -343,6 +377,66 @@ export default function AdminMembersPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Member Modal */}
+      {deleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h2 className="font-display font-bold text-gray-900 text-lg leading-tight">Delete Account</h2>
+                <p className="text-sm text-gray-500">{deleteModal.name}</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+              This permanently scrubs <strong>{deleteModal.name}</strong>'s personal data (name, email, phone) and deactivates their account.
+              Their attendance and loan history is retained anonymously. This cannot be undone.
+            </p>
+            <p className="text-sm text-gray-600 mb-3">
+              Type <strong>DELETE</strong> to confirm:
+            </p>
+            {deleteError && (
+              <div className="mb-3 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">
+                {deleteError}
+              </div>
+            )}
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder='Type "DELETE" to confirm'
+              className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 mb-4"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteModal(null)}
+                disabled={deleting}
+                className="flex-1 border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteMember}
+                disabled={deleteConfirmText !== "DELETE" || deleting}
+                className="flex-1 bg-red-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                {deleting ? (
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {deleting ? "Deleting..." : "Delete account"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Service Team Assignment Modal */}
       {teamsModal && (
