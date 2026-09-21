@@ -23,7 +23,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ data: user ? [user] : [], total: user ? 1 : 0, page: 1, limit });
   }
 
-  const where: any = {};
+  // Always exclude soft-deleted accounts (PII-scrubbed, email anonymised to @wetcf.deleted)
+  const where: any = { NOT: { email: { endsWith: "@wetcf.deleted" } } };
   if (busGroupId) where.busGroupId = busGroupId;
   if (role) where.role = role;
   if (search) {

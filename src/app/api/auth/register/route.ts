@@ -34,6 +34,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { name, email, password, phone, inviteToken } = registerSchema.parse(body);
 
+    // Block reserved deleted-account placeholder addresses
+    if (email.endsWith("@wetcf.deleted")) {
+      return NextResponse.json({ error: "Invalid email address." }, { status: 400 });
+    }
+
+    // Check for an existing active account with this email.
+    // Soft-deleted accounts have their email anonymised to deleted_<id>@wetcf.deleted,
+    // so their original email is freed up and they can re-register normally.
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return NextResponse.json({ error: "An account with this email already exists" }, { status: 400 });
