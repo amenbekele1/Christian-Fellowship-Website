@@ -1,18 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Metadata } from "next";
 import { Heart, BookOpen, Users, Star } from "lucide-react";
-
-interface Leader {
-  id: string;
-  name: string;
-  title: string;
-  bio: string | null;
-  imageUrl: string | null;
-  order: number;
-  isActive: boolean;
-}
 
 const valueIcons = [BookOpen, Heart, Users, Star];
 
@@ -25,40 +14,19 @@ const DEFAULT_VALUES = [
 
 type ContentMap = Record<string, string>;
 
-const DEFAULT_LEADERSHIP: Leader[] = [
-  { id: "default-1", name: "Ato Bekele Tadesse", title: "Senior Pastor", bio: null, imageUrl: null, order: 0, isActive: true },
-  { id: "default-2", name: "Woizero Selamawit Girma", title: "Women's Ministry Leader", bio: null, imageUrl: null, order: 1, isActive: true },
-  { id: "default-3", name: "Ato Yohannes Alemu", title: "BUS Director", bio: null, imageUrl: null, order: 2, isActive: true },
-];
-
 export default function AboutContent() {
-  const [leaders, setLeaders] = useState<Leader[]>([]);
-  const [loading, setLoading] = useState(true);
   const [content, setContent] = useState<ContentMap>({});
 
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const [leadersRes, contentRes] = await Promise.all([
-          fetch("/api/leaders"),
-          fetch("/api/page-content?page=about"),
-        ]);
-        const leadersData = await leadersRes.json();
-        setLeaders(Array.isArray(leadersData) && leadersData.length > 0 ? leadersData : []);
-        const contentRows: { fieldKey: string; value: string }[] = await contentRes.json();
+    fetch("/api/page-content?page=about")
+      .then(r => r.json())
+      .then((rows: { fieldKey: string; value: string }[]) => {
         const map: ContentMap = {};
-        for (const row of contentRows) map[row.fieldKey] = row.value;
+        for (const row of rows) map[row.fieldKey] = row.value;
         setContent(map);
-      } catch {
-        setLeaders([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAll();
+      })
+      .catch(() => {});
   }, []);
-
-  const displayLeaders = leaders.length > 0 ? leaders : DEFAULT_LEADERSHIP;
 
   return (
     <>
@@ -137,53 +105,6 @@ export default function AboutContent() {
         </div>
       </section>
 
-      {/* Leadership */}
-      <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-gold-600 text-sm font-semibold uppercase tracking-widest mb-3">Those Who Serve</p>
-          <h2 className="font-display text-4xl font-bold text-gray-800 mb-12">Our Leadership</h2>
-          {loading ? (
-            <div className="flex justify-center py-10">
-              <svg className="animate-spin w-8 h-8 text-gold-600" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            </div>
-          ) : (
-            <div className="grid sm:grid-cols-3 gap-8">
-              {displayLeaders.map((leader) => {
-                const initials = leader.name
-                  ? leader.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()
-                      .slice(0, 2)
-                  : "??";
-
-                return (
-                  <div key={leader.id} className="text-center">
-                    {leader.imageUrl ? (
-                      <img
-                        src={leader.imageUrl}
-                        alt={leader.name}
-                        className="w-20 h-20 rounded-full object-cover mx-auto mb-4"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 rounded-full bg-brown-100 flex items-center justify-center text-gold-500 font-bold text-2xl mx-auto mb-4 font-display">
-                        {initials}
-                      </div>
-                    )}
-                    <h3 className="font-display font-semibold text-gray-800 mb-1">{leader.name}</h3>
-                    <p className="text-sm text-gold-600">{leader.title}</p>
-                    {leader.bio && <p className="text-xs text-gray-500 mt-2">{leader.bio}</p>}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </section>
     </>
   );
 }
