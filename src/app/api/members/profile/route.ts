@@ -172,7 +172,9 @@ export async function DELETE(req: NextRequest) {
       email: `deleted_${userId}@wetcf.deleted`,
       phone: null,
       image: null,
-      password: null,
+      // Set to a value that can never match a real bcrypt hash so the account
+      // cannot be logged into even if someone knows the original password.
+      password: `__DELETED__${Date.now()}`,
       isActive: false,
     },
   });
