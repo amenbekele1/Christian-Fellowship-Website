@@ -1,14 +1,21 @@
 import webpush from "web-push";
 import { prisma } from "@/lib/prisma";
 
-const vapidEmail = process.env.VAPID_EMAIL!;
-webpush.setVapidDetails(
-  vapidEmail.startsWith("mailto:") || vapidEmail.startsWith("https://")
-    ? vapidEmail
-    : `mailto:${vapidEmail}`,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
+const VAPID_CONFIGURED =
+  !!process.env.VAPID_EMAIL &&
+  !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY &&
+  !!process.env.VAPID_PRIVATE_KEY;
+
+if (VAPID_CONFIGURED) {
+  const vapidEmail = process.env.VAPID_EMAIL!;
+  webpush.setVapidDetails(
+    vapidEmail.startsWith("mailto:") || vapidEmail.startsWith("https://")
+      ? vapidEmail
+      : `mailto:${vapidEmail}`,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  );
+}
 
 export interface PushPayload {
   title?: string;
@@ -23,7 +30,7 @@ async function sendPushToSubs(
   subs: Array<{ endpoint: string; p256dh: string; auth: string }>,
   payload: PushPayload
 ): Promise<void> {
-  if (subs.length === 0) return;
+  if (!VAPID_CONFIGURED || subs.length === 0) return;
 
   const results = await Promise.allSettled(
     subs.map((sub) =>

@@ -1,8 +1,9 @@
-import { PrismaClient, Role } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 // Run with: npx tsx prisma/seed.ts
 
 const prisma = new PrismaClient();
+const Role = { GUARDIAN: "GUARDIAN", BUS_LEADER: "BUS_LEADER", MEMBER: "MEMBER" } as const;
 
 async function main() {
   console.log("🌱 Seeding database...");

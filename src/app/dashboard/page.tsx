@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatDate, formatTime, getRoleLabel, getRoleBadgeColor } from "@/lib/utils";
-import { Calendar, Bell, BookOpen, Users, ClipboardList, TrendingUp } from "lucide-react";
+import { Calendar, Bell, BookOpen, Users, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 async function getVerseOfDay() {
@@ -266,7 +266,6 @@ export default async function DashboardPage() {
             <div className="space-y-1">
               {[
                 { href: "/dashboard/library",    icon: BookOpen,      label: "Browse Library" },
-                { href: "/dashboard/attendance", icon: ClipboardList, label: "My Attendance"  },
                 { href: "/events",               icon: Calendar,      label: "All Events"     },
               ].map(({ href, icon: Icon, label }) => (
                 <Link key={href} href={href} className="quick-action flex items-center gap-3 p-3">

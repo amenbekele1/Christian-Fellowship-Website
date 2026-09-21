@@ -27,6 +27,16 @@ export default function AttendancePage() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  if (session && session.user.role !== "GUARDIAN") {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <ClipboardList className="w-12 h-12 text-gray-300 mb-4" />
+        <h2 className="text-xl font-semibold text-gray-700 mb-2">Access Restricted</h2>
+        <p className="text-gray-400 text-sm">Only Guardians can record attendance.</p>
+      </div>
+    );
+  }
+
   useEffect(() => {
     fetch("/api/members?limit=200")
       .then(r => r.json())
