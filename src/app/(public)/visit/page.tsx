@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Clock, Phone, Mail, Bus, Train, Send, CheckCircle, AlertCircle } from "lucide-react";
+import { MapPin, Clock, Phone, Mail, Bus, Send, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function VisitPage() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
@@ -106,7 +106,7 @@ export default function VisitPage() {
                   </li>
                   <li className="flex items-center gap-2.5 text-sm text-gray-600">
                     <Phone className="w-4 h-4 text-gray-400" />
-                    <a href="tel:+48123456789" className="hover:text-gold-500 transition-colors">+48 123 456 789</a>
+                    <a href="tel:+48796035370" className="hover:text-gold-500 transition-colors">+48 796 035 370</a>
                   </li>
                 </ul>
               </div>
@@ -117,11 +117,7 @@ export default function VisitPage() {
                 <ul className="space-y-3">
                   <li className="flex gap-3 text-sm text-gray-600">
                     <Bus className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                    <span>Bus routes 111, 222 — stop at <strong>Central Warsaw</strong></span>
-                  </li>
-                  <li className="flex gap-3 text-sm text-gray-600">
-                    <Train className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                    <span>Metro Line 1 — <strong>Centrum</strong> station, 5 min walk</span>
+                    <span>Bus routes <strong>521, 520</strong> from Dworzec Centralny 11, Marszałkowska 01 — stop at <strong>Płowiecka 06, 04</strong> and 7–10 minutes walk</span>
                   </li>
                   <li className="flex gap-3 text-sm text-gray-600">
                     <MapPin className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />

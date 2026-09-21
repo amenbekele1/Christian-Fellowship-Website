@@ -58,11 +58,11 @@ export function PublicFooter() {
             <ul className="space-y-4">
               <li className="flex gap-2.5 text-sm" style={{ color: "#9A7B5C" }}>
                 <MapPin className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#C9A84C" }} />
-                <span>Warsaw, Poland</span>
+                <span>Naddnieprzańska 7<br />04-205 Warszawa, Poland</span>
               </li>
               <li className="flex gap-2.5 text-sm" style={{ color: "#9A7B5C" }}>
                 <Clock className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#C9A84C" }} />
-                <span>Saturday 10:00 AM<br />Sunday 10:00 AM</span>
+                <span>Saturday 18:00</span>
               </li>
               <li className="flex gap-2.5 text-sm">
                 <Mail className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#C9A84C" }} />
