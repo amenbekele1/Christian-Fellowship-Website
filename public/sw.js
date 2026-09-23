@@ -62,6 +62,7 @@ self.addEventListener("notificationclick", function (event) {
       await updateBadge();
       const clientList = await clients.matchAll({ type: "window", includeUncontrolled: true });
       for (const client of clientList) {
+        if ("navigate" in client) await client.navigate(url);
         if ("focus" in client) return client.focus();
       }
       if (clients.openWindow) return clients.openWindow(url);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { BookOpen, Search, Book, CheckCircle, Clock, AlertCircle, X } from "lucide-react";
+import Image from "next/image";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { useRefreshOnFocus } from "@/hooks/useRefreshOnFocus";
 import { usePushRefresh } from "@/hooks/usePushRefresh";
@@ -252,11 +253,18 @@ export default function LibraryPage() {
                   <div key={book.id} className="bg-white rounded-2xl border border-brown-200 shadow-sm overflow-hidden flex flex-col card-hover">
                     {/* Book cover image or placeholder */}
                     <div
-                      className="aspect-[2/3] bg-gradient-to-br from-brown-800 to-brown-900 flex items-center justify-center overflow-hidden cursor-pointer"
+                      className="aspect-[2/3] relative bg-gradient-to-br from-brown-800 to-brown-900 flex items-center justify-center overflow-hidden cursor-pointer"
                       onClick={() => book.imageUrl && setCoverPreview(book.imageUrl)}
                     >
                       {book.imageUrl ? (
-                        <img src={book.imageUrl} alt={book.title} className="w-full h-full object-contain" />
+                        <Image
+                          src={book.imageUrl}
+                          alt={book.title}
+                          fill
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          className="object-contain"
+                          loading="lazy"
+                        />
                       ) : (
                         <div className="text-center">
                           <BookOpen className="w-8 h-8 sm:w-10 sm:h-10 text-white/30 mx-auto mb-1" />
@@ -327,8 +335,8 @@ export default function LibraryPage() {
           {/* Cover image lightbox */}
           {coverPreview && (
             <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setCoverPreview(null)}>
-              <div className="relative max-h-[90vh] max-w-sm w-full">
-                <img src={coverPreview} alt="Book cover" className="w-full h-full object-contain rounded-xl shadow-2xl" />
+              <div className="relative max-h-[90vh] max-w-sm w-full aspect-[2/3]">
+                <Image src={coverPreview} alt="Book cover" fill className="object-contain rounded-xl shadow-2xl" sizes="384px" priority />
                 <button onClick={() => setCoverPreview(null)} className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80">
                   <X className="w-4 h-4" />
                 </button>
