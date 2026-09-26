@@ -137,12 +137,29 @@ function ProgramsContent() {
 
   return (
     <>
-      <section className="hero-gradient py-20 relative overflow-hidden">
-        <div className="absolute left-0 top-0 bottom-0 w-1.5 eth-stripe" />
-        <div className="max-w-4xl mx-auto px-6 text-center relative">
-          <p className="text-amber-300 text-sm font-semibold uppercase tracking-widest mb-4">How We Grow Together</p>
-          <h1 className="font-display text-5xl font-bold text-white mb-5">Our Programs</h1>
-          <p className="text-brown-100 text-lg max-w-2xl mx-auto leading-relaxed">
+      {/* Hero — fellowship photo with dark overlay */}
+      <section
+        className="relative overflow-hidden"
+        style={{
+          backgroundImage: "url('/images/fellowship-hero.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center 30%",
+        }}
+      >
+        {/* Dark overlay so text stays readable */}
+        <div className="absolute inset-0 bg-brown-900/70" />
+
+        {/* Ethiopian stripe accent */}
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 eth-stripe z-10" />
+
+        <div className="relative z-10 max-w-4xl mx-auto px-6 py-28 text-center">
+          <p className="text-amber-300 text-sm font-semibold uppercase tracking-widest mb-4 drop-shadow">
+            How We Grow Together
+          </p>
+          <h1 className="font-display text-5xl font-bold text-white mb-5 drop-shadow-lg">
+            Our Programs
+          </h1>
+          <p className="text-white/85 text-lg max-w-2xl mx-auto leading-relaxed drop-shadow">
             From Scripture study to worship nights, we have something for every season of your
             spiritual journey.
           </p>
