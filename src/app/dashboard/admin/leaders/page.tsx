@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Trash2, X, Edit2 } from "lucide-react";
+import TeamLeaders from "./TeamLeaders";
 
 interface Leader {
   id: string;
@@ -82,10 +83,15 @@ export default function AdminLeadersPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Who leads each serving team */}
+      <TeamLeaders />
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display text-3xl font-bold text-gray-800">Leadership</h1>
-          <p className="text-gray-500 mt-1">{leaders.length} leaders</p>
+          <p className="text-gray-500 mt-1">
+            {leaders.length} profiles shown on the public site
+          </p>
         </div>
         <button
           onClick={() => {

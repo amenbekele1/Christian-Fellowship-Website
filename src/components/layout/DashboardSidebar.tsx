@@ -3,12 +3,32 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, BookOpen, Calendar, Bell,
   ClipboardList, LogOut, Shield, UserCog, BookMarked,
   ChevronRight, UserCircle, Link2, MessageSquare,
+  Music, HandHeart, Megaphone, HeartHandshake, Share2,
 } from "lucide-react";
 import { cn, getRoleLabel, getInitials } from "@/lib/utils";
+
+interface MyTeam {
+  id: string;
+  name: string;
+  label: string;
+  isLeader: boolean;
+}
+
+/** Icon per team, falling back to a generic one for teams added later. */
+const TEAM_ICONS: Record<string, any> = {
+  WORSHIP: Music,
+  PRAYER: HandHeart,
+  EVANGELISM: Megaphone,
+  SOCIAL_AFFAIRS: HeartHandshake,
+  SOCIAL_MEDIA: Share2,
+  LIBRARIAN: BookMarked,
+  WEBSITE_EDITOR: BookOpen,
+};
 
 const memberLinks = [
   { href: "/dashboard",            label: "Dashboard",    icon: LayoutDashboard, exact: true },
@@ -36,6 +56,22 @@ const adminLinks = [
 export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [myTeams, setMyTeams] = useState<MyTeam[]>([]);
+
+  // Teams the signed-in person belongs to or leads. Fetched rather than read
+  // from the session because the session only carries team names, and the
+  // hub links need team ids.
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    fetch("/api/teams?mine=1")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (!cancelled && Array.isArray(data)) setMyTeams(data);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [session]);
 
   const isActive = (href: string, exact = false) =>
     exact ? pathname === href : pathname.startsWith(href);
@@ -47,7 +83,8 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
   const teams           = session.user.serviceTeams ?? [];
   const isLibrarian     = teams.includes("LIBRARIAN");
   const isWebsiteEditor = teams.includes("WEBSITE_EDITOR");
-  const isServing       = isLibrarian || isWebsiteEditor;
+  // Any team membership, or a team this person leads, opens the Serving section
+  const isServing       = isLibrarian || isWebsiteEditor || myTeams.length > 0;
 
   return (
     <aside
@@ -118,6 +155,31 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
                 Serving
               </p>
             </div>
+            {/* Team hubs — chat, files, meetings, members */}
+            {myTeams.map((team) => {
+              const Icon = TEAM_ICONS[team.name] ?? Users;
+              const href = `/dashboard/teams/${team.id}`;
+              return (
+                <Link
+                  key={team.id}
+                  href={`${href}/chat`}
+                  onClick={onClose}
+                  className={cn("sidebar-link", isActive(href) && "active")}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="flex-1 truncate">{team.label}</span>
+                  {team.isLeader && (
+                    <span
+                      className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                      style={{ background: "rgba(201,168,76,0.18)", color: "#C9A84C" }}
+                    >
+                      Lead
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+
             {isLibrarian && (
               <Link href="/dashboard/admin/books" onClick={onClose}
                 className={cn("sidebar-link", isActive("/dashboard/admin/books") && "active")}>
