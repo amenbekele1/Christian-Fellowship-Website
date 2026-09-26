@@ -60,10 +60,7 @@ export async function POST(
       fileType: data.fileType,
       isAnnouncement: auth.isLeader,
     },
-    include: {
-      sender:   { select: { id: true, name: true } },
-      busGroup: { select: { name: true } },
-    },
+    include: { sender: { select: { id: true, name: true } } },
   });
 
   // Fire push + refresh to group members except sender (non-blocking)
@@ -75,7 +72,7 @@ export async function POST(
   sendPushToBusGroup(
     params.groupId,
     {
-      title: `${message.sender.name} · ${message.busGroup.name}`,
+      title: `${message.sender.name} · ${auth.group.name}`,
       body:  preview,
       url:   `/dashboard/bus-groups/${params.groupId}/chat`,
       topic: "group-messages",
