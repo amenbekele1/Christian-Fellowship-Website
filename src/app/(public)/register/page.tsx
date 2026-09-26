@@ -119,6 +119,7 @@ function RegisterContent() {
     setError("");
     const errors: Record<string, string> = {};
     if (form.name.trim().length < 2) errors.name = "Name must be at least 2 characters";
+    if (form.phone.trim().length < 6) errors.phone = "Please enter your phone number";
     if (!pwdValid) errors.password = "Password does not meet requirements";
     if (form.password !== form.confirm) errors.confirm = "Passwords do not match";
     if (!gdprConsent) errors.gdpr = "You must accept the Privacy Policy to register";
@@ -271,14 +272,18 @@ function RegisterContent() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number *</label>
               <input
                 type="tel"
+                required
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 placeholder="+48 123 456 789"
                 className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
               />
+              {fieldErrors.phone && (
+                <p className="text-xs text-red-500 mt-1.5">{fieldErrors.phone}</p>
+              )}
             </div>
 
             <div>

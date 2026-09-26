@@ -15,7 +15,7 @@ const registerSchema = z.object({
     .string()
     .min(10, "Password must be at least 10 characters")
     .regex(PASSWORD_REGEX, "Password must contain uppercase, lowercase, and a number"),
-  phone: z.string().optional(),
+  phone: z.string().trim().min(6, "Phone number is required"),
   inviteToken: z.string().optional(),
 });
 
