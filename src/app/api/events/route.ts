@@ -16,11 +16,16 @@ function canEditContent(session: any): boolean {
 const eventSchema = z.object({
   title: z.string().min(2),
   description: z.string().optional(),
+  body: z.string().max(20000).optional().nullable(),
   location: z.string().optional(),
   startDate: z.string(),
   endDate: z.string().optional(),
   type: z.string().optional(),
   imageUrl: z.string().optional(),
+  gallery: z.array(z.string().url()).max(24).optional(),
+  videoUrl: z.string().max(500).optional().nullable(),
+  theme: z.string().max(20).optional(),
+  layout: z.string().max(20).optional(),
   isPublic: z.boolean().default(true),
 });
 
@@ -31,7 +36,13 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "20");
 
   const where: any = { isActive: true };
-  if (publicOnly) where.isPublic = true;
+
+  // Members-only events must never reach a signed-out caller. `public=true`
+  // is opt-in, so without this an unauthenticated request to /api/events
+  // would return them.
+  const session = await getServerSession(authOptions);
+  if (!session || publicOnly) where.isPublic = true;
+
   if (upcoming) where.startDate = { gte: new Date() };
 
   const events = await prisma.event.findMany({

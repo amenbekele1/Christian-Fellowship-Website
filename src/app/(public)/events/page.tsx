@@ -1,6 +1,8 @@
 import { Metadata } from "next";
+import Link from "next/link";
 import { Calendar, MapPin, Clock } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { eventPath } from "@/lib/event-presets";
 
 export const metadata: Metadata = { title: "Events" };
 export const revalidate = 60;
@@ -70,7 +72,12 @@ export default async function EventsPage() {
 
                   <div className="flex-1">
                     <div className="flex flex-wrap items-start gap-2 mb-2">
-                      <h3 className="font-display font-bold text-gray-800 text-xl">{event.title}</h3>
+                      <Link
+                        href={eventPath(event)}
+                        className="font-display font-bold text-gray-800 text-xl hover:text-gold-600 transition-colors"
+                      >
+                        {event.title}
+                      </Link>
                       {event.type && (
                         <span className={`text-xs border px-2 py-0.5 rounded-full font-medium ${typeColors[event.type] || "bg-gray-100 text-gray-600 border-gray-200"}`}>
                           {event.type}

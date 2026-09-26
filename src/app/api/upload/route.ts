@@ -17,9 +17,12 @@ const ALLOWED_CONTENT_TYPES = [
 ];
 
 function canUpload(session: any): boolean {
+  const teams = session?.user?.serviceTeams ?? [];
   return (
     session?.user?.role === "GUARDIAN" ||
-    (session?.user?.serviceTeams ?? []).includes("LIBRARIAN")
+    teams.includes("LIBRARIAN") ||
+    // Website editors upload event photos and page imagery
+    teams.includes("WEBSITE_EDITOR")
   );
 }
 

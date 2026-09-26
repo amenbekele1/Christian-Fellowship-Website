@@ -1,15 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Calendar, Trash2, X, Globe, Lock, Edit2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Calendar, Trash2, X, Globe, Lock, Edit2, ImagePlus, Youtube, ExternalLink, Check } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
+import { EVENT_THEMES, EVENT_LAYOUTS, parseVideoEmbed, eventPath } from "@/lib/event-presets";
 
 interface Event {
-  id: string; title: string; description: string | null; location: string | null;
-  startDate: string; endDate: string | null; type: string | null; isPublic: boolean;
+  id: string; title: string; description: string | null; body: string | null;
+  location: string | null; startDate: string; endDate: string | null;
+  type: string | null; imageUrl: string | null; gallery: string[];
+  videoUrl: string | null; theme: string | null; layout: string | null;
+  isPublic: boolean;
 }
 
 const eventTypes = ["Worship", "Worship Night", "Bible Study", "Sermon", "Literature Night", "BUS Meeting", "Other"];
+
+const EMPTY_FORM = {
+  title: "", description: "", body: "", location: "",
+  startDate: "", endDate: "", type: "Worship",
+  imageUrl: "", gallery: [] as string[], videoUrl: "",
+  theme: "brown", layout: "banner", isPublic: true,
+};
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -17,11 +28,58 @@ export default function AdminEventsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    title: "", description: "", location: "", startDate: "", endDate: "", type: "Worship", isPublic: true,
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [uploading, setUploading] = useState<"hero" | "gallery" | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const heroInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { fetchEvents(); }, []);
+
+  /** Upload straight to Vercel Blob via the shared upload route. */
+  const uploadImage = async (file: File): Promise<string> => {
+    const { upload } = await import("@vercel/blob/client");
+    const blob = await upload(file.name, file, {
+      access: "public",
+      handleUploadUrl: "/api/upload",
+    });
+    return blob.url;
+  };
+
+  const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading("hero");
+    setUploadError(null);
+    try {
+      const url = await uploadImage(file);
+      setForm((f) => ({ ...f, imageUrl: url }));
+    } catch (err: any) {
+      setUploadError(err?.message ?? "Upload failed");
+    } finally {
+      setUploading(null);
+      if (heroInputRef.current) heroInputRef.current.value = "";
+    }
+  };
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setUploading("gallery");
+    setUploadError(null);
+    try {
+      const urls: string[] = [];
+      for (const file of files.slice(0, 12)) {
+        urls.push(await uploadImage(file));
+      }
+      setForm((f) => ({ ...f, gallery: [...f.gallery, ...urls].slice(0, 24) }));
+    } catch (err: any) {
+      setUploadError(err?.message ?? "Upload failed");
+    } finally {
+      setUploading(null);
+      if (galleryInputRef.current) galleryInputRef.current.value = "";
+    }
+  };
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -52,7 +110,7 @@ export default function AdminEventsPage() {
 
     setShowForm(false);
     setEditingId(null);
-    setForm({ title: "", description: "", location: "", startDate: "", endDate: "", type: "Worship", isPublic: true });
+    setForm(EMPTY_FORM);
     fetchEvents();
     setSaving(false);
   };
@@ -61,10 +119,16 @@ export default function AdminEventsPage() {
     setForm({
       title: event.title,
       description: event.description || "",
+      body: event.body || "",
       location: event.location || "",
       startDate: event.startDate.slice(0, 16),
       endDate: event.endDate ? event.endDate.slice(0, 16) : "",
       type: event.type || "Worship",
+      imageUrl: event.imageUrl || "",
+      gallery: event.gallery ?? [],
+      videoUrl: event.videoUrl || "",
+      theme: event.theme || "brown",
+      layout: event.layout || "banner",
       isPublic: event.isPublic,
     });
     setEditingId(event.id);
@@ -74,7 +138,8 @@ export default function AdminEventsPage() {
   const closeForm = () => {
     setShowForm(false);
     setEditingId(null);
-    setForm({ title: "", description: "", location: "", startDate: "", endDate: "", type: "Worship", isPublic: true });
+    setForm(EMPTY_FORM);
+    setUploadError(null);
   };
 
   const deleteEvent = async (id: string) => {
@@ -147,11 +212,128 @@ export default function AdminEventsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Short summary</label>
                 <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})}
-                  placeholder="Event description..." rows={3}
+                  placeholder="One or two lines, shown on event cards and link previews..." rows={2}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none"/>
               </div>
+
+              {/* ── Full write-up ──────────────────────────── */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full write-up</label>
+                <textarea value={form.body} onChange={e => setForm({...form, body: e.target.value})}
+                  placeholder={"Write the full details here.\n\n# A heading\n## A smaller heading\n\n- a bullet point\n1. a numbered point\n> a quote\n\n**bold**, *italic*, and [a link](https://example.com)"}
+                  rows={9}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 resize-y font-mono"/>
+                <p className="text-xs text-gray-400 mt-1.5">
+                  Blank line starts a new paragraph. <code className="bg-gray-100 px-1 rounded">#</code> heading,
+                  <code className="bg-gray-100 px-1 rounded ml-1">-</code> bullet,
+                  <code className="bg-gray-100 px-1 rounded ml-1">**bold**</code>,
+                  <code className="bg-gray-100 px-1 rounded ml-1">[link](url)</code>
+                </p>
+              </div>
+
+              {/* ── Photos ─────────────────────────────────── */}
+              <div className="border-t border-gray-100 pt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Main photo</label>
+                <input type="file" ref={heroInputRef} accept="image/*" onChange={handleHeroUpload} className="hidden"/>
+                {form.imageUrl ? (
+                  <div className="flex items-center gap-3">
+                    <img src={form.imageUrl} alt="" className="w-24 h-16 object-cover rounded-lg border border-gray-200"/>
+                    <button type="button" onClick={() => heroInputRef.current?.click()}
+                      className="text-xs border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50">Replace</button>
+                    <button type="button" onClick={() => setForm({...form, imageUrl: ""})}
+                      className="text-xs text-gray-400 hover:text-red-500">Remove</button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => heroInputRef.current?.click()} disabled={uploading === "hero"}
+                    className="flex items-center gap-2 text-sm border border-dashed border-gray-300 text-gray-500 px-4 py-2.5 rounded-lg hover:border-brown-300 hover:text-brown-600 transition-colors disabled:opacity-50">
+                    <ImagePlus className="w-4 h-4"/>
+                    {uploading === "hero" ? "Uploading…" : "Upload main photo"}
+                  </button>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Photo gallery {form.gallery.length > 0 && <span className="text-gray-400 font-normal">({form.gallery.length})</span>}
+                </label>
+                <input type="file" ref={galleryInputRef} accept="image/*" multiple onChange={handleGalleryUpload} className="hidden"/>
+                {form.gallery.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 mb-2">
+                    {form.gallery.map((url) => (
+                      <div key={url} className="relative group">
+                        <img src={url} alt="" className="w-full h-16 object-cover rounded-lg border border-gray-200"/>
+                        <button type="button"
+                          onClick={() => setForm({...form, gallery: form.gallery.filter(g => g !== url)})}
+                          className="absolute -top-1.5 -right-1.5 bg-white border border-gray-200 rounded-full p-0.5 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                          <X className="w-3 h-3 text-red-500"/>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button type="button" onClick={() => galleryInputRef.current?.click()} disabled={uploading === "gallery"}
+                  className="flex items-center gap-2 text-sm border border-dashed border-gray-300 text-gray-500 px-4 py-2 rounded-lg hover:border-brown-300 hover:text-brown-600 transition-colors disabled:opacity-50">
+                  <ImagePlus className="w-4 h-4"/>
+                  {uploading === "gallery" ? "Uploading…" : "Add photos"}
+                </button>
+              </div>
+
+              {uploadError && (
+                <p className="text-xs text-red-500">{uploadError}</p>
+              )}
+
+              {/* ── Video ──────────────────────────────────── */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Video link</label>
+                <div className="relative">
+                  <Youtube className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"/>
+                  <input type="url" value={form.videoUrl} onChange={e => setForm({...form, videoUrl: e.target.value})}
+                    placeholder="https://youtube.com/watch?v=..."
+                    className="w-full h-10 rounded-lg border border-gray-200 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"/>
+                </div>
+                {form.videoUrl && (
+                  parseVideoEmbed(form.videoUrl)
+                    ? <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1"><Check className="w-3 h-3"/> Video recognised — it will play on the event page</p>
+                    : <p className="text-xs text-amber-600 mt-1.5">Not a recognised YouTube or Vimeo link — it will be ignored</p>
+                )}
+                <p className="text-xs text-gray-400 mt-1.5">
+                  Upload the video to YouTube (unlisted is fine), then paste the link here.
+                </p>
+              </div>
+
+              {/* ── Appearance ─────────────────────────────── */}
+              <div className="border-t border-gray-100 pt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Colour theme</label>
+                <div className="flex flex-wrap gap-2">
+                  {EVENT_THEMES.map(t => (
+                    <button key={t.key} type="button" onClick={() => setForm({...form, theme: t.key})}
+                      className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg border transition-colors ${
+                        form.theme === t.key ? "border-gold-500 bg-gold-50 text-brown-800 font-medium" : "border-gray-200 text-gray-600 hover:border-gray-300"
+                      }`}>
+                      <span className={`w-3.5 h-3.5 rounded-full ${t.swatch}`}/>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Page layout</label>
+                <div className="grid sm:grid-cols-3 gap-2">
+                  {EVENT_LAYOUTS.map(l => (
+                    <button key={l.key} type="button" onClick={() => setForm({...form, layout: l.key})}
+                      className={`text-left px-3 py-2.5 rounded-lg border transition-colors ${
+                        form.layout === l.key ? "border-gold-500 bg-gold-50" : "border-gray-200 hover:border-gray-300"
+                      }`}>
+                      <p className="text-xs font-medium text-gray-800">{l.label}</p>
+                      <p className="text-xs text-gray-400 mt-0.5 leading-snug">{l.hint}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeForm} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">Cancel</button>
                 <button type="submit" disabled={saving} className="flex-1 bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 disabled:opacity-50">
@@ -184,6 +366,11 @@ export default function AdminEventsPage() {
                 {event.description && <p className="text-sm text-gray-400 mt-1.5 line-clamp-2">{event.description}</p>}
               </div>
               <div className="flex gap-1 shrink-0">
+                <a href={eventPath(event)} target="_blank" rel="noreferrer"
+                  title="View the event page"
+                  className="text-gray-300 hover:text-gold-600 transition-colors p-1">
+                  <ExternalLink className="w-4 h-4"/>
+                </a>
                 <button onClick={() => editEvent(event)} className="text-gray-300 hover:text-gold-600 transition-colors p-1">
                   <Edit2 className="w-4 h-4"/>
                 </button>
