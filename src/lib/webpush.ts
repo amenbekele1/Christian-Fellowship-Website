@@ -105,6 +105,32 @@ export async function sendPushToBusGroup(
 }
 
 /**
+ * Push to every member of a service team, plus its leader.
+ * Mirrors sendPushToBusGroup.
+ */
+export async function sendPushToTeam(
+  teamId: string,
+  payload: PushPayload,
+  excludeUserId?: string
+): Promise<void> {
+  const team = await prisma.serviceTeam.findUnique({
+    where: { id: teamId },
+    select: {
+      leaderId: true,
+      members: { select: { userId: true } },
+    },
+  });
+  if (!team) return;
+
+  const userIds = [
+    ...(team.leaderId ? [team.leaderId] : []),
+    ...team.members.map((m) => m.userId),
+  ].filter((id) => id !== excludeUserId);
+
+  await sendPushToUsers(Array.from(new Set(userIds)), payload);
+}
+
+/**
  * Fire a silent "refresh" push. The service worker receives it and
  * broadcasts to any open clients via postMessage so their UI can refetch.
  * No notification is shown. Safe to call on every admin mutation.

@@ -34,6 +34,13 @@ enum RentalStatus {
   OVERDUE
 }
 
+enum FeedbackStatus {
+  OPEN
+  IN_PROGRESS
+  FIXED
+  DECLINED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String
@@ -66,6 +73,9 @@ model User {
 
   // Service teams (librarian, worship, etc.)
   serviceTeams      UserServiceTeam[]
+  ledTeams          ServiceTeam[]      @relation("TeamLeader")
+  createdTeamInvites TeamInviteToken[] @relation("TeamInviteCreator")
+  feedback          Feedback[]         @relation("FeedbackAuthor")
   pushSubscriptions PushSubscription[]
 
   @@map("users")
@@ -76,11 +86,53 @@ model ServiceTeam {
   name        String   @unique   // e.g. "LIBRARIAN"
   label       String             // Display name, e.g. "Librarian"
   description String?
+  leaderId    String?            // assigned by a Guardian
   createdAt   DateTime @default(now())
 
-  members     UserServiceTeam[]
+  leader       User?             @relation("TeamLeader", fields: [leaderId], references: [id], onDelete: SetNull)
+  members      UserServiceTeam[]
+  messages     GroupMessage[]    @relation("TeamMessages")
+  inviteTokens TeamInviteToken[]
 
   @@map("service_teams")
+}
+
+/// Shareable link that adds an existing fellowship member to a team.
+/// The person must already have an account — this never creates one.
+model TeamInviteToken {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  teamId      String
+  createdById String
+  expiresAt   DateTime
+  isActive    Boolean   @default(true)
+  useCount    Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  team      ServiceTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdBy User        @relation("TeamInviteCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+  @@map("team_invite_tokens")
+}
+
+model Feedback {
+  id         String         @id @default(cuid())
+  userId     String
+  category   String?        // "bug" | "idea" | "other"
+  message    String         @db.Text
+  pageUrl    String?        // where they were when they submitted
+  status     FeedbackStatus @default(OPEN)
+  adminNote  String?        @db.Text
+  notified   Boolean        @default(false) // member told it was resolved
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  resolvedAt DateTime?
+
+  user User @relation("FeedbackAuthor", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@map("feedback")
 }
 
 model UserServiceTeam {
@@ -152,10 +204,13 @@ model BUSGroup {
   @@map("bus_groups")
 }
 
+/// A chat message belonging to EITHER a BUS group or a service team.
+/// Exactly one of busGroupId / teamId is set.
 model GroupMessage {
   id             String   @id @default(cuid())
   seq            BigInt   @default(autoincrement())
-  busGroupId     String
+  busGroupId     String?
+  teamId         String?
   senderId       String
   content        String?  @db.Text
   fileUrl        String?
@@ -164,10 +219,12 @@ model GroupMessage {
   isAnnouncement Boolean  @default(false)
   createdAt      DateTime @default(now())
 
-  busGroup BUSGroup @relation("GroupMessages", fields: [busGroupId], references: [id], onDelete: Cascade)
-  sender   User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  busGroup BUSGroup?    @relation("GroupMessages", fields: [busGroupId], references: [id], onDelete: Cascade)
+  team     ServiceTeam? @relation("TeamMessages", fields: [teamId], references: [id], onDelete: Cascade)
+  sender   User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([busGroupId, seq])
+  @@index([teamId, seq])
   @@map("group_messages")
 }
 
@@ -253,12 +310,17 @@ model BookRental {
 model Event {
   id                String   @id @default(cuid())
   title             String
-  description       String?  @db.Text
+  description       String?  @db.Text  // short summary, shown on cards
+  body              String?  @db.Text  // rich content for the full event page
   location          String?
   startDate         DateTime
   endDate           DateTime?
   type              String?
-  imageUrl          String?
+  imageUrl          String?            // hero image
+  gallery           String[] @default([]) // additional photo URLs
+  videoUrl          String?            // YouTube / Vimeo link, embedded on the page
+  theme             String?  @default("brown")   // preset colour theme
+  layout            String?  @default("banner")  // preset layout style
   isPublic          Boolean  @default(true)
   isActive          Boolean  @default(true)
   dayReminderSent   Boolean  @default(false)
