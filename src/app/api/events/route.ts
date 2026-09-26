@@ -33,7 +33,12 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const publicOnly = searchParams.get("public") === "true";
   const upcoming = searchParams.get("upcoming") === "true";
-  const limit = parseInt(searchParams.get("limit") || "20");
+  // Capped so a caller cannot ask for the whole table, but high enough that
+  // an admin listing is not silently truncated.
+  const limit = Math.min(
+    500,
+    Math.max(1, parseInt(searchParams.get("limit") || "50", 10) || 50)
+  );
 
   const where: any = { isActive: true };
 

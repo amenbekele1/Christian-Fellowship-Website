@@ -32,7 +32,11 @@ export default async function EventsPage() {
   });
 
   const upcoming = events.filter((e) => new Date(e.startDate) >= new Date());
-  const past = events.filter((e) => new Date(e.startDate) < new Date());
+  // Newest first. The query sorts ascending for the upcoming list, which
+  // would otherwise surface the oldest events here.
+  const past = events
+    .filter((e) => new Date(e.startDate) < new Date())
+    .sort((a, b) => +new Date(b.startDate) - +new Date(a.startDate));
 
   return (
     <>

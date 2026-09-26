@@ -83,7 +83,9 @@ export default function AdminEventsPage() {
 
   const fetchEvents = async () => {
     setLoading(true);
-    const res = await fetch("/api/events");
+    // Explicit high limit: the API defaults to 20 ordered by startDate asc,
+    // which silently hides everything past the twentieth-oldest event.
+    const res = await fetch("/api/events?limit=500");
     setEvents(await res.json());
     setLoading(false);
   };
@@ -149,7 +151,11 @@ export default function AdminEventsPage() {
   };
 
   const upcoming = events.filter(e => new Date(e.startDate) >= new Date());
-  const past = events.filter(e => new Date(e.startDate) < new Date());
+  // Most recent first — the event you just ran is the one you are most
+  // likely to be adding photos to.
+  const past = events
+    .filter(e => new Date(e.startDate) < new Date())
+    .sort((a, b) => +new Date(b.startDate) - +new Date(a.startDate));
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -383,17 +389,35 @@ export default function AdminEventsPage() {
 
           {past.length > 0 && (
             <>
-              <h2 className="font-semibold text-gray-400 text-sm uppercase tracking-wider mt-6">Past</h2>
-              {past.slice(0, 5).map(event => (
-                <div key={event.id} className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 items-center opacity-60">
-                  <Calendar className="w-5 h-5 text-gray-300 shrink-0"/>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-600 text-sm">{event.title}</p>
+              <h2 className="font-semibold text-gray-400 text-sm uppercase tracking-wider mt-6">
+                Past ({past.length})
+              </h2>
+              {past.map(event => (
+                <div key={event.id} className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 items-center">
+                  {event.isPublic
+                    ? <Globe className="w-4 h-4 text-gold-400 shrink-0"/>
+                    : <Lock className="w-4 h-4 text-gray-300 shrink-0"/>}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-700 text-sm truncate">{event.title}</p>
                     <p className="text-xs text-gray-400">{formatDateTime(event.startDate)}</p>
                   </div>
-                  <button onClick={() => deleteEvent(event.id)} className="text-gray-200 hover:text-red-300 p-1">
-                    <Trash2 className="w-4 h-4"/>
-                  </button>
+                  <div className="flex gap-1 shrink-0">
+                    <a href={eventPath(event)} target="_blank" rel="noreferrer"
+                      title="View the event page"
+                      className="text-gray-300 hover:text-gold-600 transition-colors p-1">
+                      <ExternalLink className="w-4 h-4"/>
+                    </a>
+                    <button onClick={() => editEvent(event)}
+                      title="Edit — add photos, video or a write-up"
+                      className="text-gray-300 hover:text-gold-600 transition-colors p-1">
+                      <Edit2 className="w-4 h-4"/>
+                    </button>
+                    <button onClick={() => deleteEvent(event.id)}
+                      title="Delete"
+                      className="text-gray-300 hover:text-red-400 transition-colors p-1">
+                      <Trash2 className="w-4 h-4"/>
+                    </button>
+                  </div>
                 </div>
               ))}
             </>
