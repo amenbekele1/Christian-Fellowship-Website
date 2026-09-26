@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Clock, Phone, Mail, Bus, Send, CheckCircle, AlertCircle } from "lucide-react";
+import { MapPin, Clock, Phone, Mail, Bus, Send, CheckCircle, AlertCircle, Youtube, Instagram } from "lucide-react";
+import { SOCIAL_LINKS } from "@/lib/social";
 
 export default function VisitPage() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
@@ -109,6 +110,30 @@ export default function VisitPage() {
                     <a href="tel:+48796035370" className="hover:text-gold-500 transition-colors">+48 796 035 370</a>
                   </li>
                 </ul>
+
+                {/* Social — see the fellowship before you visit */}
+                <div className="mt-5 pt-5 border-t border-brown-100">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-brown-400 mb-3">
+                    See us online
+                  </p>
+                  <div className="space-y-2">
+                    {SOCIAL_LINKS.map((s) => {
+                      const Icon = s.key === "youtube" ? Youtube : Instagram;
+                      return (
+                        <a
+                          key={s.key}
+                          href={s.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-gold-600 transition-colors group"
+                        >
+                          <Icon className="w-4 h-4 text-gray-400 group-hover:text-gold-500 transition-colors" />
+                          <span>{s.handle}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               {/* How to get there */}

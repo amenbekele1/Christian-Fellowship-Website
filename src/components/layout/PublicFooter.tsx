@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { MapPin, Clock, Mail, Heart } from "lucide-react";
+import { MapPin, Clock, Mail, Heart, Youtube, Instagram } from "lucide-react";
+import { SOCIAL_LINKS } from "@/lib/social";
+
+const SOCIAL_ICONS: Record<string, typeof Youtube> = {
+  youtube: Youtube,
+  instagram: Instagram,
+};
 
 export function PublicFooter() {
   return (
@@ -26,6 +32,38 @@ export function PublicFooter() {
             <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#C9A84C" }}>
               Hebrews 10:24-25 (NIV)
             </p>
+
+            {/* Social */}
+            <div className="mt-7">
+              <h3
+                className="font-semibold mb-3 text-xs uppercase tracking-widest"
+                style={{ color: "#FAF7F0" }}
+              >
+                Follow Us
+              </h3>
+              <div className="flex items-center gap-3">
+                {SOCIAL_LINKS.map((s) => {
+                  const Icon = SOCIAL_ICONS[s.key];
+                  return (
+                    <a
+                      key={s.key}
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Warsaw Ethiopian Christian Fellowship on ${s.label} (${s.handle})`}
+                      title={`${s.label} · ${s.handle}`}
+                      className="social-icon group flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200"
+                      style={{
+                        border: "1px solid rgba(201,168,76,0.3)",
+                        color: "#C9A84C",
+                      }}
+                    >
+                      {Icon && <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />}
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Quick links */}
