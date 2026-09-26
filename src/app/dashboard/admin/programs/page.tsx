@@ -1,17 +1,31 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, X, Edit2 } from "lucide-react";
+import { Plus, Trash2, X, Edit2, Users, HandHeart } from "lucide-react";
 
 interface Program {
   id: string;
   title: string;
   description: string;
+  schedule: string | null;
+  location: string | null;
+  details: string[];
   icon: string | null;
   color: string | null;
   isActive: boolean;
   order: number;
 }
+
+const EMPTY_FORM = {
+  title: "",
+  description: "",
+  schedule: "",
+  location: "",
+  detailsText: "",
+  icon: "fellowship",
+  color: "bg-brown-100",
+  order: 0,
+};
 
 export default function AdminProgramsPage() {
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -19,13 +33,7 @@ export default function AdminProgramsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    icon: "",
-    color: "bg-brown-100",
-    order: 0,
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
 
   useEffect(() => {
     fetchPrograms();
@@ -51,10 +59,22 @@ export default function AdminProgramsPage() {
     const method = editingId ? "PATCH" : "POST";
     const url = editingId ? `/api/programs?id=${editingId}` : "/api/programs";
 
+    // One step per line in the textarea -> ordered array
+    const { detailsText, ...rest } = form;
+    const payload = {
+      ...rest,
+      schedule: form.schedule.trim() || null,
+      location: form.location.trim() || null,
+      details: detailsText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean),
+    };
+
     await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
 
     closeForm();
@@ -72,7 +92,10 @@ export default function AdminProgramsPage() {
     setForm({
       title: program.title,
       description: program.description,
-      icon: program.icon || "",
+      schedule: program.schedule || "",
+      location: program.location || "",
+      detailsText: (program.details || []).join("\n"),
+      icon: program.icon || "fellowship",
       color: program.color || "bg-brown-100",
       order: program.order,
     });
@@ -83,7 +106,7 @@ export default function AdminProgramsPage() {
   const closeForm = () => {
     setShowForm(false);
     setEditingId(null);
-    setForm({ title: "", description: "", icon: "", color: "bg-brown-100", order: 0 });
+    setForm(EMPTY_FORM);
   };
 
   return (
@@ -144,29 +167,68 @@ export default function AdminProgramsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Icon (emoji)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Schedule</label>
                   <input
                     type="text"
-                    value={form.icon}
-                    onChange={(e) => setForm({ ...form, icon: e.target.value })}
-                    placeholder="📚"
-                    maxLength={2}
+                    value={form.schedule}
+                    onChange={(e) => setForm({ ...form, schedule: e.target.value })}
+                    placeholder="Every Saturday · 18:00"
                     className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Color</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Location</label>
+                  <input
+                    type="text"
+                    value={form.location}
+                    onChange={(e) => setForm({ ...form, location: e.target.value })}
+                    placeholder="Naddnieprzańska 7, Warszawa"
+                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Programme steps
+                </label>
+                <textarea
+                  value={form.detailsText}
+                  onChange={(e) => setForm({ ...form, detailsText: e.target.value })}
+                  placeholder={"Prayer\nWorship\nWord of Encouragement (15 min)\nBible Study\nClosing Prayer"}
+                  rows={5}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none font-mono"
+                />
+                <p className="text-xs text-gray-400 mt-1.5">
+                  One step per line. They appear numbered on the public page.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Icon</label>
+                  <select
+                    value={form.icon}
+                    onChange={(e) => setForm({ ...form, icon: e.target.value })}
+                    className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  >
+                    <option value="fellowship">Fellowship (people)</option>
+                    <option value="prayer">Prayer (hands)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Panel colour</label>
                   <select
                     value={form.color}
                     onChange={(e) => setForm({ ...form, color: e.target.value })}
                     className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
                   >
-                    <option value="bg-brown-100">Green</option>
-                    <option value="bg-blue-100">Blue</option>
-                    <option value="bg-purple-100">Purple</option>
-                    <option value="bg-amber-100">Amber</option>
-                    <option value="bg-crimson-100">Crimson</option>
+                    <option value="from-brown-700 to-brown-900">Deep brown</option>
+                    <option value="from-gold-700 to-brown-800">Gold to brown</option>
+                    <option value="from-gold-600 to-brown-800">Warm gold</option>
+                    <option value="from-brown-800 to-brown-900">Darkest brown</option>
                   </select>
                 </div>
               </div>
@@ -215,11 +277,32 @@ export default function AdminProgramsPage() {
             <p className="text-gray-400 text-sm text-center py-10">No programs yet.</p>
           )}
           {programs.map((program) => (
-            <div key={program.id} className={`${program.color || "bg-brown-100"} rounded-2xl p-5 border border-brown-200 flex gap-4 items-start`}>
-              <div className="text-3xl">{program.icon || "📋"}</div>
-              <div className="flex-1">
+            <div key={program.id} className="bg-white rounded-2xl p-5 border border-brown-200 flex gap-4 items-start">
+              <div
+                className={`w-11 h-11 rounded-full shrink-0 bg-gradient-to-br ${
+                  program.color?.startsWith("from-") ? program.color : "from-brown-700 to-brown-900"
+                } flex items-center justify-center`}
+              >
+                {program.icon === "prayer" ? (
+                  <HandHeart className="w-5 h-5 text-gold-300" strokeWidth={1.75} />
+                ) : (
+                  <Users className="w-5 h-5 text-gold-300" strokeWidth={1.75} />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-gray-800">{program.title}</h3>
-                <p className="text-sm text-gray-600 mt-1">{program.description}</p>
+                {(program.schedule || program.location) && (
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {[program.schedule, program.location].filter(Boolean).join("  ·  ")}
+                  </p>
+                )}
+                <p className="text-sm text-gray-600 mt-1.5 line-clamp-2">{program.description}</p>
+                {program.details?.length > 0 && (
+                  <p className="text-xs text-gray-400 mt-2">
+                    {program.details.length} step{program.details.length === 1 ? "" : "s"}:{" "}
+                    {program.details.join(" → ")}
+                  </p>
+                )}
               </div>
               <div className="flex gap-1 shrink-0">
                 <button

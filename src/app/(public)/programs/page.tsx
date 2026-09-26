@@ -1,85 +1,56 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Clock, MapPin, Users, HandHeart } from "lucide-react";
 
 interface Program {
   id: string;
   title: string;
   description: string;
+  schedule: string | null;
+  location: string | null;
+  details: string[];
   icon: string | null;
   color: string | null;
   isActive: boolean;
   order: number;
 }
 
-type DisplayProgram = Program & { schedule?: string; details?: string[]; accent?: string };
+type DisplayProgram = Program & { accent?: string };
 
-// Default programs if database is empty
+// Shown if the database is empty or unreachable
 const DEFAULT_PROGRAMS: DisplayProgram[] = [
   {
     id: "default-1",
-    icon: "📖",
-    title: "Sunday Worship",
-    schedule: "Every Sunday · 10:00 AM",
+    icon: "fellowship",
+    title: "Weekly Fellowship",
+    schedule: "Every Saturday · 18:00",
+    location: "Naddnieprzańska 7, 04-205 Warszawa",
     description:
-      "The centerpiece of our weekly gathering. Anointed, Spirit-filled preaching from the Word of God that challenges, encourages, and equips believers to live victoriously in Christ.",
-    details: ["Expository preaching style", "Translated into Amharic when needed", "Combined with worship and prayer", "Sermon notes available online"],
-    color: "from-gold-600 to-brown-800",
-    accent: "bg-brown-100 text-gold-500",
+      "Our main weekly gathering. We come together to worship, open the Word, and encourage one another as a family in Christ. Whether you have walked with the Lord for years or are just beginning, there is a place for you here.",
+    details: [
+      "Prayer",
+      "Worship",
+      "Word of Encouragement (15 min)",
+      "Bible Study",
+      "Closing Prayer",
+    ],
+    color: "from-brown-700 to-brown-900",
     isActive: true,
     order: 0,
   },
   {
     id: "default-2",
-    icon: "👥",
-    title: "BUS Ministry",
-    schedule: "Monthly · Saturday 3:00 PM",
+    icon: "prayer",
+    title: "Weekly Prayer",
+    schedule: "Every Friday · 18:00",
+    location: "Śniardwy 8/118, Warszawa",
     description:
-      "BUS (Brotherhood & Unity in the Spirit) groups are our small-group system. Each group is led by a trained BUS leader and meets regularly for prayer, accountability, fellowship, and care. Every member belongs to a BUS group.",
-    details: ["Small groups of 8–15 members", "Led by appointed BUS leaders", "Personal pastoral care", "Attendance tracked to support members"],
-    color: "from-rose-600 to-rose-800",
-    accent: "bg-rose-100 text-rose-700",
+      "An evening set apart for prayer — interceding for our fellowship, for one another, and for the needs God lays on our hearts. A quiet, unhurried time to seek Him together.",
+    details: ["Prayer"],
+    color: "from-gold-700 to-brown-800",
     isActive: true,
     order: 1,
-  },
-  {
-    id: "default-3",
-    icon: "🎤",
-    title: "Youth Ministry",
-    schedule: "Weekly · Saturday 5:00 PM",
-    description:
-      "A dynamic program focused on developing young believers in Christ. Through worship, teaching, and community service, we equip the next generation to be leaders and witnesses for Christ.",
-    details: ["Ages 13–25", "Youth-led worship and discussion", "Service and outreach projects", "Social events and fellowship"],
-    color: "from-purple-600 to-purple-800",
-    accent: "bg-purple-100 text-purple-700",
-    isActive: true,
-    order: 2,
-  },
-  {
-    id: "default-4",
-    icon: "👩‍👩‍👧‍👦",
-    title: "Women's Fellowship",
-    schedule: "Monthly · Saturday 2:00 PM",
-    description:
-      "A community of women growing together in faith, encouraged to become mighty women of God. Through Bible study, prayer, and practical service, we support one another in all seasons of life.",
-    details: ["Safe space for women of all ages", "Led by experienced mentors", "Study, prayer, and fellowship", "Childcare provided"],
-    color: "from-amber-600 to-amber-800",
-    accent: "bg-amber-100 text-amber-700",
-    isActive: true,
-    order: 3,
-  },
-  {
-    id: "default-5",
-    icon: "⛪",
-    title: "Prayer & Fasting",
-    schedule: "Monthly · First Friday 6:00 AM",
-    description:
-      "Dedicated times of corporate prayer and fasting to seek God's face, intercede for our community, and deepen our dependence on the Holy Spirit. A transformative spiritual practice.",
-    details: ["Early morning prayer time", "Guided intercession", "Fasting support resources", "Prayer journals available"],
-    color: "from-blue-600 to-blue-800",
-    accent: "bg-blue-100 text-blue-700",
-    isActive: true,
-    order: 4,
   },
 ];
 
@@ -108,20 +79,29 @@ function ProgramsContent() {
     fetchPrograms();
   }, []);
 
+  // Brand-palette gradients only. Legacy admin values (bg-blue-100 etc.) are
+  // remapped onto the brown/gold family so nothing clashes with the page.
   const colorMap: { [key: string]: string } = {
-    "bg-brown-100": "from-gold-600 to-brown-800",
-    "bg-blue-100": "from-blue-600 to-blue-800",
-    "bg-purple-100": "from-purple-600 to-purple-800",
-    "bg-amber-100": "from-amber-600 to-amber-800",
-    "bg-crimson-100": "from-crimson-600 to-crimson-800",
+    "bg-brown-100": "from-brown-700 to-brown-900",
+    "bg-gold-100": "from-gold-700 to-brown-800",
+    "bg-blue-100": "from-brown-700 to-brown-900",
+    "bg-purple-100": "from-gold-700 to-brown-800",
+    "bg-amber-100": "from-gold-600 to-brown-800",
+    "bg-crimson-100": "from-brown-800 to-brown-900",
   };
 
-  const accentMap: { [key: string]: string } = {
-    "bg-brown-100": "bg-brown-100 text-gold-500",
-    "bg-blue-100": "bg-blue-100 text-blue-700",
-    "bg-purple-100": "bg-purple-100 text-purple-700",
-    "bg-amber-100": "bg-amber-100 text-amber-700",
-    "bg-crimson-100": "bg-crimson-100 text-crimson-700",
+  // Alternating brand gradients for anything with no colour set
+  const FALLBACK_GRADIENTS = [
+    "from-brown-700 to-brown-900",
+    "from-gold-700 to-brown-800",
+  ];
+
+  /** Resolve a program's panel gradient, accepting either a raw
+   *  `from-… to-…` value or a legacy `bg-…-100` key. */
+  const resolveGradient = (color: string | null, index: number): string => {
+    if (color?.startsWith("from-")) return color;
+    if (color && colorMap[color]) return colorMap[color];
+    return FALLBACK_GRADIENTS[index % FALLBACK_GRADIENTS.length];
   };
 
   if (loading) {
@@ -160,63 +140,95 @@ function ProgramsContent() {
             Our Programs
           </h1>
           <p className="text-white/85 text-lg max-w-2xl mx-auto leading-relaxed drop-shadow">
-            From Scripture study to worship nights, we have something for every season of your
-            spiritual journey.
+            We gather twice a week — Friday to pray, Saturday to worship and open the Word.
+            You are welcome at both.
           </p>
         </div>
       </section>
 
-      <section className="py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-6 space-y-10">
+      <section className="py-20 bg-brown-50">
+        <div className="max-w-5xl mx-auto px-6 space-y-8">
           {programs.map((prog, i) => {
-            const gradientColor = prog.color || colorMap[prog.color || "bg-brown-100"] || "from-gold-600 to-brown-800";
-            const accentClass = accentMap[prog.color || "bg-brown-100"] || "bg-brown-100 text-gold-500";
+            const gradient = resolveGradient(prog.color, i);
             const details = prog.details || [];
+            const Icon = prog.icon === "prayer" ? HandHeart : Users;
 
             return (
-              <div
+              <article
                 key={prog.id}
-                className={`rounded-2xl overflow-hidden border border-gray-100 shadow-sm card-hover flex flex-col lg:flex-row ${i % 2 === 1 ? "lg:flex-row-reverse" : ""}`}
+                className="rounded-2xl overflow-hidden bg-white border border-brown-200 shadow-sm card-hover flex flex-col lg:flex-row"
               >
-                {/* Color panel */}
-                <div className={`bg-gradient-to-br ${gradientColor} p-10 lg:w-72 flex flex-col items-center justify-center text-center shrink-0`}>
-                  <div className="text-6xl mb-4">{prog.icon || "📋"}</div>
-                  <h2 className="font-display font-bold text-white text-2xl mb-2">{prog.title}</h2>
-                  {prog.schedule && <p className="text-white/70 text-sm">{prog.schedule}</p>}
+                {/* Left panel — identity, schedule, location */}
+                <div
+                  className={`bg-gradient-to-br ${gradient} p-8 lg:p-9 lg:w-[19rem] shrink-0 flex flex-col justify-center`}
+                >
+                  <div className="w-12 h-12 rounded-full bg-gold-500/20 ring-1 ring-gold-400/40 flex items-center justify-center mb-5">
+                    <Icon className="w-6 h-6 text-gold-300" strokeWidth={1.75} />
+                  </div>
+
+                  <h2 className="font-display font-bold text-white text-2xl leading-snug mb-5">
+                    {prog.title}
+                  </h2>
+
+                  <div className="space-y-3">
+                    {prog.schedule && (
+                      <div className="flex items-start gap-2.5">
+                        <Clock className="w-4 h-4 text-gold-300 mt-0.5 shrink-0" strokeWidth={2} />
+                        <span className="text-white/90 text-sm font-medium leading-snug">
+                          {prog.schedule}
+                        </span>
+                      </div>
+                    )}
+                    {prog.location && (
+                      <div className="flex items-start gap-2.5">
+                        <MapPin className="w-4 h-4 text-gold-300 mt-0.5 shrink-0" strokeWidth={2} />
+                        <span className="text-white/75 text-sm leading-snug">{prog.location}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-8 flex-1">
-                  <p className="text-gray-600 leading-relaxed mb-6 text-base">{prog.description}</p>
+                {/* Right panel — description + ordered flow */}
+                <div className="p-8 lg:p-9 flex-1">
+                  <p className="text-brown-600 leading-relaxed text-[15px]">{prog.description}</p>
+
                   {details.length > 0 && (
-                    <ul className="space-y-2">
-                      {details.map((d) => (
-                        <li key={d} className="flex items-start gap-2.5 text-sm text-gray-600">
-                          <span className={`mt-0.5 rounded-full px-1.5 py-0.5 text-xs font-bold ${accentClass}`}>✓</span>
-                          {d}
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="mt-7 pt-7 border-t border-brown-100">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-brown-400 mb-4">
+                        {details.length > 1 ? "How the evening flows" : "What we do"}
+                      </p>
+                      <ol className="space-y-2.5">
+                        {details.map((d, idx) => (
+                          <li key={d} className="flex items-center gap-3">
+                            <span className="w-6 h-6 rounded-full bg-brown-100 text-brown-700 text-xs font-bold flex items-center justify-center shrink-0">
+                              {idx + 1}
+                            </span>
+                            <span className="text-brown-700 text-sm">{d}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
                   )}
                 </div>
-              </div>
+              </article>
             );
           })}
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 bg-brown-50 border-t border-brown-200">
+      {/* CTA — dark close, bookends the photo hero */}
+      <section className="py-20 bg-brown-900">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="font-display text-3xl font-bold text-gray-800 mb-4">
-            Ready to Get Involved?
+          <h2 className="font-display text-3xl font-bold text-white mb-4">
+            Come and Join Us
           </h2>
-          <p className="text-gray-600 mb-8">
-            Join our fellowship today and start participating in all these life-changing programs.
+          <p className="text-brown-200 mb-8 leading-relaxed">
+            You are welcome at any of our gatherings — no account needed. Create one to stay
+            connected between meetings.
           </p>
           <a
             href="/register"
-            className="inline-block bg-brown-800 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-brown-800 transition-colors shadow-sm"
+            className="inline-block bg-gold-500 text-brown-900 font-semibold px-8 py-3.5 rounded-xl hover:bg-gold-400 transition-colors shadow-sm"
           >
             Create Your Member Account
           </a>

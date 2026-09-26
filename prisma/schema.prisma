@@ -298,6 +298,9 @@ model Program {
   id          String   @id @default(cuid())
   title       String
   description String
+  schedule    String?  // e.g. "Every Saturday · 18:00"
+  location    String?  // e.g. "Naddnieprzanska 7, 04-205 Warszawa"
+  details     String[] @default([]) // ordered steps, e.g. ["Prayer", "Worship", ...]
   icon        String?
   color       String?
   isActive    Boolean  @default(true)

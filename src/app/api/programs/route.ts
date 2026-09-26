@@ -16,6 +16,9 @@ function canEditContent(session: any): boolean {
 const programSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
+  schedule: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+  details: z.array(z.string().min(1)).default([]),
   icon: z.string().optional(),
   color: z.string().optional(),
   isActive: z.boolean().default(true),
