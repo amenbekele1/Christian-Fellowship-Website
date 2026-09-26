@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { Calendar, MapPin, Clock } from "lucide-react";
+import { Calendar, MapPin, Clock, ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { eventPath } from "@/lib/event-presets";
 
@@ -87,7 +87,7 @@ export default async function EventsPage() {
                     {event.description && (
                       <p className="text-gray-500 text-sm leading-relaxed mb-3">{event.description}</p>
                     )}
-                    <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
                       <span className="flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5" />
                         {formatTime(event.startDate)}
@@ -99,6 +99,12 @@ export default async function EventsPage() {
                           {event.location}
                         </span>
                       )}
+                      <Link
+                        href={eventPath(event)}
+                        className="flex items-center gap-1 text-gold-600 font-medium hover:text-gold-700 transition-colors ml-auto"
+                      >
+                        See details <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -111,21 +117,31 @@ export default async function EventsPage() {
             <>
               <h2 className="font-display text-2xl font-bold text-gray-800 mb-6 mt-12">Past Events</h2>
               <div className="space-y-3">
-                {past.slice(0, 5).map((event) => (
-                  <div key={event.id} className="flex gap-4 p-4 rounded-xl border border-gray-100 opacity-60">
-                    <div className="shrink-0 text-center bg-gray-50 rounded-lg px-3 py-2 min-w-[56px]">
-                      <p className="text-xs font-bold text-gray-400 uppercase">
+                {past.slice(0, 10).map((event) => (
+                  <Link
+                    key={event.id}
+                    href={eventPath(event)}
+                    className="flex gap-4 p-4 rounded-xl border border-gray-100 hover:border-brown-200 hover:bg-brown-50/50 transition-colors group"
+                  >
+                    <div className="shrink-0 text-center bg-gray-50 rounded-lg px-3 py-2 min-w-[56px] group-hover:bg-brown-100 transition-colors">
+                      <p className="text-xs font-bold text-gray-400 uppercase group-hover:text-gold-600 transition-colors">
                         {new Date(event.startDate).toLocaleDateString("en-GB", { month: "short" })}
                       </p>
-                      <p className="font-bold text-gray-500 text-lg leading-none">
+                      <p className="font-bold text-gray-500 text-lg leading-none group-hover:text-brown-700 transition-colors">
                         {new Date(event.startDate).getDate()}
                       </p>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-600 text-sm">{event.title}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-700 text-sm group-hover:text-gold-600 transition-colors">
+                        {event.title}
+                      </p>
                       <p className="text-xs text-gray-400">{formatDate(event.startDate)}</p>
+                      {event.description && (
+                        <p className="text-xs text-gray-400 mt-1 line-clamp-1">{event.description}</p>
+                      )}
                     </div>
-                  </div>
+                    <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gold-500 self-center shrink-0 transition-colors" />
+                  </Link>
                 ))}
               </div>
             </>
