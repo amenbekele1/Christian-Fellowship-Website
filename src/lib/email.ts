@@ -566,3 +566,112 @@ export function welcomeEmail(name: string): string {
     </html>
   `;
 }
+
+/** Sent to the fellowship inbox when a member submits feedback. */
+export function feedbackReceivedEmail(
+  memberName: string,
+  memberEmail: string,
+  category: string | null,
+  message: string,
+  pageUrl: string | null
+): string {
+  const categoryLabel =
+    category === "bug" ? "Something is broken"
+    : category === "idea" ? "Idea or suggestion"
+    : "General feedback";
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #1C0F07, #2C1A0E); padding: 32px 40px; }
+        .header h1 { color: #C9A84C; margin: 0; font-size: 20px; }
+        .header p { color: #FAF7F0; margin: 6px 0 0; font-size: 14px; }
+        .body { padding: 32px 40px; }
+        .meta { background: #FAF7F0; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .meta p { margin: 4px 0; color: #3D2410; font-size: 14px; }
+        .quote { background: white; border: 1px solid #E0CBB0; border-radius: 8px; padding: 20px; color: #374151; line-height: 1.7; white-space: pre-wrap; }
+        .cta { text-align: center; margin: 28px 0 0; }
+        .cta a { background: #2C1A0E; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 15px; display: inline-block; }
+        .footer { background: #FAF7F0; padding: 20px 40px; text-align: center; color: #6b7280; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>New feedback from a member</h1>
+          <p>${esc(categoryLabel)}</p>
+        </div>
+        <div class="body">
+          <div class="meta">
+            <p><strong>From:</strong> ${esc(memberName)} (${esc(memberEmail)})</p>
+            ${pageUrl ? `<p><strong>Page:</strong> ${esc(pageUrl)}</p>` : ""}
+          </div>
+          <div class="quote">${esc(message)}</div>
+          <div class="cta">
+            <a href="${process.env.NEXTAUTH_URL}/dashboard/admin/feedback">Open the feedback inbox →</a>
+          </div>
+        </div>
+        <div class="footer">
+          Reply directly to this email to reach ${esc(memberName)}.
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+/** Sent to the member when their feedback is marked as fixed. */
+export function feedbackResolvedEmail(
+  memberName: string,
+  message: string,
+  adminNote: string | null
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #1C0F07, #2C1A0E); padding: 36px 40px; text-align: center; }
+        .header h1 { color: #C9A84C; margin: 0; font-size: 22px; }
+        .body { padding: 36px 40px; }
+        .body p { color: #374151; line-height: 1.7; }
+        .quote { background: #FAF7F0; border-left: 3px solid #C9A84C; padding: 16px 20px; margin: 20px 0; color: #5C3D20; font-style: italic; white-space: pre-wrap; }
+        .note { background: #fefce8; border: 1px solid #F5E3BB; border-radius: 8px; padding: 16px 20px; margin: 20px 0; color: #3D2410; }
+        .cta { text-align: center; margin: 28px 0 0; }
+        .cta a { background: #C9A84C; color: #1C0F07; padding: 13px 30px; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: bold; display: inline-block; }
+        .footer { background: #FAF7F0; padding: 22px 40px; text-align: center; color: #6b7280; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Thank you — this is now sorted</h1>
+        </div>
+        <div class="body">
+          <p>Dear ${esc(memberName)},</p>
+          <p>You told us about something on the member portal, and we have now dealt with it. Thank you for taking the time to let us know — it genuinely helps us make this better for everyone.</p>
+          <p style="color:#6b7280; font-size:14px; margin-bottom:4px;">You wrote:</p>
+          <div class="quote">${esc(message)}</div>
+          ${adminNote ? `<div class="note"><strong>What we did:</strong><br>${esc(adminNote)}</div>` : ""}
+          <div class="cta">
+            <a href="${process.env.NEXTAUTH_URL}/dashboard">Open the portal →</a>
+          </div>
+          <p style="margin-top:28px;">If it still is not right, just send us another note from your profile.</p>
+          <p>God bless you,<br><strong>Warsaw Ethiopian Christian Fellowship</strong></p>
+        </div>
+        <div class="footer">
+          You are receiving this because you sent us feedback on the member portal.
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}

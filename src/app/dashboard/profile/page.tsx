@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { AlertCircle, Check, Eye, EyeOff, Bell, BellOff, Trash2 } from "lucide-react";
+import FeedbackCard from "@/components/feedback/FeedbackCard";
 import {
   subscribeToPush,
   unsubscribeFromPush,
@@ -435,6 +436,11 @@ export default function ProfilePage() {
           </form>
         </div>
       )}
+
+      {/* Feedback */}
+      <div className="mt-8">
+        <FeedbackCard />
+      </div>
 
       {/* Danger Zone */}
       <div className="mt-8 border border-red-200 rounded-2xl p-5 bg-red-50">

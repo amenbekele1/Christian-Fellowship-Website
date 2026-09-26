@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, BookOpen, Calendar, Bell,
   ClipboardList, LogOut, Shield, UserCog, BookMarked,
   ChevronRight, UserCircle, Link2, MessageSquare,
-  Music, HandHeart, Megaphone, HeartHandshake, Share2,
+  Music, HandHeart, Megaphone, HeartHandshake, Share2, MessageSquarePlus,
 } from "lucide-react";
 import { cn, getRoleLabel, getInitials } from "@/lib/utils";
 
@@ -51,6 +51,7 @@ const adminLinks = [
   { href: "/dashboard/admin/leaders",      label: "Leadership",        icon: Shield },
   { href: "/dashboard/admin/books",        label: "Library Books",     icon: BookMarked },
   { href: "/dashboard/admin/invites",      label: "Invites",           icon: Link2 },
+  { href: "/dashboard/admin/feedback",     label: "Feedback",          icon: MessageSquarePlus },
 ];
 
 export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
