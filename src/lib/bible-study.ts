@@ -25,6 +25,13 @@ export function toSessionData(s: NonNullable<SessionRow>, seriesTitle: string): 
     reference: formatReference(s),
     passageId: passageId(s),
     chapterId: `${s.bookId}.${s.startChapter}`,
+    range: {
+      bookId: s.bookId,
+      startChapter: s.startChapter,
+      startVerse: s.startVerse,
+      endChapter: s.endChapter,
+      endVerse: s.endVerse,
+    },
     questions: s.questions,
     notes: s.notes,
   };

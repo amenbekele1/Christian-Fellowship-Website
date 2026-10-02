@@ -57,3 +57,25 @@ export function passageId(r: PassageRange): string {
   return `${r.bookId}.${r.startChapter}.${r.startVerse}-${end}`;
 }
 
+// ── Amharic on Bible.com ─────────────────────────────────────────
+// API.Bible carries no Amharic Bible, so these open the passage on
+// Bible.com (or the YouVersion app, if installed). Linking needs no licence.
+export const AMHARIC_VERSIONS = [
+  { key: "AM1962", label: "1962", title: "አማርኛ 1954 (1962)", youVersionId: 3867 },
+  { key: "NASV", label: "NASV", title: "አዲሱ መደበኛ ትርጒም", youVersionId: 1260 },
+] as const;
+
+/**
+ * Bible.com link for a passage. YouVersion links can't span chapters, so a
+ * multi-chapter passage opens at its first chapter.
+ */
+export function bibleComUrl(youVersionId: number, r: PassageRange): string {
+  const endCh = r.endChapter ?? r.startChapter;
+  let ref = `${r.bookId}.${r.startChapter}`;
+  if (r.startVerse && endCh === r.startChapter) {
+    ref += `.${r.startVerse}`;
+    if (r.endVerse && r.endVerse !== r.startVerse) ref += `-${r.endVerse}`;
+  }
+  return `https://www.bible.com/bible/${youVersionId}/${ref}`;
+}
+

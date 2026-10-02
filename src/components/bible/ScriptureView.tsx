@@ -2,13 +2,35 @@
 
 import { useEffect, useState } from "react";
 import Script from "next/script";
+import { ExternalLink } from "lucide-react";
 import { peekCache, rememberCache } from "@/lib/fetch-cache";
+import { AMHARIC_VERSIONS, bibleComUrl, type PassageRange } from "@/lib/bible-books";
+
+/** Amharic versions open the same passage on Bible.com / the YouVersion app. */
+export function AmharicLinks({ range }: { range: PassageRange }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 mt-4 pt-4" style={{ borderTop: "1px solid #F0E6D3" }}>
+      <span lang="am" className="text-sm font-semibold mr-1" style={{ color: "#5C3D20" }}>በአማርኛ ያንብቡ</span>
+      {AMHARIC_VERSIONS.map((v) => (
+        <a
+          key={v.key}
+          href={bibleComUrl(v.youVersionId, range)}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`${v.title} — opens on Bible.com`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
+          style={{ background: "#F0E6D3", color: "#3D2410" }}
+        >
+          {v.label} <ExternalLink className="w-3 h-3" aria-hidden="true" />
+        </a>
+      ))}
+    </div>
+  );
+}
 
 export const VERSION_TABS = [
-  { key: "KJV", label: "KJV", lang: "en" },
-  { key: "NIV", label: "NIV", lang: "en" },
-  { key: "AM1962", label: "1962", lang: "am" },
-  { key: "NASV", label: "NASV", lang: "am" },
+  { key: "KJV", label: "KJV" },
+  { key: "NIV", label: "NIV" },
 ] as const;
 export type VersionKey = (typeof VERSION_TABS)[number]["key"];
 
@@ -130,7 +152,6 @@ export function ScriptureView({
   const url = textUrl(version, { passage, chapter });
   const [text, setText] = useState<ScriptureText | null>(() => peekCache<ScriptureText>(url) ?? null);
   const [error, setError] = useState<string | null>(null);
-  const lang = VERSION_TABS.find((t) => t.key === version)?.lang ?? "en";
 
   useEffect(() => {
     let cancelled = false;
@@ -169,11 +190,7 @@ export function ScriptureView({
           <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "#8A6A1F" }}>
             {text.reference}
           </p>
-          <div
-            lang={lang}
-            className={lang === "am" ? "text-[17px] leading-[1.9]" : "font-scripture text-[17px] leading-[1.8]"}
-            style={{ color: "#2C1A0E" }}
-          >
+          <div className="font-scripture text-[17px] leading-[1.8]" style={{ color: "#2C1A0E" }}>
             <Verses content={text.content} />
           </div>
           {onNavigate && (text.previous || text.next) && (

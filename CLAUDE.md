@@ -64,7 +64,7 @@ Meetings use Jitsi as a Service: `meeting-token` routes sign an RS256 JWT with `
 - Crons are in `vercel.json` (Hobby plan: each runs at most daily). Event reminders therefore send a "Today" and a "Tomorrow" push from the 08:00 UTC run rather than an hour-before one.
 
 ### Bible and Bible study
-- Scripture comes from API.Bible (`src/lib/bible.ts`, env `API_BIBLE_KEY`; optional `BIBLE_ID_KJV|NIV|AM1962|NASV` overrides). Versions: KJV, NIV, Amharic 1962, NASV — Protestant 66-book canon only (`src/lib/bible-books.ts`, client-safe). Members fetch text through `/api/bible/text`; every display must call FUMS `trackView` (done in `components/bible/ScriptureView.tsx`), cached text must refresh within 30 days, and the copyright line is always shown.
+- Scripture: KJV and NIV come from API.Bible (`src/lib/bible.ts`, env `API_BIBLE_KEY`; optional `BIBLE_ID_KJV|NIV` overrides) through `/api/bible/text`. API.Bible has no Amharic Bible, so Amharic 1962 (Bible.com id 3867) and NASV (id 1260) are links to Bible.com (`AMHARIC_VERSIONS`, `bibleComUrl` in `src/lib/bible-books.ts`, client-safe). Protestant 66-book canon only. Every in-app display must call FUMS `trackView` (done in `components/bible/ScriptureView.tsx`), cached text must refresh within 30 days, and the copyright line is always shown.
 - Studies: `StudySeries` → `StudySession` (passage range + `questions[]`), Guardian-only writes via `/api/bible-study`. Session `date` is a calendar day stored as UTC midnight of the Warsaw date. The daily cron sends a "read ahead" push the day before.
 
 ### Other conventions

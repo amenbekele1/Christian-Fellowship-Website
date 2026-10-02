@@ -1,30 +1,29 @@
 /**
  * Bible text via API.Bible (https://api.bible), non-commercial Starter plan.
  *
- * Versions: KJV (public domain) and NIV in English; Amharic 1962 and the
- * New Amharic Standard Version (NASV). The three copyrighted ones are the
- * plan's three licensed translations. Only the 66 books of the Protestant
- * canon are offered.
+ * Versions shown in the app: KJV (public domain) and NIV (licensed on the
+ * Starter plan). API.Bible has no Amharic Bibles, so the Amharic 1962 and
+ * NASV open on Bible.com instead (see AMHARIC_VERSIONS and bibleComUrl in bible-books.ts).
+ * Only the 66 books of the Protestant canon are offered.
  *
  * Fair-use rules we follow: cached text is refreshed within 30 days (we
  * revalidate weekly), at most a chapter/passage is fetched at once, the
  * copyright line is shown with every passage, and each display is
  * reported through FUMS (see components/bible/BibleText.tsx).
  *
- * Env: API_BIBLE_KEY (required). BIBLE_ID_KJV / _NIV / _AM1962 / _NASV
+ * Env: API_BIBLE_KEY (required). BIBLE_ID_KJV / BIBLE_ID_NIV
  * override the automatic lookup if it picks the wrong edition.
  */
 
 const BASE = "https://rest.api.bible/v1";
 const WEEK = 60 * 60 * 24 * 7;
 
-export type VersionKey = "KJV" | "NIV" | "AM1962" | "NASV";
+export type VersionKey = "KJV" | "NIV";
 
 interface VersionDef {
   key: VersionKey;
   label: string;
   name: string;
-  lang: "en" | "am";
   apiLanguage: string;
   /** Picks this version out of the /bibles list when no env override is set. */
   match: (b: ApiBible) => boolean;
@@ -44,20 +43,12 @@ const has = (s: string | undefined, ...needles: string[]) =>
 
 export const VERSIONS: VersionDef[] = [
   {
-    key: "KJV", label: "KJV", name: "King James Version", lang: "en", apiLanguage: "eng",
+    key: "KJV", label: "KJV", name: "King James Version", apiLanguage: "eng",
     match: (b) => (has(b.abbreviation, "kjv") || has(b.abbreviationLocal, "kjv")) && !has(b.name, "apocrypha", "deutero"),
   },
   {
-    key: "NIV", label: "NIV", name: "New International Version", lang: "en", apiLanguage: "eng",
+    key: "NIV", label: "NIV", name: "New International Version", apiLanguage: "eng",
     match: (b) => b.id === "78a9f6124f344018-01" || has(b.abbreviation, "niv") || has(b.abbreviationLocal, "niv"),
-  },
-  {
-    key: "AM1962", label: "1962", name: "Amharic 1962 (አማርኛ 1954)", lang: "am", apiLanguage: "amh",
-    match: (b) => has(b.name, "1962", "1954") || has(b.nameLocal, "1954", "1962") || has(b.abbreviation, "1962"),
-  },
-  {
-    key: "NASV", label: "NASV", name: "New Amharic Standard Version (አዲሱ መደበኛ ትርጒም)", lang: "am", apiLanguage: "amh",
-    match: (b) => has(b.abbreviation, "nasv") || has(b.abbreviationLocal, "nasv") || has(b.name, "new amharic standard"),
   },
 ];
 
@@ -147,12 +138,3 @@ async function fetchScripture(version: VersionKey, kind: "passages" | "chapters"
 
 export const getPassage = (version: VersionKey, id: string) => fetchScripture(version, "passages", id);
 export const getChapter = (version: VersionKey, id: string) => fetchScripture(version, "chapters", id);
-
-/** Book names in a version's own language, limited to the Protestant canon. */
-export async function getBookNames(version: VersionKey): Promise<Record<string, string>> {
-  const ids = await resolveBibleIds();
-  const bibleId = ids[version];
-  if (!bibleId) return {};
-  const { data } = await api<{ data: { id: string; name: string }[] }>(`/bibles/${bibleId}/books`);
-  return Object.fromEntries(data.filter((b) => BOOK_IDS.has(b.id)).map((b) => [b.id, b.name]));
-}

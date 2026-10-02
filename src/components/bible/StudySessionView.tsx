@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { BookOpen, HelpCircle } from "lucide-react";
-import { ScriptureView, VersionSwitch, useBibleVersion } from "./ScriptureView";
+import { ScriptureView, VersionSwitch, useBibleVersion, AmharicLinks } from "./ScriptureView";
+import type { PassageRange } from "@/lib/bible-books";
 
 export interface StudySessionData {
   id: string;
@@ -12,6 +13,7 @@ export interface StudySessionData {
   reference: string;
   passageId: string;
   chapterId: string;
+  range: PassageRange;
   questions: string[];
   notes: string | null;
 }
@@ -68,6 +70,7 @@ export function StudySessionView({ session }: { session: StudySessionData }) {
           <VersionSwitch value={version} onChange={setVersion} />
         </div>
         <ScriptureView version={version} passage={session.passageId} />
+        <AmharicLinks range={session.range} />
         <Link
           href={`/dashboard/bible?chapter=${session.chapterId}`}
           className="inline-block mt-4 text-sm font-semibold"

@@ -3,8 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BOOKS } from "@/lib/bible-books";
-import { ScriptureView, VersionSwitch, useBibleVersion, VERSION_TABS } from "@/components/bible/ScriptureView";
-import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
+import { ScriptureView, VersionSwitch, useBibleVersion, AmharicLinks } from "@/components/bible/ScriptureView";
 
 const LAST_KEY = "wecf.bibleLast";
 
@@ -20,8 +19,6 @@ function Reader() {
   const [version, setVersion] = useBibleVersion();
   const fromUrl = parseChapter(params.get("chapter"));
   const [pos, setPos] = useState(fromUrl ?? { book: "JHN", chapter: 1 });
-  const [names, setNames] = useState<Record<string, string>>({});
-  const lang = VERSION_TABS.find((t) => t.key === version)?.lang;
 
   // Resume where the member left off, unless a link asked for a chapter.
   useEffect(() => {
@@ -36,14 +33,6 @@ function Reader() {
   useEffect(() => {
     try { localStorage.setItem(LAST_KEY, `${pos.book}.${pos.chapter}`); } catch {}
   }, [pos]);
-
-  // Book names in Amharic for the Amharic versions.
-  useEffect(() => {
-    if (lang !== "am") { setNames({}); return; }
-    const url = `/api/bible/books?v=${version}`;
-    setNames(peekCache<Record<string, string>>(url) ?? {});
-    fetchJsonCached<Record<string, string>>(url).then(setNames).catch(() => {});
-  }, [version, lang]);
 
   const book = BOOKS.find((b) => b.id === pos.book) ?? BOOKS[0];
   const go = (chapterId: string) => {
@@ -72,10 +61,10 @@ function Reader() {
           style={selectStyle}
         >
           <optgroup label="Old Testament">
-            {BOOKS.slice(0, 39).map((b) => <option key={b.id} value={b.id}>{names[b.id] ?? b.name}</option>)}
+            {BOOKS.slice(0, 39).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
           </optgroup>
           <optgroup label="New Testament">
-            {BOOKS.slice(39).map((b) => <option key={b.id} value={b.id}>{names[b.id] ?? b.name}</option>)}
+            {BOOKS.slice(39).map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
           </optgroup>
         </select>
         <select
@@ -93,6 +82,7 @@ function Reader() {
 
       <div className="rounded-2xl p-5" style={{ background: "#fff", border: "1px solid #E0CBB0", boxShadow: "0 2px 8px rgba(44,26,14,0.05)" }}>
         <ScriptureView version={version} chapter={`${pos.book}.${pos.chapter}`} onNavigate={go} />
+        <AmharicLinks range={{ bookId: pos.book, startChapter: pos.chapter }} />
       </div>
     </div>
   );
