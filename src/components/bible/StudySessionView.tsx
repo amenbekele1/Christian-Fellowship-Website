@@ -72,7 +72,7 @@ export function StudySessionView({ session }: { session: StudySessionData }) {
         <ScriptureView version={version} passage={session.passageId} />
         <AmharicLinks range={session.range} />
         <Link
-          href={`/dashboard/bible?chapter=${session.chapterId}`}
+          href={`/dashboard/bible?chapter=${session.chapterId}${session.range.startVerse ? `&verse=${session.range.startVerse}` : ""}`}
           className="inline-block mt-4 text-sm font-semibold"
           style={{ color: "#8A6A1F" }}
         >

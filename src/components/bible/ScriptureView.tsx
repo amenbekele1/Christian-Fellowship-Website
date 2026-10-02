@@ -95,8 +95,16 @@ function trackView(token: string | null) {
   window.fums("trackView", token);
 }
 
-/** "[16] For God so loved…" → paragraphs with superscript verse numbers. */
-function Verses({ content }: { content: string }) {
+/** Verse numbers present in "[n]"-marked text, in order. */
+export function verseNumbers(content: string): number[] {
+  return Array.from(content.matchAll(/\[(\d+)\]/g), (m) => Number(m[1]));
+}
+
+/**
+ * "[16] For God so loved…" → paragraphs with superscript verse numbers.
+ * Each verse is a span with id "v-<n>" so the reader can scroll to it.
+ */
+function Verses({ content, highlight }: { content: string; highlight?: number | null }) {
   const paragraphs = content.split(/\n+/).map((p) => p.trim()).filter(Boolean);
   return (
     <>
@@ -110,17 +118,22 @@ function Verses({ content }: { content: string }) {
             </h4>
           );
         }
+        const verses: { n: number; text: string }[] = [];
+        for (let j = 1; j < parts.length; j += 2) verses.push({ n: Number(parts[j]), text: parts[j + 1] ?? "" });
         return (
           <p key={i} className="mb-3">
-            {parts.map((part, j) =>
-              j % 2 === 1 ? (
-                <sup key={j} className="font-sans font-bold text-[0.65em] mr-0.5 select-none" style={{ color: "#A8862E" }}>
-                  {part}
-                </sup>
-              ) : (
-                <span key={j}>{part}</span>
-              )
-            )}
+            {parts[0] && <span>{parts[0]}</span>}
+            {verses.map(({ n, text }) => (
+              <span
+                key={n}
+                id={`v-${n}`}
+                className="scroll-mt-24 rounded transition-colors duration-700"
+                style={highlight === n ? { background: "rgba(201,168,76,0.28)", boxShadow: "0 0 0 3px rgba(201,168,76,0.28)" } : undefined}
+              >
+                <sup className="font-sans font-bold text-[0.65em] mr-0.5 select-none" style={{ color: "#A8862E" }}>{n}</sup>
+                {text}
+              </span>
+            ))}
           </p>
         );
       })}
@@ -142,16 +155,33 @@ export function ScriptureView({
   version,
   passage,
   chapter,
+  verse,
   onNavigate,
 }: {
   version: VersionKey;
   passage?: string;
   chapter?: string;
+  /** Scroll to and briefly highlight this verse once the text is shown. */
+  verse?: number | null;
   onNavigate?: (chapterId: string) => void;
 }) {
   const url = textUrl(version, { passage, chapter });
   const [text, setText] = useState<ScriptureText | null>(() => peekCache<ScriptureText>(url) ?? null);
   const [error, setError] = useState<string | null>(null);
+  const [highlight, setHighlight] = useState<number | null>(null);
+
+  // Glide to the requested verse once its text is on screen.
+  useEffect(() => {
+    if (!verse || !text) return;
+    const el = document.getElementById(`v-${verse}`);
+    if (!el) return;
+    const t1 = setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlight(verse);
+    }, 80);
+    const t2 = setTimeout(() => setHighlight(null), 2600);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [verse, text]);
 
   useEffect(() => {
     let cancelled = false;
@@ -191,7 +221,7 @@ export function ScriptureView({
             {text.reference}
           </p>
           <div className="font-scripture text-[17px] leading-[1.8]" style={{ color: "#2C1A0E" }}>
-            <Verses content={text.content} />
+            <Verses content={text.content} highlight={highlight} />
           </div>
           {onNavigate && (text.previous || text.next) && (
             <div className="flex justify-between mt-6 gap-3">
