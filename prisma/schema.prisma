@@ -1,0 +1,441 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MEMBER
+  BUS_LEADER
+  GUARDIAN
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum RentalStatus {
+  ACTIVE
+  RETURNED
+  OVERDUE
+}
+
+enum FeedbackStatus {
+  OPEN
+  IN_PROGRESS
+  FIXED
+  DECLINED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  password      String
+  image         String?
+  phone         String?
+  role          Role      @default(MEMBER)
+  isActive      Boolean   @default(true)
+  joinedAt      DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // BUS Group relationships
+  busGroupId     String?
+  busGroup       BUSGroup?  @relation("GroupMembers", fields: [busGroupId], references: [id])
+  ledBusGroup    BUSGroup?  @relation("GroupLeader")
+
+  // Other relationships
+  attendances    Attendance[]
+  bookRentals    BookRental[]
+  accounts       Account[]
+  sessions       Session[]
+
+  // Group communication
+  sentMessages   GroupMessage[] @relation("SentMessages")
+  createdTasks   GroupTask[]    @relation("CreatedTasks")
+  assignedTasks  GroupTask[]    @relation("AssignedTasks")
+
+  // Service teams (librarian, worship, etc.)
+  serviceTeams      UserServiceTeam[]
+  ledTeams          ServiceTeam[]      @relation("TeamLeader")
+  createdTeamInvites TeamInviteToken[] @relation("TeamInviteCreator")
+  feedback          Feedback[]         @relation("FeedbackAuthor")
+  pushSubscriptions PushSubscription[]
+
+  @@map("users")
+}
+
+model ServiceTeam {
+  id          String   @id @default(cuid())
+  name        String   @unique   // e.g. "LIBRARIAN"
+  label       String             // Display name, e.g. "Librarian"
+  description String?
+  leaderId    String?            // assigned by a Guardian
+  createdAt   DateTime @default(now())
+
+  leader       User?             @relation("TeamLeader", fields: [leaderId], references: [id], onDelete: SetNull)
+  members      UserServiceTeam[]
+  messages     GroupMessage[]    @relation("TeamMessages")
+  inviteTokens TeamInviteToken[]
+
+  @@map("service_teams")
+}
+
+/// Shareable link that adds an existing fellowship member to a team.
+/// The person must already have an account — this never creates one.
+model TeamInviteToken {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  teamId      String
+  createdById String
+  expiresAt   DateTime
+  isActive    Boolean   @default(true)
+  useCount    Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  team      ServiceTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdBy User        @relation("TeamInviteCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+  @@map("team_invite_tokens")
+}
+
+model Feedback {
+  id         String         @id @default(cuid())
+  userId     String
+  category   String?        // "bug" | "idea" | "other"
+  message    String         @db.Text
+  pageUrl    String?        // where they were when they submitted
+  status     FeedbackStatus @default(OPEN)
+  adminNote  String?        @db.Text
+  notified   Boolean        @default(false) // member told it was resolved
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  resolvedAt DateTime?
+
+  user User @relation("FeedbackAuthor", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@map("feedback")
+}
+
+model UserServiceTeam {
+  userId     String
+  teamId     String
+  assignedAt DateTime @default(now())
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team ServiceTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@id([userId, teamId])
+  @@map("user_service_teams")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model BUSGroup {
+  id                String    @id @default(cuid())
+  name              String    @unique
+  description       String?
+  leaderId          String    @unique
+  lastMeetingPingAt DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  leader      User           @relation("GroupLeader", fields: [leaderId], references: [id])
+  members     User[]         @relation("GroupMembers")
+  attendances Attendance[]
+  messages    GroupMessage[] @relation("GroupMessages")
+  tasks       GroupTask[]    @relation("GroupTasks")
+
+  @@map("bus_groups")
+}
+
+/// A chat message belonging to EITHER a BUS group or a service team.
+/// Exactly one of busGroupId / teamId is set.
+model GroupMessage {
+  id             String   @id @default(cuid())
+  seq            BigInt   @default(autoincrement())
+  busGroupId     String?
+  teamId         String?
+  senderId       String
+  content        String?  @db.Text
+  fileUrl        String?
+  fileName       String?
+  fileType       String?
+  isAnnouncement Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  busGroup BUSGroup?    @relation("GroupMessages", fields: [busGroupId], references: [id], onDelete: Cascade)
+  team     ServiceTeam? @relation("TeamMessages", fields: [teamId], references: [id], onDelete: Cascade)
+  sender   User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([busGroupId, seq])
+  @@index([teamId, seq])
+  @@map("group_messages")
+}
+
+model GroupTask {
+  id           String     @id @default(cuid())
+  busGroupId   String
+  createdById  String
+  assignedToId String?
+  title        String
+  description  String?    @db.Text
+  status       TaskStatus @default(PENDING)
+  dueDate      DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  busGroup   BUSGroup @relation("GroupTasks", fields: [busGroupId], references: [id], onDelete: Cascade)
+  createdBy  User     @relation("CreatedTasks", fields: [createdById], references: [id])
+  assignedTo User?    @relation("AssignedTasks", fields: [assignedToId], references: [id])
+
+  @@index([busGroupId])
+  @@map("group_tasks")
+}
+
+model Attendance {
+  id         String           @id @default(cuid())
+  userId     String
+  busGroupId String?
+  date       DateTime
+  status     AttendanceStatus @default(PRESENT)
+  notes      String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  busGroup BUSGroup? @relation(fields: [busGroupId], references: [id])
+
+  @@unique([userId, date])
+  @@map("attendances")
+}
+
+model Book {
+  id              String   @id @default(cuid())
+  title           String
+  author          String
+  translatedBy    String?
+  description     String?  @db.Text
+  coverImage      String?
+  imageUrl        String?
+  totalQuantity   Int      @default(1)
+  availableQty    Int      @default(1)
+  category        String?
+  publishedYear   Int?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  rentals         BookRental[]
+
+  @@map("books")
+}
+
+model BookRental {
+  id           String       @id @default(cuid())
+  userId       String
+  bookId       String
+  status       RentalStatus @default(ACTIVE)
+  reservedAt   DateTime     @default(now())
+  pickupDate   DateTime?
+  borrowedAt   DateTime?
+  dueDate      DateTime?
+  returnedAt   DateTime?
+  reminderSent Boolean      @default(false)
+  notes        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book  Book  @relation(fields: [bookId], references: [id])
+
+  @@index([status, dueDate])
+  @@index([userId, status])
+  @@map("book_rentals")
+}
+
+model Event {
+  id                String   @id @default(cuid())
+  title             String
+  description       String?  @db.Text  // short summary, shown on cards
+  body              String?  @db.Text  // rich content for the full event page
+  location          String?
+  startDate         DateTime
+  endDate           DateTime?
+  type              String?
+  imageUrl          String?            // hero image
+  gallery           String[] @default([]) // additional photo URLs
+  videoUrl          String?            // YouTube / Vimeo link, embedded on the page
+  theme             String?  @default("brown")   // preset colour theme
+  layout            String?  @default("banner")  // preset layout style
+  isPublic          Boolean  @default(true)
+  isActive          Boolean  @default(true)
+  dayReminderSent   Boolean  @default(false)
+  hourReminderSent  Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([isActive, startDate])
+  @@map("events")
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  priority  String?  @default("normal")
+  isPublic  Boolean  @default(false)
+  isPinned  Boolean  @default(false)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([expiresAt])
+  @@map("announcements")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+model Program {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  schedule    String?  // e.g. "Every Saturday · 18:00"
+  location    String?  // e.g. "Naddnieprzanska 7, 04-205 Warszawa"
+  details     String[] @default([]) // ordered steps, e.g. ["Prayer", "Worship", ...]
+  icon        String?
+  color       String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("programs")
+}
+
+model Leader {
+  id          String   @id @default(cuid())
+  name        String
+  title       String
+  bio         String?
+  imageUrl    String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("leaders")
+}
+
+model InviteToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String?
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  createdById String
+
+  @@map("invite_tokens")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+model PageContent {
+  id        String   @id @default(cuid())
+  pageKey   String   // "home" | "about"
+  fieldKey  String   // e.g. "welcome_title"
+  label     String   // Human-readable label shown in the editor
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@unique([pageKey, fieldKey])
+  @@map("page_contents")
+}
+
+/// Shared fixed-window counters for API rate limiting (see src/lib/rate-limit.ts).
+model RateLimit {
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime
+
+  @@index([resetAt])
+  @@map("rate_limits")
+}
