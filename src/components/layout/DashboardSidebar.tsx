@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, BookOpen, Calendar, Bell,
   ClipboardList, LogOut, Shield, UserCog, BookMarked,
   ChevronRight, UserCircle, Link2, MessageSquare,
-  Music, HandHeart, Megaphone, HeartHandshake, Share2, MessageSquarePlus,
+  Music, HandHeart, ScrollText, Book, Megaphone, HeartHandshake, Share2, MessageSquarePlus,
 } from "lucide-react";
 import { cn, getRoleLabel, getInitials } from "@/lib/utils";
 
@@ -32,6 +32,8 @@ const TEAM_ICONS: Record<string, any> = {
 const memberLinks = [
   { href: "/dashboard",            label: "Dashboard",    icon: LayoutDashboard, exact: true },
   { href: "/dashboard/profile",    label: "Profile",      icon: UserCircle },
+  { href: "/dashboard/bible-study", label: "Bible Study", icon: ScrollText },
+  { href: "/dashboard/bible",      label: "Bible",        icon: Book },
   { href: "/dashboard/events",     label: "Events",       icon: Calendar },
   { href: "/dashboard/library",    label: "Library",      icon: BookOpen },
   { href: "/dashboard/bus-groups", label: "My BUS Group", icon: Users },
@@ -48,6 +50,7 @@ const adminLinks = [
   { href: "/dashboard/admin/events",       label: "Events",            icon: Calendar },
   { href: "/dashboard/admin/announcements",label: "Announcements",     icon: Bell },
   { href: "/dashboard/admin/programs",     label: "Programs",          icon: BookOpen },
+  { href: "/dashboard/admin/bible-study",  label: "Bible Study",       icon: ScrollText },
   { href: "/dashboard/admin/leaders",      label: "Leadership",        icon: Shield },
   { href: "/dashboard/admin/books",        label: "Library Books",     icon: BookMarked },
   { href: "/dashboard/admin/invites",      label: "Invites",           icon: Link2 },
@@ -77,7 +80,7 @@ export function DashboardSidebar({
   const pathname = usePathname();
 
   const isActive = (href: string, exact = false) =>
-    exact ? pathname === href : pathname.startsWith(href);
+    exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
 
   const isLeader        = user.role === "BUS_LEADER";
   const isGuardian      = user.role === "GUARDIAN";

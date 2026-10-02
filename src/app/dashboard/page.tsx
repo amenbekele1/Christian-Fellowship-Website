@@ -5,7 +5,9 @@ import { formatDate, formatTime, formatShortDate, getRoleLabel } from "@/lib/uti
 import { getVerseOfDay } from "@/lib/verse";
 import { formatWarsaw, warsawGreeting } from "@/lib/timezone";
 import { eventPath } from "@/lib/event-presets";
-import { Calendar, Bell, BookOpen, Users, TrendingUp } from "lucide-react";
+import { getCurrentStudy, studyDateLabel } from "@/lib/bible-study";
+import { formatReference } from "@/lib/bible";
+import { Calendar, Bell, BookOpen, Users, TrendingUp, ScrollText, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -13,7 +15,8 @@ export default async function DashboardPage() {
   if (!session) return null;
 
   const verse = getVerseOfDay();
-  const [announcements, events, user] = await Promise.all([
+  const [study, announcements, events, user] = await Promise.all([
+    getCurrentStudy(),
     prisma.announcement.findMany({
       where: { OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }] },
       orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
@@ -79,6 +82,32 @@ export default async function DashboardPage() {
           <span className="font-normal" style={{ color: "#9A7B5C" }}>({verse.translation})</span>
         </p>
       </div>
+
+      {/* ── Bible study ─────────────────────────────────────── */}
+      {study && (
+        <Link
+          href="/dashboard/bible-study"
+          className="flex items-center gap-4 rounded-2xl p-5 mb-6 card-hover"
+          style={{ background: "#fff", border: "1px solid #E0CBB0", boxShadow: "0 2px 8px rgba(44,26,14,0.05)" }}
+        >
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(201,168,76,0.12)" }}>
+            <ScrollText className="w-5 h-5" style={{ color: "#A8862E" }} aria-hidden="true" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#8A6A1F" }}>
+              {study.isUpcoming ? "Bible study" : "Latest Bible study"} · {studyDateLabel(study.session.date)}
+            </p>
+            <p className="font-display font-bold text-lg truncate" style={{ color: "#2C1A0E" }}>
+              {formatReference(study.session)}
+            </p>
+            <p className="text-xs" style={{ color: "#7A5C3E" }}>
+              {study.session.series.title}
+              {study.session.questions.length > 0 && ` · ${study.session.questions.length} question${study.session.questions.length === 1 ? "" : "s"}`}
+            </p>
+          </div>
+          <ChevronRight className="w-5 h-5 shrink-0" style={{ color: "#C4A882" }} aria-hidden="true" />
+        </Link>
+      )}
 
       {/* ── Stats row ───────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

@@ -19,3 +19,8 @@ export async function fetchJsonCached<T>(url: string): Promise<T> {
   cache.set(url, data);
   return data;
 }
+
+/** Store a response fetched some other way (e.g. when the caller needs the error body). */
+export function rememberCache(url: string, data: unknown): void {
+  cache.set(url, data);
+}

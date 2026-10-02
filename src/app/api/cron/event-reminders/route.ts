@@ -4,13 +4,15 @@ import { verifyCron } from "@/lib/cron-auth";
 import { sendPushToAll } from "@/lib/webpush";
 import { formatWarsaw, parseWarsawDateTime, warsawDateKey } from "@/lib/timezone";
 import { eventPath } from "@/lib/event-presets";
+import { formatReference } from "@/lib/bible";
 
 /**
  * Daily cron (08:00 UTC = 09:00/10:00 in Warsaw — Vercel Hobby only allows
  * one run per day). Sends, by Warsaw calendar day:
  *   • "Today"    — events later today      (flag: hourReminderSent)
  *   • "Tomorrow" — events on the next day  (flag: dayReminderSent)
- * Idempotent: each reminder is sent at most once per event via flag columns.
+ *   • Bible study — the day before a study session  (flag: reminderSent)
+ * Idempotent: each reminder is sent at most once via flag columns.
  */
 export async function GET(req: NextRequest) {
   const unauth = verifyCron(req);
@@ -67,5 +69,26 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({ todaySent: todayEvents.length, tomorrowSent: tomorrowEvents.length });
+  // Bible study "read ahead" reminder, the day before each session.
+  let studySent = 0;
+  try {
+    const study = await prisma.studySession.findFirst({
+      where: { date: new Date(`${tomorrowKey}T00:00:00.000Z`), reminderSent: false },
+      include: { series: { select: { title: true } } },
+    });
+    if (study) {
+      await sendPushToAll({
+        title: "📖 Tomorrow's Bible study: " + formatReference(study),
+        body: study.title ?? `${study.series.title} — read ahead and look at the questions.`,
+        url: "/dashboard/bible-study",
+        topic: "bible-study",
+      }).catch(() => {});
+      await prisma.studySession.update({ where: { id: study.id }, data: { reminderSent: true } });
+      studySent = 1;
+    }
+  } catch (err) {
+    console.error("study reminder:", (err as Error).message);
+  }
+
+  return NextResponse.json({ todaySent: todayEvents.length, tomorrowSent: tomorrowEvents.length, studySent });
 }

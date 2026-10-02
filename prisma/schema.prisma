@@ -439,3 +439,40 @@ model RateLimit {
   @@index([resetAt])
   @@map("rate_limits")
 }
+
+/// A Bible study series, e.g. "John" or "Acts" — studied week by week.
+model StudySeries {
+  id          String         @id @default(cuid())
+  title       String
+  description String?        @db.Text
+  createdAt   DateTime       @default(now())
+  sessions    StudySession[]
+
+  @@map("study_series")
+}
+
+/// One Saturday Bible study: a passage plus the leaders' questions.
+model StudySession {
+  id           String      @id @default(cuid())
+  seriesId     String
+  date         DateTime    // the Saturday, stored as UTC midnight of that Warsaw date
+  title        String?
+  bookId       String      // USFM code, e.g. "JHN"
+  startChapter Int
+  startVerse   Int?
+  endChapter   Int?
+  endVerse     Int?
+  questions    String[]    @default([])
+  notes        String?     @db.Text
+  reminderSent Boolean     @default(false)
+  createdById  String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  series StudySeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@index([date])
+  @@index([seriesId, date])
+  @@map("study_sessions")
+}
+
