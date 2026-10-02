@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-import { DashboardSidebar } from "./DashboardSidebar";
+import { DashboardSidebar, type SidebarUser, type MyTeam } from "./DashboardSidebar";
 
-export function DashboardMobileNav() {
+export function DashboardMobileNav({ user, teams }: { user: SidebarUser; teams: MyTeam[] }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -38,7 +38,7 @@ export function DashboardMobileNav() {
             </div>
             {/* Scrollable sidebar content */}
             <div className="flex-1 overflow-y-auto">
-              <DashboardSidebar onClose={() => setOpen(false)} />
+              <DashboardSidebar user={user} teams={teams} onClose={() => setOpen(false)} />
             </div>
           </div>
         </div>

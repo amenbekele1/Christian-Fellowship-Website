@@ -7,6 +7,7 @@ import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { useRefreshOnFocus } from "@/hooks/useRefreshOnFocus";
 import { usePushRefresh } from "@/hooks/usePushRefresh";
 import { TIME_ZONE, warsawDateKey, warsawParts } from "@/lib/timezone";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface Book {
   id: string;
@@ -39,12 +40,15 @@ const categoryColors: Record<string, string> = {
   "Biography": "bg-teal-100 text-teal-700",
 };
 
+const RENTALS_URL = "/api/books/rentals?mine=true";
+
 export default function LibraryPage() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [myRentals, setMyRentals] = useState<Rental[]>([]);
+  const [books, setBooks] = useState<Book[]>(() => peekCache<Book[]>("/api/books") ?? []);
+  const [myRentals, setMyRentals] = useState<Rental[]>(() => peekCache<Rental[]>(RENTALS_URL) ?? []);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  // Only show the spinner when there is nothing cached from an earlier visit.
+  const [loading, setLoading] = useState(() => peekCache("/api/books") === undefined);
   const [reserving, setReserving] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [activeTab, setActiveTab] = useState<"browse" | "my-books">("browse");
@@ -67,24 +71,28 @@ export default function LibraryPage() {
   usePushRefresh("books", refreshAll);
 
   const fetchBooks = async (q?: string, cat?: string) => {
-    setLoading(true);
+    const params = new URLSearchParams();
+    if (q)   params.set("search",   q);
+    if (cat) params.set("category", cat);
+    const url = params.size ? `/api/books?${params}` : "/api/books";
+    const cached = peekCache<Book[]>(url);
+    if (cached) setBooks(cached);
+    else setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (q)   params.set("search",   q);
-      if (cat) params.set("category", cat);
-      const url = params.size ? `/api/books?${params}` : "/api/books";
-      const res = await fetch(url);
-      const data = await res.json();
-      setBooks(data);
+      const data = await fetchJsonCached<Book[]>(url);
+      setBooks(Array.isArray(data) ? data : []);
+    } catch {
+      // keep whatever is on screen
     } finally {
       setLoading(false);
     }
   };
 
   const fetchMyRentals = async () => {
-    const res = await fetch("/api/books/rentals?mine=true");
-    const data = await res.json();
-    setMyRentals(Array.isArray(data) ? data : []);
+    try {
+      const data = await fetchJsonCached<Rental[]>(RENTALS_URL);
+      setMyRentals(Array.isArray(data) ? data : []);
+    } catch {}
   };
 
   const handleSearch = (e: React.FormEvent) => {

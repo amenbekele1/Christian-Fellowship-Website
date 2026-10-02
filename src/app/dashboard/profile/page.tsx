@@ -11,6 +11,7 @@ import {
   isSubscribed,
   registerSW,
 } from "@/lib/push-client";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface UserProfile {
   id: string;
@@ -22,10 +23,12 @@ interface UserProfile {
   createdAt: string;
 }
 
+const PROFILE_URL = "/api/members/profile";
+
 export default function ProfilePage() {
   const { data: session } = useSession();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(() => peekCache<UserProfile>(PROFILE_URL) ?? null);
+  const [loading, setLoading] = useState(() => peekCache(PROFILE_URL) === undefined);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
@@ -114,11 +117,9 @@ export default function ProfilePage() {
   };
 
   const fetchProfile = async () => {
-    setLoading(true);
+    if (!peekCache(PROFILE_URL)) setLoading(true);
     try {
-      const res = await fetch("/api/members/profile");
-      if (!res.ok) throw new Error("Failed to fetch profile");
-      const data = await res.json();
+      const data = await fetchJsonCached<UserProfile>(PROFILE_URL);
       setProfile(data);
 
       // Parse name into first and last

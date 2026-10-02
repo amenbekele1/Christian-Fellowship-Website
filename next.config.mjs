@@ -15,6 +15,12 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
+  experimental: {
+    // Keep visited dashboard pages in the client router cache for 2 minutes
+    // so moving between them doesn't re-render from the server every time.
+    // RouterRefresher still refreshes on app focus and on push.
+    staleTimes: { dynamic: 120, static: 300 },
+  },
   images: {
     remotePatterns: [
       {

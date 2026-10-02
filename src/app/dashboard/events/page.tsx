@@ -5,6 +5,9 @@ import { formatTime } from "@/lib/utils";
 import { formatWarsaw } from "@/lib/timezone";
 import { eventPath } from "@/lib/event-presets";
 
+// Lists members-only events: always render per request, never prerender.
+export const dynamic = "force-dynamic";
+
 type EventRow = {
   id: string;
   title: string;

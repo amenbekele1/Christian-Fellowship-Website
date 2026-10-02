@@ -5,6 +5,7 @@ import {
   UserPlus, UserMinus, Link2, Copy, Check, AlertCircle, X, Crown, Search,
 } from "lucide-react";
 import { confirmDialog } from "@/components/ui/toaster";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface Member {
   id: string;
@@ -21,9 +22,14 @@ interface Candidate {
 }
 
 export default function TeamMembersPage({ params }: { params: { teamId: string } }) {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [isLeader, setIsLeader] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const membersUrl = `/api/teams/${params.teamId}/members`;
+  const findTeam = (teams: unknown) =>
+    Array.isArray(teams) ? teams.find((x: any) => x.id === params.teamId) : null;
+  const [members, setMembers] = useState<Member[]>(
+    () => peekCache<{ members: Member[] }>(membersUrl)?.members ?? []
+  );
+  const [isLeader, setIsLeader] = useState(() => Boolean(findTeam(peekCache("/api/teams?mine=1"))?.isLeader));
+  const [loading, setLoading] = useState(() => peekCache(membersUrl) === undefined);
   const [error, setError] = useState<string | null>(null);
 
   // Add-member search
@@ -39,23 +45,19 @@ export default function TeamMembersPage({ params }: { params: { teamId: string }
 
   const load = useCallback(async () => {
     try {
-      const [mRes, tRes] = await Promise.all([
-        fetch(`/api/teams/${params.teamId}/members`),
-        fetch("/api/teams?mine=1"),
+      const [{ members }, teams] = await Promise.all([
+        fetchJsonCached<{ members: Member[] }>(membersUrl),
+        fetchJsonCached<unknown>("/api/teams?mine=1"),
       ]);
-      if (!mRes.ok) throw new Error("Could not load members");
-      const { members } = await mRes.json();
       setMembers(members);
-
-      const teams = await tRes.json();
-      const t = Array.isArray(teams) ? teams.find((x: any) => x.id === params.teamId) : null;
-      setIsLeader(Boolean(t?.isLeader));
+      setIsLeader(Boolean(findTeam(teams)?.isLeader));
     } catch (e: any) {
       setError(e.message ?? "Something went wrong");
     } finally {
       setLoading(false);
     }
-  }, [params.teamId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [membersUrl]);
 
   useEffect(() => { load(); }, [load]);
 

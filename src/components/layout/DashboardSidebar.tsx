@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { signOut } from "next-auth/react";
 import {
   LayoutDashboard, Users, BookOpen, Calendar, Bell,
   ClipboardList, LogOut, Shield, UserCog, BookMarked,
@@ -12,7 +11,7 @@ import {
 } from "lucide-react";
 import { cn, getRoleLabel, getInitials } from "@/lib/utils";
 
-interface MyTeam {
+export interface MyTeam {
   id: string;
   name: string;
   label: string;
@@ -55,34 +54,34 @@ const adminLinks = [
   { href: "/dashboard/admin/feedback",     label: "Feedback",          icon: MessageSquarePlus },
 ];
 
-export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
-  const pathname = usePathname();
-  const { data: session } = useSession();
-  const [myTeams, setMyTeams] = useState<MyTeam[]>([]);
+export interface SidebarUser {
+  name: string;
+  role: string;
+  serviceTeams: string[];
+}
 
-  // Teams the signed-in person belongs to or leads. Fetched rather than read
-  // from the session because the session only carries team names, and the
-  // hub links need team ids.
-  useEffect(() => {
-    if (!session) return;
-    let cancelled = false;
-    fetch("/api/teams?mine=1")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => {
-        if (!cancelled && Array.isArray(data)) setMyTeams(data);
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [session]);
+/**
+ * The user and their teams come from the dashboard layout (server-rendered),
+ * so the menu — including the Serving section — is complete on first paint
+ * and when the mobile drawer re-opens, instead of filling in after a fetch.
+ */
+export function DashboardSidebar({
+  user,
+  teams: myTeams,
+  onClose,
+}: {
+  user: SidebarUser;
+  teams: MyTeam[];
+  onClose?: () => void;
+}) {
+  const pathname = usePathname();
 
   const isActive = (href: string, exact = false) =>
     exact ? pathname === href : pathname.startsWith(href);
 
-  if (!session) return null;
-
-  const isLeader        = session.user.role === "BUS_LEADER";
-  const isGuardian      = session.user.role === "GUARDIAN";
-  const teams           = session.user.serviceTeams ?? [];
+  const isLeader        = user.role === "BUS_LEADER";
+  const isGuardian      = user.role === "GUARDIAN";
+  const teams           = user.serviceTeams ?? [];
   const isLibrarian     = teams.includes("LIBRARIAN");
   const isWebsiteEditor = teams.includes("WEBSITE_EDITOR");
   // Any team membership, or a team this person leads, opens the Serving section
@@ -115,14 +114,14 @@ export function DashboardSidebar({ onClose }: { onClose?: () => void } = {}) {
             className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
             style={{ background: "rgba(201,168,76,0.15)", color: "#C9A84C" }}
           >
-            {getInitials(session.user.name || "?")}
+            {getInitials(user.name || "?")}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold truncate" style={{ color: "#FAF7F0" }}>
-              {session.user.name}
+              {user.name}
             </p>
             <p className="text-xs font-medium" style={{ color: "#C9A84C" }}>
-              {getRoleLabel(session.user.role)}
+              {getRoleLabel(user.role)}
             </p>
           </div>
         </div>

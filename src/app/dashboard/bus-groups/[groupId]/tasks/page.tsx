@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { Plus, X, CheckCircle2, Circle, Clock, Trash2, Calendar, User, AlertCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { confirmDialog } from "@/components/ui/toaster";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface TaskUser { id: string; name: string; }
 interface Task {
@@ -30,10 +31,13 @@ const NEXT_STATUS: Record<string, string> = {
 
 export default function TasksPage({ params }: { params: { groupId: string } }) {
   const { data: session } = useSession();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [members, setMembers] = useState<GroupMember[]>([]);
-  const [isLeader, setIsLeader] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const tasksUrl = `/api/bus-groups/${params.groupId}/tasks`;
+  const groupUrl = `/api/bus-groups/${params.groupId}`;
+  const cachedGroup = peekCache<{ members?: GroupMember[]; isLeader?: boolean }>(groupUrl);
+  const [tasks, setTasks] = useState<Task[]>(() => peekCache<Task[]>(tasksUrl) ?? []);
+  const [members, setMembers] = useState<GroupMember[]>(cachedGroup?.members ?? []);
+  const [isLeader, setIsLeader] = useState(cachedGroup?.isLeader ?? false);
+  const [loading, setLoading] = useState(() => peekCache(tasksUrl) === undefined);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,15 +45,15 @@ export default function TasksPage({ params }: { params: { groupId: string } }) {
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/bus-groups/${params.groupId}/tasks`).then(r => r.json()),
-      fetch(`/api/bus-groups/${params.groupId}`).then(r => r.json()),
+      fetchJsonCached<Task[]>(tasksUrl),
+      fetchJsonCached<{ members?: GroupMember[]; isLeader?: boolean }>(groupUrl),
     ]).then(([taskData, groupData]) => {
       setTasks(Array.isArray(taskData) ? taskData : []);
       setMembers(groupData.members ?? []);
       setIsLeader(groupData.isLeader ?? false);
     }).catch(() => setError("Failed to load tasks"))
       .finally(() => setLoading(false));
-  }, [params.groupId]);
+  }, [tasksUrl, groupUrl]);
 
   const createTask = async (e: React.FormEvent) => {
     e.preventDefault();
