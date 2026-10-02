@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Bug, Lightbulb, MessageCircle, AlertCircle, X, Mail, Check } from "lucide-react";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 type Status = "OPEN" | "IN_PROGRESS" | "FIXED" | "DECLINED";
 
@@ -40,20 +41,23 @@ const STATUS_CLS: Record<Status, string> = {
 };
 
 export default function AdminFeedbackPage() {
-  const [items, setItems] = useState<Item[]>([]);
+  const [items, setItems] = useState<Item[]>(() => peekCache<{ items: Item[] }>("/api/feedback?status=OPEN")?.items ?? []);
   const [filter, setFilter] = useState("OPEN");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => peekCache("/api/feedback?status=OPEN") === undefined);
   const [error, setError] = useState<string | null>(null);
   const [noteFor, setNoteFor] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    setLoading(true);
+    const url = `/api/feedback?status=${filter}`;
+    const cached = peekCache<{ items: Item[] }>(url);
+    if (cached) setItems(cached.items ?? []);
+    else setLoading(true);
     try {
-      const res = await fetch(`/api/feedback?status=${filter}`);
-      if (!res.ok) throw new Error("Could not load feedback");
-      const { items } = await res.json();
+      const { items } = await fetchJsonCached<{ items: Item[] }>(url).catch(() => {
+        throw new Error("Could not load feedback");
+      });
       setItems(Array.isArray(items) ? items : []);
     } catch (e: any) {
       setError(e.message ?? "Something went wrong");

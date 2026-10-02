@@ -10,6 +10,7 @@ import { useRefreshOnFocus } from "@/hooks/useRefreshOnFocus";
 import { usePushRefresh } from "@/hooks/usePushRefresh";
 import { TIME_ZONE } from "@/lib/timezone";
 import { confirmDialog } from "@/components/ui/toaster";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface Book {
   id: string; title: string; author: string; translatedBy: string | null;
@@ -31,12 +32,12 @@ const EMPTY_FORM = {
 export default function AdminBooksPage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [books, setBooks] = useState<Book[]>([]);
-  const [rentals, setRentals] = useState<Rental[]>([]);
+  const [books, setBooks] = useState<Book[]>(() => peekCache<Book[]>("/api/books") ?? []);
+  const [rentals, setRentals] = useState<Rental[]>(() => peekCache<Rental[]>("/api/books/rentals") ?? []);
   const [showForm, setShowForm] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [activeTab, setActiveTab] = useState<"books" | "rentals">("books");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => peekCache("/api/books") === undefined);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -52,12 +53,19 @@ export default function AdminBooksPage() {
   }, [session]);
 
   const fetchData = async () => {
-    setLoading(true);
-    const [b, r] = await Promise.all([fetch("/api/books"), fetch("/api/books/rentals")]);
-    setBooks(await b.json());
-    const rentalData = await r.json();
-    setRentals(Array.isArray(rentalData) ? rentalData : []);
-    setLoading(false);
+    if (!peekCache("/api/books")) setLoading(true);
+    try {
+      const [bookData, rentalData] = await Promise.all([
+        fetchJsonCached<Book[]>("/api/books"),
+        fetchJsonCached<Rental[]>("/api/books/rentals"),
+      ]);
+      setBooks(Array.isArray(bookData) ? bookData : []);
+      setRentals(Array.isArray(rentalData) ? rentalData : []);
+    } catch {
+      // keep what is on screen
+    } finally {
+      setLoading(false);
+    }
   };
 
   useRefreshOnFocus(fetchData);

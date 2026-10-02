@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Search, Users, ChevronLeft, ChevronRight, AlertCircle, X, Trash2 } from "lucide-react";
 import { getRoleLabel, getRoleBadgeColor, formatDate } from "@/lib/utils";
 import { confirmDialog, toast } from "@/components/ui/toaster";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface Member {
   id: string; name: string; email: string; phone: string | null;
@@ -22,17 +23,36 @@ interface ServiceTeam {
 
 const PAGE_SIZE = 20;
 
+function membersUrl(page: number, search: string): string {
+  const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
+  if (search) params.set("search", search);
+  return `/api/members?${params}`;
+}
+
+/** Flatten serviceTeams relation: [{team:{name}}] -> ["LIBRARIAN",...] */
+function normaliseMembers(json: any): { members: any[]; total: number } {
+  const raw: any[] = Array.isArray(json) ? json : (json?.data ?? []);
+  return {
+    members: raw.map((m: any) => ({
+      ...m,
+      serviceTeams: (m.serviceTeams ?? []).map((st: any) => st.team?.name ?? st),
+    })),
+    total: json?.total ?? raw.length ?? 0,
+  };
+}
+
 export default function AdminMembersPage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [members, setMembers] = useState<Member[]>([]);
-  const [busGroups, setBusGroups] = useState<BUSGroup[]>([]);
-  const [serviceTeams, setServiceTeams] = useState<ServiceTeam[]>([]);
-  const [total, setTotal] = useState(0);
+  const firstPage = peekCache(membersUrl(1, ""));
+  const [members, setMembers] = useState<Member[]>(() => (firstPage ? normaliseMembers(firstPage).members : []));
+  const [busGroups, setBusGroups] = useState<BUSGroup[]>(() => peekCache<BUSGroup[]>("/api/bus-groups") ?? []);
+  const [serviceTeams, setServiceTeams] = useState<ServiceTeam[]>(() => peekCache<ServiceTeam[]>("/api/service-teams") ?? []);
+  const [total, setTotal] = useState(() => (firstPage ? normaliseMembers(firstPage).total : 0));
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => firstPage === undefined);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [teamsModal, setTeamsModal] = useState<Member | null>(null);
@@ -55,9 +75,7 @@ export default function AdminMembersPage() {
 
   const fetchBusGroups = async () => {
     try {
-      const res = await fetch("/api/bus-groups");
-      if (!res.ok) throw new Error("Failed to load groups");
-      const data = await res.json();
+      const data = await fetchJsonCached<BUSGroup[]>("/api/bus-groups");
       setBusGroups(Array.isArray(data) ? data : []);
     } catch {
       // non-critical
@@ -66,9 +84,7 @@ export default function AdminMembersPage() {
 
   const fetchServiceTeams = async () => {
     try {
-      const res = await fetch("/api/service-teams");
-      if (!res.ok) return;
-      const data = await res.json();
+      const data = await fetchJsonCached<ServiceTeam[]>("/api/service-teams");
       setServiceTeams(Array.isArray(data) ? data : []);
     } catch {
       // non-critical
@@ -107,25 +123,23 @@ export default function AdminMembersPage() {
   };
 
   const fetchMembers = async () => {
-    setLoading(true);
+    const url = membersUrl(page, search);
+    const cached = peekCache(url);
+    if (cached) {
+      const c = normaliseMembers(cached);
+      setMembers(c.members);
+      setTotal(c.total);
+    } else {
+      setLoading(true);
+    }
     setError(null);
     try {
-      const params = new URLSearchParams({
-        page: String(page),
-        limit: String(PAGE_SIZE),
+      const json = await fetchJsonCached<any>(url).catch(() => {
+        throw new Error("Failed to load members");
       });
-      if (search) params.set("search", search);
-      const res = await fetch(`/api/members?${params}`);
-      if (!res.ok) throw new Error("Failed to load members");
-      const json = await res.json();
-      const raw: any[] = Array.isArray(json) ? json : (json.data ?? []);
-      // Flatten serviceTeams relation: [{team:{name}}] -> ["LIBRARIAN",...]
-      const normalised = raw.map((m: any) => ({
-        ...m,
-        serviceTeams: (m.serviceTeams ?? []).map((st: any) => st.team?.name ?? st),
-      }));
+      const { members: normalised, total } = normaliseMembers(json);
       setMembers(normalised);
-      setTotal(json.total ?? json.length ?? 0);
+      setTotal(total);
     } catch (err: any) {
       setError(err.message ?? "Something went wrong");
     } finally {

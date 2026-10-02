@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { ClipboardList, CheckCircle, XCircle, MinusCircle, Save } from "lucide-react";
+import { warsawDateKey } from "@/lib/timezone";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface Member {
   id: string;
@@ -18,14 +20,31 @@ interface MemberRecord {
   busGroupId: string | null;
 }
 
+const MEMBERS_URL = "/api/members?limit=200";
+
+function membersFrom(json: any): Member[] {
+  if (!json) return [];
+  const raw = Array.isArray(json) ? json : (json.data ?? []);
+  return raw.filter((m: Member) => m);
+}
+
+function allPresent(members: Member[]): Record<string, "PRESENT" | "ABSENT" | "EXCUSED"> {
+  const init: Record<string, "PRESENT" | "ABSENT" | "EXCUSED"> = {};
+  members.forEach((m) => { init[m.id] = "PRESENT"; });
+  return init;
+}
+
 export default function AttendancePage() {
   const { data: session } = useSession();
-  const [members, setMembers] = useState<Member[]>([]);
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [attendance, setAttendance] = useState<Record<string, "PRESENT" | "ABSENT" | "EXCUSED">>({});
+  const cachedMembers = membersFrom(peekCache(MEMBERS_URL));
+  const [members, setMembers] = useState<Member[]>(cachedMembers);
+  // Today on the Warsaw calendar (toISOString would give the UTC day, which is
+  // yesterday between midnight and 01:00/02:00 in Warsaw).
+  const [date, setDate] = useState(() => warsawDateKey());
+  const [attendance, setAttendance] = useState<Record<string, "PRESENT" | "ABSENT" | "EXCUSED">>(() => allPresent(cachedMembers));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(cachedMembers.length === 0);
 
   if (session && session.user.role !== "GUARDIAN") {
     return (
@@ -38,15 +57,12 @@ export default function AttendancePage() {
   }
 
   useEffect(() => {
-    fetch("/api/members?limit=200")
-      .then(r => r.json())
+    fetchJsonCached<any>(MEMBERS_URL)
       .then((json: any) => {
-        const raw = Array.isArray(json) ? json : (json.data ?? []);
-        const active = raw.filter((m: Member) => m);
+        const active = membersFrom(json);
         setMembers(active);
-        const init: Record<string, "PRESENT" | "ABSENT" | "EXCUSED"> = {};
-        active.forEach((m: Member) => { init[m.id] = "PRESENT"; });
-        setAttendance(init);
+        // Keep marks already made; new members default to present.
+        setAttendance(prev => ({ ...allPresent(active), ...prev }));
       })
       .catch(() => setMembers([]))
       .finally(() => setLoading(false));

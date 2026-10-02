@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, X, Edit2, Users, HandHeart } from "lucide-react";
 import { confirmDialog } from "@/components/ui/toaster";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface Program {
   id: string;
@@ -29,10 +30,10 @@ const EMPTY_FORM = {
 };
 
 export default function AdminProgramsPage() {
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [programs, setPrograms] = useState<Program[]>(() => peekCache<Program[]>("/api/programs") ?? []);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => peekCache("/api/programs") === undefined);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
 
@@ -41,13 +42,12 @@ export default function AdminProgramsPage() {
   }, []);
 
   const fetchPrograms = async () => {
-    setLoading(true);
+    if (!peekCache("/api/programs")) setLoading(true);
     try {
-      const res = await fetch("/api/programs");
-      const data = await res.json();
+      const data = await fetchJsonCached<Program[]>("/api/programs");
       setPrograms(Array.isArray(data) ? data : []);
     } catch {
-      setPrograms([]);
+      // keep what is on screen
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import { Plus, Bell, Trash2, X, Pin, Edit2, AlertCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { confirmDialog } from "@/components/ui/toaster";
 import { warsawDateKey } from "@/lib/timezone";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface Announcement {
   id: string; title: string; content: string; isPublic: boolean; isPinned: boolean;
@@ -12,10 +13,10 @@ interface Announcement {
 }
 
 export default function AdminAnnouncementsPage() {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>(() => peekCache<Announcement[]>("/api/announcements") ?? []);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => peekCache("/api/announcements") === undefined);
   const [saving, setSaving] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [form, setForm] = useState({ title: "", content: "", isPublic: false, isPinned: false, expiresAt: "" });
@@ -23,12 +24,12 @@ export default function AdminAnnouncementsPage() {
   useEffect(() => { fetchAnnouncements(); }, []);
 
   const fetchAnnouncements = async () => {
-    setLoading(true);
+    if (!peekCache("/api/announcements")) setLoading(true);
     setFetchError(null);
     try {
-      const res = await fetch("/api/announcements");
-      if (!res.ok) throw new Error("Failed to load announcements");
-      const data = await res.json();
+      const data = await fetchJsonCached<Announcement[]>("/api/announcements").catch(() => {
+        throw new Error("Failed to load announcements");
+      });
       setAnnouncements(Array.isArray(data) ? data : []);
     } catch (err: any) {
       setFetchError(err.message ?? "Something went wrong");

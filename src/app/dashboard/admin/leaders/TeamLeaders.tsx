@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Crown, Search, X, Check, AlertCircle, Users, Plus, Pencil, Trash2, Sparkles } from "lucide-react";
 import { confirmDialog } from "@/components/ui/toaster";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 /** The teams the fellowship expects to have. Offered as one-click setup. */
 const SUGGESTED_TEAMS = [
@@ -35,8 +36,8 @@ interface Candidate {
  * account role.
  */
 export default function TeamLeaders() {
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [teams, setTeams] = useState<Team[]>(() => peekCache<Team[]>("/api/teams") ?? []);
+  const [loading, setLoading] = useState(() => peekCache("/api/teams") === undefined);
   const [error, setError] = useState<string | null>(null);
   const [openFor, setOpenFor] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -53,9 +54,10 @@ export default function TeamLeaders() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/teams");
-      if (!res.ok) throw new Error("Could not load teams");
-      setTeams(await res.json());
+      const data = await fetchJsonCached<Team[]>("/api/teams").catch(() => {
+        throw new Error("Could not load teams");
+      });
+      setTeams(Array.isArray(data) ? data : []);
     } catch (e: any) {
       setError(e.message ?? "Something went wrong");
     } finally {

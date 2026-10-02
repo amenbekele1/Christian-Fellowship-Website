@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Plus, Trash2, X, Edit2 } from "lucide-react";
 import TeamLeaders from "./TeamLeaders";
 import { confirmDialog } from "@/components/ui/toaster";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface Leader {
   id: string;
@@ -16,10 +17,10 @@ interface Leader {
 }
 
 export default function AdminLeadersPage() {
-  const [leaders, setLeaders] = useState<Leader[]>([]);
+  const [leaders, setLeaders] = useState<Leader[]>(() => peekCache<Leader[]>("/api/leaders") ?? []);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => peekCache("/api/leaders") === undefined);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -34,10 +35,15 @@ export default function AdminLeadersPage() {
   }, []);
 
   const fetchLeaders = async () => {
-    setLoading(true);
-    const res = await fetch("/api/leaders");
-    setLeaders(await res.json());
-    setLoading(false);
+    if (!peekCache("/api/leaders")) setLoading(true);
+    try {
+      const data = await fetchJsonCached<Leader[]>("/api/leaders");
+      setLeaders(Array.isArray(data) ? data : []);
+    } catch {
+      // keep what is on screen
+    } finally {
+      setLoading(false);
+    }
   };
 
   const saveLeader = async (e: React.FormEvent) => {

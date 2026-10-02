@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Plus, Trash2, Users, Edit2, X } from "lucide-react";
 import { confirmDialog } from "@/components/ui/toaster";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface BUSGroup {
   id: string; name: string; description: string | null;
@@ -13,13 +14,15 @@ interface BUSGroup {
 }
 interface User { id: string; name: string; email: string; role: string; }
 
+const USERS_URL = "/api/members?limit=500";
+
 export default function AdminBusGroupsPage() {
   const { data: session } = useSession();
-  const [groups, setGroups] = useState<BUSGroup[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [groups, setGroups] = useState<BUSGroup[]>(() => peekCache<BUSGroup[]>("/api/bus-groups") ?? []);
+  const [users, setUsers] = useState<User[]>(() => peekCache<{ data?: User[] }>(USERS_URL)?.data ?? []);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", leaderId: "" });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => peekCache("/api/bus-groups") === undefined);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [editLeaderGroup, setEditLeaderGroup] = useState<BUSGroup | null>(null);
@@ -28,12 +31,19 @@ export default function AdminBusGroupsPage() {
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
-    setLoading(true);
-    const [g, u] = await Promise.all([fetch("/api/bus-groups"), fetch("/api/members?limit=500")]);
-    setGroups(await g.json());
-    const uData = await u.json();
-    setUsers(Array.isArray(uData) ? uData : (uData.data ?? []));
-    setLoading(false);
+    if (!peekCache("/api/bus-groups")) setLoading(true);
+    try {
+      const [gData, uData] = await Promise.all([
+        fetchJsonCached<BUSGroup[]>("/api/bus-groups"),
+        fetchJsonCached<any>(USERS_URL),
+      ]);
+      setGroups(Array.isArray(gData) ? gData : []);
+      setUsers(Array.isArray(uData) ? uData : (uData.data ?? []));
+    } catch {
+      // keep what is on screen
+    } finally {
+      setLoading(false);
+    }
   };
 
   const createGroup = async (e: React.FormEvent) => {

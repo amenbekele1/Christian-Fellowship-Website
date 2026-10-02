@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { formatWarsaw, warsawDateKey } from "@/lib/timezone";
 import { confirmDialog, toast } from "@/components/ui/toaster";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface InviteToken {
   id: string;
@@ -161,12 +162,12 @@ function expiresOnFor(preset: Preset, date: string): string | undefined {
 }
 
 export default function AdminInvitesPage() {
-  const [tokens, setTokens] = useState<InviteToken[]>([]);
+  const [tokens, setTokens] = useState<InviteToken[]>(() => peekCache<InviteToken[]>("/api/invites") ?? []);
   const [showForm, setShowForm] = useState(false);
   const [email, setEmail] = useState("");
   const [preset, setPreset] = useState<Preset>("2d");
   const [date, setDate] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => peekCache("/api/invites") === undefined);
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [generated, setGenerated] = useState<{ url: string; expiresAt: string } | null>(null);
@@ -179,9 +180,8 @@ export default function AdminInvitesPage() {
   }, []);
 
   const fetchTokens = async () => {
-    const res = await fetch("/api/invites");
-    const data = await res.json();
-    setTokens(Array.isArray(data) ? data : []);
+    const data = await fetchJsonCached<InviteToken[]>("/api/invites").catch(() => null);
+    if (data) setTokens(Array.isArray(data) ? data : []);
     setLoading(false);
   };
 

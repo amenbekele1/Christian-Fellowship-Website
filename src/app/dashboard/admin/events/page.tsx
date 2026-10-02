@@ -6,6 +6,7 @@ import { formatDateTime } from "@/lib/utils";
 import { EVENT_THEMES, EVENT_LAYOUTS, parseVideoEmbed, eventPath } from "@/lib/event-presets";
 import { TIME_ZONE, formatWarsaw, toWarsawInputValue } from "@/lib/timezone";
 import { confirmDialog, toast } from "@/components/ui/toaster";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface Event {
   id: string; title: string; description: string | null; body: string | null;
@@ -24,11 +25,15 @@ const EMPTY_FORM = {
   theme: "brown", layout: "banner", isPublic: true,
 };
 
+// Explicit high limit: the API defaults to 50 ordered by startDate asc,
+// which would silently hide older events.
+const EVENTS_URL = "/api/events?limit=500";
+
 export default function AdminEventsPage() {
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<Event[]>(() => peekCache<Event[]>(EVENTS_URL) ?? []);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => peekCache(EVENTS_URL) === undefined);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [uploading, setUploading] = useState<"hero" | "gallery" | null>(null);
@@ -84,12 +89,15 @@ export default function AdminEventsPage() {
   };
 
   const fetchEvents = async () => {
-    setLoading(true);
-    // Explicit high limit: the API defaults to 20 ordered by startDate asc,
-    // which silently hides everything past the twentieth-oldest event.
-    const res = await fetch("/api/events?limit=500");
-    setEvents(await res.json());
-    setLoading(false);
+    if (!peekCache(EVENTS_URL)) setLoading(true);
+    try {
+      const data = await fetchJsonCached<Event[]>(EVENTS_URL);
+      setEvents(Array.isArray(data) ? data : []);
+    } catch {
+      // keep what is on screen
+    } finally {
+      setLoading(false);
+    }
   };
 
   const createEvent = async (e: React.FormEvent) => {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { CheckCircle, AlertCircle, FileText } from "lucide-react";
+import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface ContentRow {
   pageKey:   string;
@@ -18,12 +19,18 @@ const PAGE_LABELS: Record<string, string> = {
   about: "About Page",
 };
 
+function editsFrom(rows: { pageKey: string; fieldKey: string; value: string }[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const row of rows) out[`${row.pageKey}__${row.fieldKey}`] = row.value;
+  return out;
+}
+
 export default function ContentEditorPage() {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const [rows, setRows] = useState<ContentRow[]>([]);
-  const [edits, setEdits] = useState<Record<string, string>>({});
+  const [rows, setRows] = useState<ContentRow[]>(() => peekCache<ContentRow[]>("/api/page-content") ?? []);
+  const [edits, setEdits] = useState<Record<string, string>>(() => editsFrom(peekCache<ContentRow[]>("/api/page-content") ?? []));
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved]   = useState<string | null>(null);
   const [error, setError]   = useState<string | null>(null);
@@ -38,12 +45,10 @@ export default function ContentEditorPage() {
   }, [session]);
 
   const fetchContent = async () => {
-    const res = await fetch("/api/page-content");
-    const data: ContentRow[] = await res.json();
+    const data = await fetchJsonCached<ContentRow[]>("/api/page-content").catch(() => null);
+    if (!data) return;
     setRows(data);
-    const initial: Record<string, string> = {};
-    for (const row of data) initial[`${row.pageKey}__${row.fieldKey}`] = row.value;
-    setEdits(initial);
+    setEdits(editsFrom(data));
   };
 
   const handleSave = async (row: ContentRow) => {
