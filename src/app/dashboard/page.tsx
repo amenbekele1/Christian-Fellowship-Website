@@ -7,7 +7,7 @@ import { formatWarsaw, warsawGreeting } from "@/lib/timezone";
 import { eventPath } from "@/lib/event-presets";
 import { getCurrentStudy, studyDateLabel } from "@/lib/bible-study";
 import { formatReference } from "@/lib/bible";
-import { Calendar, Bell, BookOpen, Users, TrendingUp, ScrollText, ChevronRight } from "lucide-react";
+import { Calendar, Bell, BookOpen, Users, ScrollText, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -30,15 +30,22 @@ export default async function DashboardPage() {
     prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
-        busGroup: { select: { name: true, leader: { select: { name: true, email: true } } } },
-        attendances: { orderBy: { date: "desc" }, take: 5, select: { status: true } },
+        busGroup: { select: { id: true, name: true, leader: { select: { name: true, email: true } } } },
+        // A BUS leader may lead a group without being listed as its member.
+        ledBusGroup: { select: { id: true, name: true } },
+        bookRentals: {
+          where: { status: { in: ["ACTIVE", "OVERDUE"] } },
+          orderBy: { dueDate: "asc" },
+          select: { status: true, dueDate: true },
+        },
       },
     }),
   ]);
 
-  const presentCount   = user?.attendances.filter((a) => a.status === "PRESENT").length ?? 0;
-  const totalCount     = user?.attendances.length ?? 0;
-  const attendanceRate = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+  const myGroup   = user?.busGroup ?? user?.ledBusGroup ?? null;
+  const rentals   = user?.bookRentals ?? [];
+  const overdue   = rentals.filter((r) => r.status === "OVERDUE").length;
+  const nextDue   = rentals.find((r) => r.dueDate)?.dueDate;
 
 
   return (
@@ -114,44 +121,61 @@ export default async function DashboardPage() {
         {[
           {
             label: "BUS Group",
-            value: user?.busGroup?.name || "Not Assigned",
-            sub:   user?.busGroup?.leader?.name || "—",
+            value: myGroup?.name || "Not Assigned",
+            sub:   user?.busGroup?.leader?.name || (myGroup ? "You lead this group" : "Ask a leader to join one"),
             icon:  Users,
+            // No group -> plain tile, nothing to open.
+            href:  myGroup ? `/dashboard/bus-groups/${myGroup.id}` : null,
           },
           {
-            label: "Attendance Rate",
-            value: `${attendanceRate}%`,
-            sub:   `${presentCount} of ${totalCount} sessions`,
-            icon:  TrendingUp,
+            label: "My Books",
+            value: rentals.length === 0 ? "None" : `${rentals.length} book${rentals.length === 1 ? "" : "s"}`,
+            sub:   overdue > 0
+              ? `${overdue} overdue — please return`
+              : nextDue
+                ? `Due ${formatShortDate(nextDue)}`
+                : "Browse the library",
+            icon:  BookOpen,
+            href:  "/dashboard/library",
           },
           {
             label: "Announcements",
             value: announcements.length,
             sub:   `${announcements.filter((a) => a.isPinned).length} pinned`,
             icon:  Bell,
+            href:  "#announcements",
           },
           {
             label: "Upcoming Events",
             value: events.length,
             sub:   events[0] ? `Next: ${formatShortDate(events[0].startDate)}` : "None scheduled",
             icon:  Calendar,
+            href:  "/dashboard/events",
           },
-        ].map(({ label, value, sub, icon: Icon }) => (
-          <div
-            key={label}
-            className="rounded-2xl p-4 card-hover"
-            style={{ background: "#fff", border: "1px solid #E0CBB0", boxShadow: "0 2px 8px rgba(44,26,14,0.05)" }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs uppercase tracking-wide" style={{ color: "#9A7B5C" }}>{label}</p>
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(201,168,76,0.10)" }}>
-                <Icon className="w-3.5 h-3.5" style={{ color: "#C9A84C" }} />
+        ].map(({ label, value, sub, icon: Icon, href }) => {
+          const body = (
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs uppercase tracking-wide" style={{ color: "#9A7B5C" }}>{label}</p>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(201,168,76,0.10)" }}>
+                  <Icon className="w-3.5 h-3.5" style={{ color: "#C9A84C" }} />
+                </div>
               </div>
-            </div>
-            <p className="font-display font-bold text-lg truncate" style={{ color: "#2C1A0E" }}>{value}</p>
-            <p className="text-xs mt-1" style={{ color: "#C4A882" }}>{sub}</p>
-          </div>
-        ))}
+              <p className="font-display font-bold text-lg truncate" style={{ color: "#2C1A0E" }}>{value}</p>
+              <p className="text-xs mt-1 truncate" style={{ color: label === "My Books" && overdue > 0 ? "#B42318" : "#8A6A4A" }}>{sub}</p>
+            </>
+          );
+          const tile = { background: "#fff", border: "1px solid #E0CBB0", boxShadow: "0 2px 8px rgba(44,26,14,0.05)" };
+          if (!href) {
+            return <div key={label} className="rounded-2xl p-4" style={tile}>{body}</div>;
+          }
+          // In-page anchors use <a> so the browser scrolls; routes use Link.
+          return href.startsWith("#") ? (
+            <a key={label} href={href} className="block rounded-2xl p-4 card-hover" style={tile}>{body}</a>
+          ) : (
+            <Link key={label} href={href} className="block rounded-2xl p-4 card-hover" style={tile}>{body}</Link>
+          );
+        })}
       </div>
 
       {/* ── Main content grid ───────────────────────────────── */}
@@ -159,7 +183,8 @@ export default async function DashboardPage() {
 
         {/* Announcements */}
         <div
-          className="lg:col-span-2 rounded-2xl p-6"
+          id="announcements"
+          className="lg:col-span-2 rounded-2xl p-6 scroll-mt-4"
           style={{ background: "#fff", border: "1px solid #E0CBB0", boxShadow: "0 2px 8px rgba(44,26,14,0.05)" }}
         >
           <div className="flex items-center gap-2 mb-5">
