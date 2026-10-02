@@ -21,9 +21,10 @@ const registerSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limit: 5 registration attempts per IP per 15 minutes
+    // Rate limit per IP. Generous because a whole congregation may register
+    // at once from the venue Wi-Fi (one shared IP) after scanning the QR code.
     const ip = getClientIp(req);
-    const rl = await checkRateLimit(`register:${ip}`, 5, 15 * 60 * 1000);
+    const rl = await checkRateLimit(`register:${ip}`, 40, 15 * 60 * 1000);
     if (!rl.allowed) {
       return NextResponse.json(
         { error: "Too many registration attempts. Please try again later." },

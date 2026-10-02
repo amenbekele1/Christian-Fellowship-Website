@@ -4,7 +4,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
   const ip = getClientIp(req);
-  if (!(await checkRateLimit(`invite-validate:${ip}`, 10, 15 * 60 * 1000)).allowed) {
+  if (!(await checkRateLimit(`invite-validate:${ip}`, 120, 15 * 60 * 1000)).allowed) {
     return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
   }
 
