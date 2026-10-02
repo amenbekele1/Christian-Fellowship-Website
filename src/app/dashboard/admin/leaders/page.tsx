@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, X, Edit2 } from "lucide-react";
 import TeamLeaders from "./TeamLeaders";
+import { confirmDialog } from "@/components/ui/toaster";
 
 interface Leader {
   id: string;
@@ -58,7 +59,7 @@ export default function AdminLeadersPage() {
   };
 
   const deleteLeader = async (id: string) => {
-    if (!confirm("Delete this leader?")) return;
+    if (!(await confirmDialog({ title: "Delete this leader?", destructive: true }))) return;
     await fetch(`/api/leaders?id=${id}`, { method: "DELETE" });
     fetchLeaders();
   };

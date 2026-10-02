@@ -5,6 +5,7 @@ import { sendEmail, bookReminderEmail } from "@/lib/email";
 import { sendPushToUser } from "@/lib/webpush";
 import { formatDate } from "@/lib/utils";
 import { addDays } from "date-fns";
+import { pruneRateLimits } from "@/lib/rate-limit";
 
 /**
  * Daily cron. Two passes:
@@ -18,6 +19,9 @@ import { addDays } from "date-fns";
 export async function GET(req: NextRequest) {
   const unauth = verifyCron(req);
   if (unauth) return unauth;
+
+  // Housekeeping piggybacks on this daily run.
+  await pruneRateLimits();
 
   const tomorrow = addDays(new Date(), 1);
   const dayAfter = addDays(new Date(), 2);

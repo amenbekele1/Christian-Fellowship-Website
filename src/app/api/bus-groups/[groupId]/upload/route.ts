@@ -1,20 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { groupAuth, isAuthError } from "@/lib/group-auth";
-
-// Rate limiter: max 20 uploads per IP per hour
-const rateMap = new Map<string, { count: number; resetAt: number }>();
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateMap.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 });
-    return false;
-  }
-  if (entry.count >= 20) return true;
-  entry.count++;
-  return false;
-}
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const ALLOWED_TYPES = [
   "image/jpeg", "image/png", "image/gif", "image/webp",
@@ -37,11 +24,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { groupId: string } }
 ) {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    req.headers.get("x-real-ip") ||
-    "unknown";
-  if (isRateLimited(ip)) {
+  const ip = getClientIp(req);
+  if (!(await checkRateLimit(`upload:${ip}`, 20, 60 * 60 * 1000)).allowed) {
     return NextResponse.json({ error: "Too many uploads. Please try again later." }, { status: 429 });
   }
 

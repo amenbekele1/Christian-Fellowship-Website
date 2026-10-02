@@ -5,23 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { sendEmail, feedbackReceivedEmail, feedbackResolvedEmail } from "@/lib/email";
 import { sendPushToUser } from "@/lib/webpush";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const FEEDBACK_INBOX = process.env.FEEDBACK_EMAIL || "info@wetcf.com";
-
-// Light rate limit: 5 submissions per user per hour, so a frustrated
-// member cannot accidentally flood the inbox.
-const rateMap = new Map<string, { count: number; resetAt: number }>();
-function isRateLimited(userId: string): boolean {
-  const now = Date.now();
-  const entry = rateMap.get(userId);
-  if (!entry || now > entry.resetAt) {
-    rateMap.set(userId, { count: 1, resetAt: now + 60 * 60 * 1000 });
-    return false;
-  }
-  if (entry.count >= 5) return true;
-  entry.count++;
-  return false;
-}
 
 const createSchema = z.object({
   message: z.string().trim().min(5, "Please tell us a little more").max(4000),
@@ -55,7 +41,7 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (isRateLimited(session.user.id)) {
+  if (!(await checkRateLimit(`feedback:${session.user.id}`, 5, 60 * 60 * 1000)).allowed) {
     return NextResponse.json(
       { error: "You have sent several notes already. Please try again a little later." },
       { status: 429 }

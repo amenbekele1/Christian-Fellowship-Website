@@ -3,17 +3,17 @@ import Link from "next/link";
 import { Calendar, MapPin, Clock, ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { eventPath } from "@/lib/event-presets";
+import { TIME_ZONE, formatWarsaw } from "@/lib/timezone";
 
 export const metadata: Metadata = { title: "Events" };
 export const revalidate = 60;
 
 function formatDate(date: Date) {
-  return new Date(date).toLocaleDateString("en-GB", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  return new Date(date).toLocaleDateString("en-GB", { timeZone: TIME_ZONE, weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 }
 function formatTime(date: Date) {
-  return new Date(date).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return new Date(date).toLocaleTimeString("en-GB", { timeZone: TIME_ZONE, hour: "2-digit", minute: "2-digit" });
 }
 
 const typeColors: Record<string, string> = {
@@ -67,10 +67,10 @@ export default async function EventsPage() {
                   {/* Date badge */}
                   <div className="shrink-0 text-center bg-brown-50 rounded-xl px-4 py-3 border border-brown-200 min-w-[68px]">
                     <p className="text-xs font-bold text-gold-600 uppercase">
-                      {new Date(event.startDate).toLocaleDateString("en-GB", { month: "short" })}
+                      {new Date(event.startDate).toLocaleDateString("en-GB", { timeZone: TIME_ZONE, month: "short" })}
                     </p>
                     <p className="font-display font-bold text-brown-700 text-2xl leading-none">
-                      {new Date(event.startDate).getDate()}
+                      {formatWarsaw(event.startDate, { day: "numeric" })}
                     </p>
                   </div>
 
@@ -129,10 +129,10 @@ export default async function EventsPage() {
                   >
                     <div className="shrink-0 text-center bg-gray-50 rounded-lg px-3 py-2 min-w-[56px] group-hover:bg-brown-100 transition-colors">
                       <p className="text-xs font-bold text-gray-400 uppercase group-hover:text-gold-600 transition-colors">
-                        {new Date(event.startDate).toLocaleDateString("en-GB", { month: "short" })}
+                        {new Date(event.startDate).toLocaleDateString("en-GB", { timeZone: TIME_ZONE, month: "short" })}
                       </p>
                       <p className="font-bold text-gray-500 text-lg leading-none group-hover:text-brown-700 transition-colors">
-                        {new Date(event.startDate).getDate()}
+                        {formatWarsaw(event.startDate, { day: "numeric" })}
                       </p>
                     </div>
                     <div className="flex-1 min-w-0">

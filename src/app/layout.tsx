@@ -1,8 +1,25 @@
 import type { Metadata, Viewport } from "next";
+import { Playfair_Display, Lato } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/layout/Providers";
 import { Toaster } from "@/components/ui/toaster";
 import { DisablePinchZoom } from "@/components/layout/DisablePinchZoom";
+
+// Self-hosted by Next.js and preloaded: no render-blocking request to Google
+// before the first paint (the old CSS @import delayed every page load).
+const playfair = Playfair_Display({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "600", "700", "900"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+const lato = Lato({
+  subsets: ["latin", "latin-ext"],
+  weight: ["300", "400", "700"],
+  variable: "--font-lato",
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -14,17 +31,18 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "WETCF",
-    template: "%s | WETCF",
+    default: "WECF · Warsaw Ethiopian Christian Fellowship",
+    template: "%s | WECF",
   },
   description:
-    "Member portal for Warsaw Ethiopian Christian Fellowship — worshipping, growing, and serving together.",
-  keywords: ["Ethiopian church", "Warsaw", "Christian fellowship", "Ethiopia", "worship"],
+    "Warsaw Ethiopian Christian Fellowship (WECF) — a Christ-centred community in Warsaw. Join us every Saturday at 18:00 at Naddnieprzańska 7 for worship, the Word and fellowship.",
+  keywords: ["Ethiopian church Warsaw", "WECF", "Christian fellowship Warsaw", "Ethiopian Christian", "worship", "Bible study"],
+  metadataBase: new URL(process.env.NEXTAUTH_URL ?? "https://wetcf.com"),
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "WETCF",
+    title: "WECF",
     startupImage: "/icons/icon-512x512.png",
   },
   icons: {
@@ -40,7 +58,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${playfair.variable} ${lato.variable}`} suppressHydrationWarning>
       <body>
         <Providers>
           <DisablePinchZoom />

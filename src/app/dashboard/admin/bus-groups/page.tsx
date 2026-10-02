@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Plus, Trash2, Users, Edit2, X } from "lucide-react";
+import { confirmDialog } from "@/components/ui/toaster";
 
 interface BUSGroup {
   id: string; name: string; description: string | null;
@@ -57,7 +58,7 @@ export default function AdminBusGroupsPage() {
   };
 
   const deleteGroup = async (id: string) => {
-    if (!confirm("Delete this BUS group? Members will be unassigned.")) return;
+    if (!(await confirmDialog({ title: "Delete this BUS group?", message: "Its members will be unassigned. Chat history and files for the group are removed.", destructive: true }))) return;
     await fetch(`/api/bus-groups?id=${id}`, { method: "DELETE" });
     fetchData();
   };

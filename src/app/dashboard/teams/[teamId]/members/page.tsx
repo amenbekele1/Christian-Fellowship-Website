@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   UserPlus, UserMinus, Link2, Copy, Check, AlertCircle, X, Crown, Search,
 } from "lucide-react";
+import { confirmDialog } from "@/components/ui/toaster";
 
 interface Member {
   id: string;
@@ -96,7 +97,7 @@ export default function TeamMembersPage({ params }: { params: { teamId: string }
   };
 
   const removeMember = async (m: Member) => {
-    if (!confirm(`Remove ${m.name} from this team?`)) return;
+    if (!(await confirmDialog({ title: `Remove ${m.name} from this team?`, confirmLabel: "Remove", destructive: true }))) return;
     setError(null);
     const res = await fetch(`/api/teams/${params.teamId}/members?userId=${m.id}`, {
       method: "DELETE",

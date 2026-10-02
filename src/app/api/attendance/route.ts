@@ -38,18 +38,19 @@ export async function GET(req: NextRequest) {
     };
   }
 
-  // BUS leaders can only see their own group
-  if (session.user.role === "BUS_LEADER") {
-    const leader = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { ledBusGroup: true },
-    });
-    if (leader?.ledBusGroup) where.busGroupId = leader.ledBusGroup.id;
-  }
-
-  // Regular members can only see their own
-  if (session.user.role === "MEMBER") {
-    where.userId = session.user.id;
+  // Guardians may filter freely. A BUS leader is pinned to the group they
+  // lead; everyone else (including a leader with no group) sees only their own.
+  if (session.user.role !== "GUARDIAN") {
+    const led =
+      session.user.role === "BUS_LEADER"
+        ? await prisma.bUSGroup.findFirst({ where: { leaderId: session.user.id }, select: { id: true } })
+        : null;
+    if (led) {
+      where.busGroupId = led.id;
+    } else {
+      delete where.busGroupId;
+      where.userId = session.user.id;
+    }
   }
 
   const attendance = await prisma.attendance.findMany({

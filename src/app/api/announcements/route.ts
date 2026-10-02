@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { sendPushToAll, sendRefreshPush } from "@/lib/webpush";
+import { endOfWarsawDay } from "@/lib/timezone";
 
 function canEditContent(session: any): boolean {
   return (
@@ -18,7 +19,7 @@ const announcementSchema = z.object({
   content: z.string().min(5),
   isPublic: z.boolean().default(false),
   isPinned: z.boolean().default(false),
-  expiresAt: z.string().optional(),
+  expiresAt: z.string().optional().nullable(), // "YYYY-MM-DD"; shown until the end of that day in Warsaw
 });
 
 export async function GET(req: NextRequest) {
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
   const announcement = await prisma.announcement.create({
     data: {
       ...data,
-      expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+      expiresAt: data.expiresAt ? endOfWarsawDay(data.expiresAt) : null,
     },
   });
 
@@ -84,7 +85,9 @@ export async function PATCH(req: NextRequest) {
     where: { id },
     data: {
       ...data,
-      expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
+      // null clears the expiry; omitting the key keeps it.
+      expiresAt:
+        data.expiresAt === undefined ? undefined : data.expiresAt ? endOfWarsawDay(data.expiresAt) : null,
     },
   });
 

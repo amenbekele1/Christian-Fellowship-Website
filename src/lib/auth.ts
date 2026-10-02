@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 const THIRTY_DAYS = 30 * 24 * 60 * 60; // seconds
+const ACCESS_RECHECK_MS = 2 * 60 * 1000;
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
@@ -77,24 +78,35 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.role = (user as any).role;
-        token.id = user.id;
-        // Fetch service teams on sign-in and embed in the token
+      // Role, team membership and active status are copied into the token, so
+      // they are re-read from the database every few minutes. Without this a
+      // deactivated, deleted or demoted account kept its old access until the
+      // 30-day session expired.
+      const userId = (user?.id ?? token.id) as string | undefined;
+      const stale = !token.checkedAt || Date.now() - token.checkedAt > ACCESS_RECHECK_MS;
+      if (userId && (user || stale)) {
         const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          include: { serviceTeams: { include: { team: true } } },
+          where: { id: userId },
+          select: {
+            role: true,
+            isActive: true,
+            serviceTeams: { select: { team: { select: { name: true } } } },
+          },
         });
+        token.id = userId;
+        token.disabled = !dbUser || !dbUser.isActive;
+        token.role = dbUser?.role ?? "MEMBER";
         token.serviceTeams = dbUser?.serviceTeams.map((m) => m.team.name) ?? [];
+        token.checkedAt = Date.now();
       }
       return token;
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.role = token.role as string;
-        session.user.id = token.id as string;
-        session.user.serviceTeams = (token.serviceTeams as string[]) ?? [];
-      }
+      // An empty session is treated as signed out by getServerSession and useSession.
+      if (!token || token.disabled) return {} as typeof session;
+      session.user.role = token.role as string;
+      session.user.id = token.id as string;
+      session.user.serviceTeams = (token.serviceTeams as string[]) ?? [];
       return session;
     },
   },

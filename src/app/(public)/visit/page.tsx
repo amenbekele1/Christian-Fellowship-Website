@@ -291,7 +291,7 @@ export default function VisitPage() {
             href="/register"
             className="inline-block bg-amber-400 text-brown-800 font-bold px-8 py-3.5 rounded-xl hover:bg-amber-300 transition-colors"
           >
-            Register as a New Member
+            Join the Fellowship
           </a>
         </div>
       </section>

@@ -8,6 +8,8 @@ import { upload } from "@vercel/blob/client";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { useRefreshOnFocus } from "@/hooks/useRefreshOnFocus";
 import { usePushRefresh } from "@/hooks/usePushRefresh";
+import { TIME_ZONE } from "@/lib/timezone";
+import { confirmDialog } from "@/components/ui/toaster";
 
 interface Book {
   id: string; title: string; author: string; translatedBy: string | null;
@@ -133,7 +135,7 @@ export default function AdminBooksPage() {
   };
 
   const deleteBook = async (id: string) => {
-    if (!confirm("Remove this book from the library?")) return;
+    if (!(await confirmDialog({ title: "Remove this book?", message: "It will no longer appear in the library.", confirmLabel: "Remove", destructive: true }))) return;
     await fetch(`/api/books?id=${id}`, { method: "DELETE" });
     fetchData();
   };
@@ -279,7 +281,7 @@ export default function AdminBooksPage() {
                 onClick={() => book.imageUrl && setCoverPreview(book.imageUrl)}
               >
                 {book.imageUrl ? (
-                  <img src={book.imageUrl} alt={book.title} className="w-full h-full object-contain" />
+                  <img src={book.imageUrl} alt={book.title} loading="lazy" decoding="async" className="w-full h-full object-contain" />
                 ) : (
                   <BookOpen className="w-8 h-8 text-white/30"/>
                 )}
@@ -325,7 +327,7 @@ export default function AdminBooksPage() {
                 {rental.dueDate && (
                   <p className={`text-xs mt-0.5 ${rental.status === "OVERDUE" ? "text-red-500 font-medium" : "text-amber-600"}`}>
                     {rental.status === "OVERDUE" ? "⚠️ OVERDUE — " : "Due: "}
-                    {new Date(rental.dueDate).toLocaleDateString("en-GB", {day:"numeric", month:"short", year:"numeric"})}
+                    {new Date(rental.dueDate).toLocaleDateString("en-GB", { timeZone: TIME_ZONE, day:"numeric", month:"short", year:"numeric"})}
                   </p>
                 )}
               </div>

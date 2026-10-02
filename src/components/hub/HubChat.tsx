@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Send, Paperclip, X, Download, Megaphone, Trash2, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { confirmDialog } from "@/components/ui/toaster";
 
 interface Sender { id: string; name: string; }
 interface Message {
@@ -112,7 +113,7 @@ export default function HubChat({
   };
 
   const deleteMsg = async (id: string) => {
-    if (!confirm("Delete this message?")) return;
+    if (!(await confirmDialog({ title: "Delete this message?", message: "It will be removed for everyone in the chat.", destructive: true }))) return;
     await fetch(`${apiBase}/messages?msgId=${id}`, { method: "DELETE" });
     setMessages(prev => prev.filter(m => m.id !== id));
   };
@@ -249,7 +250,7 @@ function FileAttachment({ url, name, type, dark }: { url: string; name?: string 
   if (type === "image") {
     return (
       <a href={url} target="_blank" rel="noreferrer" className="block mt-2">
-        <img src={url} alt={name ?? "image"} className="max-w-[220px] rounded-lg object-cover" />
+        <img src={url} alt={name ?? "image"} loading="lazy" decoding="async" className="max-w-[220px] rounded-lg object-cover" />
       </a>
     );
   }

@@ -15,10 +15,24 @@ export async function GET(req: NextRequest) {
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
   const limit = Math.min(200, Math.max(1, parseInt(searchParams.get("limit") ?? "50", 10)));
 
-  if (session.user.role === "MEMBER") {
+  // BUS leaders see only their own group. One with no group assigned (e.g.
+  // between groups) is treated as a regular member.
+  let ledGroupId: string | null = null;
+  if (session.user.role === "BUS_LEADER") {
+    const led = await prisma.bUSGroup.findFirst({
+      where: { leaderId: session.user.id },
+      select: { id: true },
+    });
+    ledGroupId = led?.id ?? null;
+  }
+
+  if (session.user.role === "MEMBER" || (session.user.role === "BUS_LEADER" && !ledGroupId)) {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      include: { busGroup: { include: { leader: { select: { name: true, email: true } } } } },
+      select: {
+        id: true, name: true, email: true, phone: true, role: true, isActive: true, joinedAt: true,
+        busGroup: { select: { id: true, name: true, leader: { select: { name: true, email: true } } } },
+      },
     });
     return NextResponse.json({ data: user ? [user] : [], total: user ? 1 : 0, page: 1, limit });
   }
@@ -34,13 +48,7 @@ export async function GET(req: NextRequest) {
     ];
   }
 
-  if (session.user.role === "BUS_LEADER") {
-    const leader = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { ledBusGroup: true },
-    });
-    if (leader?.ledBusGroup) where.busGroupId = leader.ledBusGroup.id;
-  }
+  if (ledGroupId) where.busGroupId = ledGroupId;
 
   const [members, total] = await prisma.$transaction([
     prisma.user.findMany({
@@ -67,8 +75,8 @@ export async function GET(req: NextRequest) {
 }
 
 const updateSchema = z.object({
-  name: z.string().min(2).optional(),
-  phone: z.string().optional(),
+  name: z.string().trim().min(2).max(100).optional(),
+  phone: z.string().trim().max(40).optional(),
   role: z.enum(["MEMBER", "BUS_LEADER", "GUARDIAN"]).optional(),
   busGroupId: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
@@ -82,7 +90,7 @@ export async function PATCH(req: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Member ID required" }, { status: 400 });
 
-  if (session.user.role === "MEMBER" && id !== session.user.id) {
+  if (session.user.role !== "GUARDIAN" && id !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

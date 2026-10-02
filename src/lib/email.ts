@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 
 /** Escape user-supplied strings before embedding in HTML email bodies. */
-function esc(str: string): string {
+export function esc(str: string): string {
   return str
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -34,7 +34,7 @@ interface EmailOptions {
   to: string | string[];
   subject: string;
   html: string;
-  replyTo?: string;
+  replyTo?: string | { name: string; address: string };
 }
 
 export async function sendEmail({ to, subject, html, replyTo }: EmailOptions) {

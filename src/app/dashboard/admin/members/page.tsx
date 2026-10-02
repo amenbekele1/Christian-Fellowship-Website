@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Search, Users, ChevronLeft, ChevronRight, AlertCircle, X, Trash2 } from "lucide-react";
 import { getRoleLabel, getRoleBadgeColor, formatDate } from "@/lib/utils";
+import { confirmDialog, toast } from "@/components/ui/toaster";
 
 interface Member {
   id: string; name: string; email: string; phone: string | null;
@@ -142,20 +143,28 @@ export default function AdminMembersPage() {
       });
       if (!res.ok) {
         const json = await res.json();
-        alert(json.error ?? "Update failed");
+        toast.error(json.error ?? "Update failed");
         return;
       }
       await fetchMembers();
     } catch {
-      alert("Network error. Please try again.");
+      toast.error("Network error. Please try again.");
     } finally {
       setUpdating(null);
     }
   };
 
   const toggleActive = async (member: Member) => {
-    const action = member.isActive ? "deactivate" : "reactivate";
-    if (!confirm(`Are you sure you want to ${action} ${member.name}?`)) return;
+    if (
+      !(await confirmDialog({
+        title: `${member.isActive ? "Deactivate" : "Reactivate"} ${member.name}?`,
+        message: member.isActive
+          ? "They will be signed out within a couple of minutes and won't be able to log in."
+          : "They will be able to log in again.",
+        confirmLabel: member.isActive ? "Deactivate" : "Reactivate",
+        destructive: member.isActive,
+      }))
+    ) return;
     await updateMember(member.id, { isActive: !member.isActive });
   };
 

@@ -115,7 +115,7 @@ export function PublicHeader() {
                   onMouseEnter={e => (e.currentTarget.style.background = "#DDB95A")}
                   onMouseLeave={e => (e.currentTarget.style.background = "#C9A84C")}
                 >
-                  Join Fellowship
+                  Join the Fellowship
                 </Link>
               </>
             )}
@@ -167,7 +167,7 @@ export function PublicHeader() {
                   Sign in
                 </Link>
                 <Link href="/register" className="block px-4 py-2.5 rounded-xl text-sm font-semibold text-center" style={{ background: "#C9A84C", color: "#1C0F07" }} onClick={() => setMobileOpen(false)}>
-                  Join Fellowship
+                  Join the Fellowship
                 </Link>
               </>
             )}

@@ -33,6 +33,7 @@ const TEAM_ICONS: Record<string, any> = {
 const memberLinks = [
   { href: "/dashboard",            label: "Dashboard",    icon: LayoutDashboard, exact: true },
   { href: "/dashboard/profile",    label: "Profile",      icon: UserCircle },
+  { href: "/dashboard/events",     label: "Events",       icon: Calendar },
   { href: "/dashboard/library",    label: "Library",      icon: BookOpen },
   { href: "/dashboard/bus-groups", label: "My BUS Group", icon: Users },
 ];

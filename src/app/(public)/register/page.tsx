@@ -142,15 +142,6 @@ function RegisterContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Registration failed");
 
-      // Mark invite as used if provided
-      if (inviteToken) {
-        await fetch("/api/invites/use", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: inviteToken }),
-        }).catch(console.error);
-      }
-
       setSuccess(true);
       setTimeout(() => router.push("/login"), 3000);
     } catch (err: any) {

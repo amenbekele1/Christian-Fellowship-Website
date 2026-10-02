@@ -77,7 +77,7 @@ export function PublicFooter() {
                 { href: "/programs", label: "Programs"        },
                 { href: "/events",   label: "Events"          },
                 { href: "/visit",    label: "Visit Us"        },
-                { href: "/register", label: "Join Fellowship" },
+                { href: "/register", label: "Join the Fellowship" },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="link-gold-hover text-sm">

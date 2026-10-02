@@ -10,7 +10,12 @@ import { Suspense } from "react";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  // Only follow same-site paths; "//evil.com" or "https://…" would leave the site.
+  const requested = searchParams.get("callbackUrl") ?? "";
+  const callbackUrl =
+    requested.startsWith("/") && !requested.startsWith("//") && !requested.startsWith("/\\")
+      ? requested
+      : "/dashboard";
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     // IP-based rate limit: 10 requests per IP per 15 min
     const ip = getClientIp(req);
-    const rl = checkRateLimit(`forgot-pwd:${ip}`, 10, 15 * 60 * 1000);
+    const rl = await checkRateLimit(`forgot-pwd:${ip}`, 10, 15 * 60 * 1000);
     if (!rl.allowed) {
       return NextResponse.json(SAFE_RESPONSE, { status: 200 });
     }

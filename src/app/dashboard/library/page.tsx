@@ -6,6 +6,7 @@ import Image from "next/image";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { useRefreshOnFocus } from "@/hooks/useRefreshOnFocus";
 import { usePushRefresh } from "@/hooks/usePushRefresh";
+import { TIME_ZONE, warsawDateKey, warsawParts } from "@/lib/timezone";
 
 interface Book {
   id: string;
@@ -97,14 +98,14 @@ export default function LibraryPage() {
     fetchBooks(search, next);
   };
 
-  // Get next Saturday
+  // Next Saturday on the Warsaw calendar (today counts only if it is not yet Saturday)
   const getNextSaturday = (): string => {
-    const today = new Date();
-    const day = today.getDay();
-    const daysUntilSaturday = day === 0 ? 6 : (6 - day + 7) % 7 || 7;
-    const nextSat = new Date(today);
-    nextSat.setDate(nextSat.getDate() + daysUntilSaturday);
-    return nextSat.toISOString().split("T")[0];
+    const today = warsawDateKey();
+    const day = warsawParts(new Date()).weekday;
+    const daysUntilSaturday = (6 - day + 7) % 7 || 7;
+    const d = new Date(today + "T12:00:00Z");
+    d.setUTCDate(d.getUTCDate() + daysUntilSaturday);
+    return d.toISOString().split("T")[0];
   };
 
   // Check if date is Saturday
@@ -426,12 +427,12 @@ export default function LibraryPage() {
                   <p className="text-sm text-gray-500">{rental.book.author}</p>
                   <div className="flex items-center gap-4 mt-2">
                     <span className="text-xs text-gray-400">
-                      Reserved: {new Date(rental.reservedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      Reserved: {new Date(rental.reservedAt).toLocaleDateString("en-GB", { timeZone: TIME_ZONE, day: "numeric", month: "short", year: "numeric" })}
                     </span>
                     {rental.dueDate && (
                       <span className="text-xs text-amber-600 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        Due: {new Date(rental.dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                        Due: {new Date(rental.dueDate).toLocaleDateString("en-GB", { timeZone: TIME_ZONE, day: "numeric", month: "short" })}
                       </span>
                     )}
                   </div>

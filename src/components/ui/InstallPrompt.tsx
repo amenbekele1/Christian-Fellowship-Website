@@ -58,11 +58,11 @@ export function InstallPrompt() {
       className="fixed bottom-4 left-4 right-4 z-50 rounded-2xl p-4 shadow-xl flex items-start gap-3"
       style={{ background: "#1C0F07", border: "1px solid rgba(201,168,76,0.3)" }}
     >
-      <img src="/icons/icon-72x72.png" alt="WETCF" className="w-12 h-12 rounded-xl shrink-0" />
+      <img src="/icons/icon-72x72.png" alt="WECF" className="w-12 h-12 rounded-xl shrink-0" />
 
       <div className="flex-1 min-w-0">
         <p className="font-display font-bold text-sm" style={{ color: "#FAF7F0" }}>
-          Install WETCF App
+          Install WECF App
         </p>
         {isIOS ? (
           <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "#C4A882" }}>

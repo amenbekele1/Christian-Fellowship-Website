@@ -304,6 +304,8 @@ model BookRental {
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   book  Book  @relation(fields: [bookId], references: [id])
 
+  @@index([status, dueDate])
+  @@index([userId, status])
   @@map("book_rentals")
 }
 
@@ -328,6 +330,7 @@ model Event {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  @@index([isActive, startDate])
   @@map("events")
 }
 
@@ -342,6 +345,7 @@ model Announcement {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([expiresAt])
   @@map("announcements")
 }
 
@@ -410,6 +414,7 @@ model PushSubscription {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("push_subscriptions")
 }
 
@@ -423,4 +428,14 @@ model PageContent {
 
   @@unique([pageKey, fieldKey])
   @@map("page_contents")
+}
+
+/// Shared fixed-window counters for API rate limiting (see src/lib/rate-limit.ts).
+model RateLimit {
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime
+
+  @@index([resetAt])
+  @@map("rate_limits")
 }

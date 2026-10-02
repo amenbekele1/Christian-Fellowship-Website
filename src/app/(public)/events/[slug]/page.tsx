@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import { ArrowLeft, Calendar, MapPin, Clock, Lock, LogIn } from "lucide-react";
 import { getTheme, getLayout, parseVideoEmbed, idFromSlug, eventPath } from "@/lib/event-presets";
 import RichText from "@/components/events/RichText";
+import { TIME_ZONE } from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +30,11 @@ export async function generateMetadata({
   // Members-only events get no rich preview — a shared link should not leak
   // the description to anyone who cannot open the page.
   if (!event.isPublic) {
-    return { title: "Members only · WETCF", robots: { index: false, follow: false } };
+    return { title: "Members only", robots: { index: false, follow: false } };
   }
 
   return {
-    title: `${event.title} · WETCF`,
+    title: event.title,
     description: event.description ?? undefined,
     openGraph: {
       title: event.title,
@@ -45,12 +46,11 @@ export async function generateMetadata({
 }
 
 function formatWhen(start: Date, end: Date | null): string {
-  const d = new Intl.DateTimeFormat("en-GB", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  const d = new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, weekday: "long", day: "numeric", month: "long", year: "numeric",
   }).format(start);
-  const t = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" }).format(start);
+  const t = new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, hour: "2-digit", minute: "2-digit" }).format(start);
   if (!end) return `${d} · ${t}`;
-  const te = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" }).format(end);
+  const te = new Intl.DateTimeFormat("en-GB", { timeZone: TIME_ZONE, hour: "2-digit", minute: "2-digit" }).format(end);
   return `${d} · ${t} – ${te}`;
 }
 

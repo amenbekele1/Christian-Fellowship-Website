@@ -1,54 +1,58 @@
 import Link from "next/link";
-import { Calendar, ArrowRight, ChevronDown, MapPin } from "lucide-react";
+import { Calendar, ArrowRight, ChevronDown, MapPin, Clock, HandHeart, Users } from "lucide-react";
 import { getPageContent } from "@/lib/page-content";
+import { prisma } from "@/lib/prisma";
+import { getVerseOfDay } from "@/lib/verse";
+import { eventPath } from "@/lib/event-presets";
+import { TIME_ZONE } from "@/lib/timezone";
 
-async function getVerseOfDay() {
-  try {
-    const res = await fetch(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/verse`, { cache: "no-store" });
-    if (!res.ok) throw new Error("Failed");
-    return res.json();
-  } catch {
-    return {
-      reference: "Hebrews 10:24-25",
-      text: "And let us consider how we may spur one another on toward love and good deeds, not giving up meeting together…",
-      translation: "NIV",
-    };
-  }
-}
+// Rebuilt at most once a minute; admin edits show up within that window.
+export const revalidate = 60;
 
 async function getUpcomingEvents() {
   try {
-    const res = await fetch(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/events?public=true&upcoming=true&limit=3`,
-      { cache: "no-store" }
-    );
-    if (!res.ok) throw new Error("Failed");
-    return res.json();
+    return await prisma.event.findMany({
+      where: { isActive: true, isPublic: true, startDate: { gte: new Date() } },
+      orderBy: { startDate: "asc" },
+      take: 3,
+    });
   } catch {
     return [];
   }
 }
 
-const programs = [
-  { icon: "📖", title: "Bible Study",      desc: "Deep dive into the Word of God every week"         },
-  { icon: "🎵", title: "Worship Night",    desc: "An evening of praise and worship"                   },
-  { icon: "🎤", title: "Sunday Sermon",    desc: "Anointed preaching every Sunday service"            },
-  { icon: "📚", title: "Literature Night", desc: "Exploring great Christian writings together"        },
-  { icon: "👥", title: "BUS Meetings",     desc: "Building community in small groups"                 },
+// Shown if no programs have been added in the admin yet.
+const FALLBACK_PROGRAMS = [
+  { id: "fellowship", icon: "fellowship", title: "Weekly Fellowship", schedule: "Every Saturday · 18:00", description: "Worship, the Word and encouragement as a family in Christ." },
+  { id: "prayer",     icon: "prayer",     title: "Weekly Prayer",     schedule: "Every Friday · 18:00",   description: "An evening set apart to seek God together in prayer." },
 ];
 
-function formatEventDate(date: string) {
-  return new Date(date).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+async function getPrograms() {
+  try {
+    const rows = await prisma.program.findMany({
+      where: { isActive: true },
+      orderBy: { order: "asc" },
+      select: { id: true, icon: true, title: true, schedule: true, description: true },
+    });
+    return rows.length > 0 ? rows : FALLBACK_PROGRAMS;
+  } catch {
+    return FALLBACK_PROGRAMS;
+  }
 }
-function formatEventTime(date: string) {
-  return new Date(date).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+function formatEventDate(date: Date | string) {
+  return new Date(date).toLocaleDateString("en-GB", { timeZone: TIME_ZONE, weekday: "short", day: "numeric", month: "short" });
+}
+function formatEventTime(date: Date | string) {
+  return new Date(date).toLocaleTimeString("en-GB", { timeZone: TIME_ZONE, hour: "2-digit", minute: "2-digit" });
 }
 
 export default async function HomePage() {
-  const [verse, events, c] = await Promise.all([
-    getVerseOfDay(),
+  const verse = getVerseOfDay();
+  const [events, programs, c] = await Promise.all([
     getUpcomingEvents(),
-    getPageContent("home"),
+    getPrograms(),
+    getPageContent("home").catch(() => ({} as Record<string, string>)),
   ]);
 
   return (
@@ -151,7 +155,7 @@ export default async function HomePage() {
               {[
                 { value: "5+",       label: "Years of Ministry",    icon: "🙏" },
                 { value: "BUS",      label: "Small Group System",   icon: "👥" },
-                { value: "Sat & Sun",label: "Weekly Services",      icon: "⛪" },
+                { value: "Saturdays",label: "Service at 18:00",     icon: "⛪" },
                 { value: "E-Library",label: "Digital Book Access",  icon: "📚" },
               ].map((stat, i) => (
                 <div
@@ -180,18 +184,29 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-            {programs.map((prog, i) => (
-              <div
-                key={prog.title}
-                className={`rounded-2xl p-6 text-center card-hover animate-fade-up stagger-${i + 1}`}
-                style={{ background: "#fff", border: "1px solid #E0CBB0", boxShadow: "0 2px 8px rgba(44,26,14,0.05)" }}
-              >
-                <div className="text-4xl mb-4">{prog.icon}</div>
-                <h3 className="font-display font-bold mb-2" style={{ color: "#2C1A0E" }}>{prog.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "#9A7B5C" }}>{prog.desc}</p>
-              </div>
-            ))}
+          <div className="flex flex-wrap justify-center gap-5">
+            {programs.map((prog, i) => {
+              const Icon = prog.icon === "prayer" ? HandHeart : Users;
+              return (
+                <Link
+                  key={prog.id}
+                  href="/programs"
+                  className={`w-full sm:w-[calc(50%-0.625rem)] lg:w-[calc(33.333%-0.84rem)] rounded-2xl p-6 text-center card-hover animate-fade-up stagger-${Math.min(i + 1, 5)}`}
+                  style={{ background: "#fff", border: "1px solid #E0CBB0", boxShadow: "0 2px 8px rgba(44,26,14,0.05)" }}
+                >
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(201,168,76,0.12)" }}>
+                    <Icon className="w-6 h-6" style={{ color: "#A8862E" }} aria-hidden="true" />
+                  </div>
+                  <h3 className="font-display font-bold mb-1" style={{ color: "#2C1A0E" }}>{prog.title}</h3>
+                  {prog.schedule && (
+                    <p className="text-xs font-semibold mb-2 inline-flex items-center gap-1" style={{ color: "#8A6A1F" }}>
+                      <Clock className="w-3 h-3" aria-hidden="true" /> {prog.schedule}
+                    </p>
+                  )}
+                  <p className="text-sm leading-relaxed line-clamp-3" style={{ color: "#7A5C3E" }}>{prog.description}</p>
+                </Link>
+              );
+            })}
           </div>
 
           <div className="text-center mt-10">
@@ -225,8 +240,9 @@ export default async function HomePage() {
 
           {events.length > 0 ? (
             <div className="grid md:grid-cols-3 gap-6">
-              {events.map((event: any, i: number) => (
-                <div
+              {events.map((event, i) => (
+                <Link
+                  href={eventPath(event)}
                   key={event.id}
                   className={`rounded-2xl overflow-hidden card-hover animate-fade-up stagger-${i + 1}`}
                   style={{ background: "#fff", border: "1px solid #E0CBB0", boxShadow: "0 2px 8px rgba(44,26,14,0.06)" }}
@@ -251,7 +267,7 @@ export default async function HomePage() {
                       </div>
                     )}
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           ) : (
@@ -280,7 +296,7 @@ export default async function HomePage() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/register" className="btn-gold font-bold px-8 py-4 rounded-xl">
-              Create an Account
+              Get Involved
             </Link>
             <Link href="/visit" className="btn-outline-gold font-medium px-8 py-4 rounded-xl">
               Visit Us First

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Trash2, X, Edit2, Users, HandHeart } from "lucide-react";
+import { confirmDialog } from "@/components/ui/toaster";
 
 interface Program {
   id: string;
@@ -83,7 +84,7 @@ export default function AdminProgramsPage() {
   };
 
   const deleteProgram = async (id: string) => {
-    if (!confirm("Delete this program?")) return;
+    if (!(await confirmDialog({ title: "Delete this program?", message: "It will be removed from the Programs page and the homepage.", destructive: true }))) return;
     await fetch(`/api/programs?id=${id}`, { method: "DELETE" });
     fetchPrograms();
   };

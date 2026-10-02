@@ -2,71 +2,70 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyCron } from "@/lib/cron-auth";
 import { sendPushToAll } from "@/lib/webpush";
+import { formatWarsaw, parseWarsawDateTime, warsawDateKey } from "@/lib/timezone";
+import { eventPath } from "@/lib/event-presets";
 
 /**
- * Hourly cron. Fires two kinds of reminders per event:
- *   • day-before  — within 20–28 hours of start
- *   • hour-before — within 30–90 minutes of start
+ * Daily cron (08:00 UTC = 09:00/10:00 in Warsaw — Vercel Hobby only allows
+ * one run per day). Sends, by Warsaw calendar day:
+ *   • "Today"    — events later today      (flag: hourReminderSent)
+ *   • "Tomorrow" — events on the next day  (flag: dayReminderSent)
  * Idempotent: each reminder is sent at most once per event via flag columns.
  */
 export async function GET(req: NextRequest) {
   const unauth = verifyCron(req);
   if (unauth) return unauth;
 
-  const now     = new Date();
-  const in30m   = new Date(now.getTime() + 30 * 60 * 1000);
-  const in90m   = new Date(now.getTime() + 90 * 60 * 1000);
-  const in20h   = new Date(now.getTime() + 20 * 60 * 60 * 1000);
-  const in28h   = new Date(now.getTime() + 28 * 60 * 60 * 1000);
+  const now = new Date();
+  const tomorrowKey = warsawDateKey(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+  const startOfTomorrow = parseWarsawDateTime(`${tomorrowKey}T00:00`);
+  const dayAfterKey = warsawDateKey(new Date(startOfTomorrow.getTime() + 36 * 60 * 60 * 1000));
+  const startOfDayAfter = parseWarsawDateTime(`${dayAfterKey}T00:00`);
 
-  let daySent  = 0;
-  let hourSent = 0;
+  const time = (d: Date) => formatWarsaw(d, { hour: "2-digit", minute: "2-digit" });
+  const where = (ev: { location: string | null }) => (ev.location ? ` · ${ev.location}` : "");
 
-  // Day-before reminders
-  const dayEvents = await prisma.event.findMany({
-    where: {
-      isActive:         true,
-      dayReminderSent:  false,
-      startDate:        { gte: in20h, lte: in28h },
-    },
-  });
+  const [todayEvents, tomorrowEvents] = await Promise.all([
+    prisma.event.findMany({
+      where: { isActive: true, hourReminderSent: false, startDate: { gt: now, lt: startOfTomorrow } },
+    }),
+    prisma.event.findMany({
+      where: { isActive: true, dayReminderSent: false, startDate: { gte: startOfTomorrow, lt: startOfDayAfter } },
+    }),
+  ]);
 
-  for (const ev of dayEvents) {
-    await sendPushToAll({
-      title: "📅 Tomorrow: " + ev.title,
-      body:  ev.location ? `At ${ev.location}` : "See you there.",
-      url:   "/dashboard",
-      topic: "events",
-    }).catch(() => {});
-    await prisma.event.update({
-      where: { id: ev.id },
-      data:  { dayReminderSent: true },
+  await Promise.allSettled([
+    ...todayEvents.map((ev) =>
+      sendPushToAll({
+        title: "⏰ Today: " + ev.title,
+        body: `Starts at ${time(ev.startDate)}${where(ev)}`,
+        url: eventPath(ev),
+        topic: "events",
+      })
+    ),
+    ...tomorrowEvents.map((ev) =>
+      sendPushToAll({
+        title: "📅 Tomorrow: " + ev.title,
+        body: `${time(ev.startDate)}${where(ev)}`,
+        url: eventPath(ev),
+        topic: "events",
+      })
+    ),
+  ]);
+
+  if (todayEvents.length) {
+    await prisma.event.updateMany({
+      where: { id: { in: todayEvents.map((e) => e.id) } },
+      // An event announced today needs no "tomorrow" reminder either.
+      data: { hourReminderSent: true, dayReminderSent: true },
     });
-    daySent++;
+  }
+  if (tomorrowEvents.length) {
+    await prisma.event.updateMany({
+      where: { id: { in: tomorrowEvents.map((e) => e.id) } },
+      data: { dayReminderSent: true },
+    });
   }
 
-  // Hour-before reminders
-  const hourEvents = await prisma.event.findMany({
-    where: {
-      isActive:         true,
-      hourReminderSent: false,
-      startDate:        { gte: in30m, lte: in90m },
-    },
-  });
-
-  for (const ev of hourEvents) {
-    await sendPushToAll({
-      title: "⏰ Starting soon: " + ev.title,
-      body:  ev.location ? `At ${ev.location}` : "Starting within the hour.",
-      url:   "/dashboard",
-      topic: "events",
-    }).catch(() => {});
-    await prisma.event.update({
-      where: { id: ev.id },
-      data:  { hourReminderSent: true },
-    });
-    hourSent++;
-  }
-
-  return NextResponse.json({ daySent, hourSent });
+  return NextResponse.json({ todaySent: todayEvents.length, tomorrowSent: tomorrowEvents.length });
 }

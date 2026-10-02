@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Crown, Search, X, Check, AlertCircle, Users, Plus, Pencil, Trash2, Sparkles } from "lucide-react";
+import { confirmDialog } from "@/components/ui/toaster";
 
 /** The teams the fellowship expects to have. Offered as one-click setup. */
 const SUGGESTED_TEAMS = [
@@ -177,7 +178,7 @@ export default function TeamLeaders() {
   };
 
   const removeTeam = async (team: Team) => {
-    if (!confirm(`Remove the ${team.label} team?`)) return;
+    if (!(await confirmDialog({ title: `Remove the ${team.label} team?`, message: "Members are taken off the team and its chat is deleted.", confirmLabel: "Remove", destructive: true }))) return;
     setSaving(true);
     setError(null);
     try {

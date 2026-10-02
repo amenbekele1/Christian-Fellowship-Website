@@ -1,25 +1,19 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { formatDate, formatTime, getRoleLabel, getRoleBadgeColor } from "@/lib/utils";
+import { formatDate, formatTime, formatShortDate, getRoleLabel } from "@/lib/utils";
+import { getVerseOfDay } from "@/lib/verse";
+import { formatWarsaw, warsawGreeting } from "@/lib/timezone";
+import { eventPath } from "@/lib/event-presets";
 import { Calendar, Bell, BookOpen, Users, TrendingUp } from "lucide-react";
 import Link from "next/link";
-
-async function getVerseOfDay() {
-  try {
-    const res = await fetch(`${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/verse`, { cache: "no-store" });
-    return res.json();
-  } catch {
-    return { reference: "Hebrews 10:24-25", text: "Not giving up meeting together, but encouraging one another…", translation: "NIV" };
-  }
-}
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session) return null;
 
-  const [verse, announcements, events, user] = await Promise.all([
-    getVerseOfDay(),
+  const verse = getVerseOfDay();
+  const [announcements, events, user] = await Promise.all([
     prisma.announcement.findMany({
       where: { OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }] },
       orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
@@ -32,9 +26,9 @@ export default async function DashboardPage() {
     }),
     prisma.user.findUnique({
       where: { id: session.user.id },
-      include: {
-        busGroup: { include: { leader: { select: { name: true, email: true } } } },
-        attendances: { orderBy: { date: "desc" }, take: 5 },
+      select: {
+        busGroup: { select: { name: true, leader: { select: { name: true, email: true } } } },
+        attendances: { orderBy: { date: "desc" }, take: 5, select: { status: true } },
       },
     }),
   ]);
@@ -43,12 +37,6 @@ export default async function DashboardPage() {
   const totalCount     = user?.attendances.length ?? 0;
   const attendanceRate = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
 
-  const greeting = () => {
-    const h = new Date().getHours();
-    if (h < 12) return "Good morning";
-    if (h < 17) return "Good afternoon";
-    return "Good evening";
-  };
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -57,11 +45,11 @@ export default async function DashboardPage() {
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-bold" style={{ color: "#2C1A0E" }}>
-            {greeting()}, {session.user.name?.split(" ")[0]} 👋
+            {warsawGreeting()}, {session.user.name?.split(" ")[0]} 👋
           </h1>
           <p className="mt-1" style={{ color: "#9A7B5C" }}>
             {getRoleLabel(session.user.role)} ·{" "}
-            {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
+            {formatWarsaw(new Date(), { weekday: "long", day: "numeric", month: "long" })}
           </p>
         </div>
         <span
@@ -116,7 +104,7 @@ export default async function DashboardPage() {
           {
             label: "Upcoming Events",
             value: events.length,
-            sub:   "this month",
+            sub:   events[0] ? `Next: ${formatShortDate(events[0].startDate)}` : "None scheduled",
             icon:  Calendar,
           },
         ].map(({ label, value, sub, icon: Icon }) => (
@@ -197,29 +185,37 @@ export default async function DashboardPage() {
                 <Calendar className="w-4 h-4" style={{ color: "#C9A84C" }} />
               </div>
               <h2 className="font-display font-bold" style={{ color: "#2C1A0E" }}>Upcoming Events</h2>
+              <Link href="/dashboard/events" className="ml-auto text-xs font-semibold" style={{ color: "#8A6A1F" }}>
+                View all →
+              </Link>
             </div>
             <div className="space-y-2">
               {events.length === 0 ? (
                 <p className="text-sm text-center py-4" style={{ color: "#C4A882" }}>No upcoming events.</p>
               ) : (
                 events.map((event) => (
-                  <div key={event.id} className="flex gap-3 py-2.5" style={{ borderBottom: "1px solid #F0E6D3" }}>
+                  <Link
+                    key={event.id}
+                    href={eventPath(event)}
+                    className="flex gap-3 py-2.5 rounded-lg transition-colors hover:bg-[#FAF7F0]"
+                    style={{ borderBottom: "1px solid #F0E6D3" }}
+                  >
                     <div
                       className="shrink-0 rounded-xl p-2 text-center min-w-[44px]"
                       style={{ background: "rgba(201,168,76,0.08)" }}
                     >
                       <p className="text-xs font-bold" style={{ color: "#C9A84C" }}>
-                        {new Date(event.startDate).toLocaleDateString("en-GB", { month: "short" })}
+                        {formatWarsaw(event.startDate, { month: "short" })}
                       </p>
                       <p className="font-bold text-sm" style={{ color: "#2C1A0E" }}>
-                        {new Date(event.startDate).getDate()}
+                        {formatWarsaw(event.startDate, { day: "numeric" })}
                       </p>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate" style={{ color: "#3D2410" }}>{event.title}</p>
-                      <p className="text-xs" style={{ color: "#C4A882" }}>{formatTime(event.startDate)}</p>
+                      <p className="text-xs" style={{ color: "#8A6A4A" }}>{formatTime(event.startDate)}</p>
                     </div>
-                  </div>
+                  </Link>
                 ))
               )}
             </div>
@@ -266,7 +262,7 @@ export default async function DashboardPage() {
             <div className="space-y-1">
               {[
                 { href: "/dashboard/library",    icon: BookOpen,      label: "Browse Library" },
-                { href: "/events",               icon: Calendar,      label: "All Events"     },
+                { href: "/dashboard/events",     icon: Calendar,      label: "All Events"     },
               ].map(({ href, icon: Icon, label }) => (
                 <Link key={href} href={href} className="quick-action flex items-center gap-3 p-3">
                   <Icon className="w-4 h-4 shrink-0" />

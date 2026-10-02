@@ -108,7 +108,7 @@ export default function HubFiles({ apiBase }: { apiBase: string }) {
             <div key={f.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-brown-200 transition-colors shadow-sm">
               {f.fileType === "image" ? (
                 <a href={f.fileUrl} target="_blank" rel="noreferrer">
-                  <img src={f.fileUrl} alt={f.fileName ?? "image"} className="w-full h-32 object-cover" />
+                  <img src={f.fileUrl} alt={f.fileName ?? "image"} loading="lazy" decoding="async" className="w-full h-32 object-cover" />
                 </a>
               ) : (
                 <div className="h-32 bg-gray-50 flex items-center justify-center">

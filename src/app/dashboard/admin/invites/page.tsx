@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Copy, Trash2, X, CheckCircle, Clock, AlertCircle, Link2 } from "lucide-react";
+import { TIME_ZONE } from "@/lib/timezone";
+import { confirmDialog } from "@/components/ui/toaster";
 
 interface InviteToken {
   id: string;
@@ -60,7 +62,7 @@ export default function AdminInvitesPage() {
   };
 
   const deleteToken = async (id: string) => {
-    if (!confirm("Are you sure you want to revoke this invite?")) return;
+    if (!(await confirmDialog({ title: "Revoke this invite?", message: "The link will stop working for anyone who has not registered yet.", confirmLabel: "Revoke", destructive: true }))) return;
     await fetch(`/api/invites?id=${id}`, { method: "DELETE" });
     fetchTokens();
   };
@@ -73,7 +75,7 @@ export default function AdminInvitesPage() {
           <span className="text-xs bg-brown-100 text-gold-500 px-2 py-0.5 rounded-full">Used</span>
           {token.usedAt && (
             <span className="text-xs text-gray-500">
-              {new Date(token.usedAt).toLocaleDateString("en-GB", {day: "numeric", month: "short"})}
+              {new Date(token.usedAt).toLocaleDateString("en-GB", { timeZone: TIME_ZONE, day: "numeric", month: "short"})}
             </span>
           )}
         </div>
@@ -214,15 +216,13 @@ export default function AdminInvitesPage() {
                     <p className="text-xs text-gray-500 truncate font-mono">{token.token.slice(0, 12)}...</p>
                   </div>
                   <div className="text-sm text-gray-600">
-                    {new Date(token.expiresAt).toLocaleDateString("en-GB", {
-                      day: "numeric",
+                    {new Date(token.expiresAt).toLocaleDateString("en-GB", { timeZone: TIME_ZONE, day: "numeric",
                       month: "short",
                       year: "2-digit",
                     })}
                   </div>
                   <div className="text-sm text-gray-600">
-                    {new Date(token.expiresAt).toLocaleDateString("en-GB", {
-                      day: "numeric",
+                    {new Date(token.expiresAt).toLocaleDateString("en-GB", { timeZone: TIME_ZONE, day: "numeric",
                       month: "short",
                       hour: "2-digit",
                       minute: "2-digit",

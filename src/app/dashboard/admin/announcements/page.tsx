@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Plus, Bell, Trash2, X, Pin, Edit2, AlertCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { confirmDialog } from "@/components/ui/toaster";
+import { warsawDateKey } from "@/lib/timezone";
 
 interface Announcement {
   id: string; title: string; content: string; isPublic: boolean; isPinned: boolean;
@@ -44,14 +46,14 @@ export default function AdminAnnouncementsPage() {
       await fetch(`/api/announcements?id=${editingId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, expiresAt: form.expiresAt || undefined }),
+        body: JSON.stringify({ ...form, expiresAt: form.expiresAt || null }),
       });
     } else {
       // Create new announcement
       await fetch("/api/announcements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, expiresAt: form.expiresAt || undefined }),
+        body: JSON.stringify({ ...form, expiresAt: form.expiresAt || null }),
       });
     }
 
@@ -68,7 +70,7 @@ export default function AdminAnnouncementsPage() {
       content: ann.content,
       isPublic: ann.isPublic,
       isPinned: ann.isPinned,
-      expiresAt: ann.expiresAt ? ann.expiresAt.slice(0, 10) : "",
+      expiresAt: ann.expiresAt ? warsawDateKey(ann.expiresAt) : "",
     });
     setEditingId(ann.id);
     setShowForm(true);
@@ -81,7 +83,7 @@ export default function AdminAnnouncementsPage() {
   };
 
   const deleteAnnouncement = async (id: string) => {
-    if (!confirm("Delete this announcement?")) return;
+    if (!(await confirmDialog({ title: "Delete this announcement?", message: "It will disappear from the dashboard for everyone.", destructive: true }))) return;
     await fetch(`/api/announcements?id=${id}`, { method: "DELETE" });
     fetchAnnouncements();
   };

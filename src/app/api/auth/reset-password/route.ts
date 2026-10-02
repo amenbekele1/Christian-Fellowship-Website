@@ -2,20 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-
-// Rate limiter: 10 attempts per IP per hour
-const rateMap = new Map<string, { count: number; resetAt: number }>();
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateMap.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 });
-    return false;
-  }
-  if (entry.count >= 10) return true;
-  entry.count++;
-  return false;
-}
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{10,}$/;
 
@@ -33,11 +20,8 @@ const resetPasswordSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
-    if (isRateLimited(ip)) {
+    const ip = getClientIp(req);
+    if (!(await checkRateLimit(`reset-pwd:${ip}`, 10, 60 * 60 * 1000)).allowed) {
       return NextResponse.json({ error: "Too many attempts. Please try again later." }, { status: 429 });
     }
 

@@ -1,32 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, esc } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
-
-// Rate limiter: 10 submissions per IP per hour
-const rateMap = new Map<string, { count: number; resetAt: number }>();
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateMap.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 });
-    return false;
-  }
-  if (entry.count >= 10) return true;
-  entry.count++;
-  return false;
-}
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
-    if (isRateLimited(ip)) {
+    const ip = getClientIp(req);
+    if (!(await checkRateLimit(`interest:${ip}`, 10, 60 * 60 * 1000)).allowed) {
       return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
     }
 
-    const { name, email, message } = await req.json();
+    const raw = await req.json();
+    const name = String(raw.name ?? "").slice(0, 120);
+    const email = String(raw.email ?? "").trim().slice(0, 200);
+    const message = raw.message ? String(raw.message).slice(0, 5000) : "";
     if (!name?.trim() || !email?.trim()) {
       return NextResponse.json({ error: "Name and email are required" }, { status: 400 });
     }
@@ -36,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     // Get all guardian emails to notify
     const guardians = await prisma.user.findMany({
-      where: { role: "GUARDIAN" },
+      where: { role: "GUARDIAN", isActive: true },
       select: { email: true },
     });
     const guardianEmails = guardians.map(g => g.email);
@@ -44,7 +31,7 @@ export async function POST(req: NextRequest) {
     if (guardianEmails.length > 0) {
       await sendEmail({
         to: guardianEmails,
-        subject: `New Membership Interest — ${name}`,
+        subject: `New Membership Interest — ${name.replace(/[\r\n]+/g, " ")}`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: #2C1A0E; padding: 24px; border-radius: 12px 12px 0 0;">
@@ -53,9 +40,9 @@ export async function POST(req: NextRequest) {
             </div>
             <div style="background: #f9fafb; padding: 24px; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb; border-top: none;">
               <table style="width: 100%; border-collapse: collapse;">
-                <tr><td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Name</td><td style="padding: 8px 0; font-weight: 600; color: #111827;">${name}</td></tr>
-                <tr><td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Email</td><td style="padding: 8px 0; color: #111827;"><a href="mailto:${email}" style="color: #C9A84C;">${email}</a></td></tr>
-                ${message ? `<tr><td style="padding: 8px 0; color: #6b7280; font-size: 14px; vertical-align: top;">Message</td><td style="padding: 8px 0; color: #111827;">${message}</td></tr>` : ""}
+                <tr><td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Name</td><td style="padding: 8px 0; font-weight: 600; color: #111827;">${esc(name)}</td></tr>
+                <tr><td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Email</td><td style="padding: 8px 0; color: #111827;"><a href="mailto:${encodeURIComponent(email)}" style="color: #C9A84C;">${esc(email)}</a></td></tr>
+                ${message ? `<tr><td style="padding: 8px 0; color: #6b7280; font-size: 14px; vertical-align: top;">Message</td><td style="padding: 8px 0; color: #111827; white-space: pre-wrap;">${esc(message)}</td></tr>` : ""}
               </table>
               <div style="margin-top: 20px; padding: 16px; background: #dcfce7; border-radius: 8px;">
                 <p style="margin: 0; font-size: 14px; color: #2C1A0E;">

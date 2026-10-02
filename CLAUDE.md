@@ -43,7 +43,7 @@ Tables are snake_case via `@@map`; Prisma model names are PascalCase (note `BUSG
 
 ### Authorization (three layers — keep them consistent)
 1. **`src/middleware.ts`** guards `/dashboard/*` (must be logged in). `/dashboard/admin/*` requires `GUARDIAN`, except members of the `LIBRARIAN` service team may reach `admin/books` and `WEBSITE_EDITOR` members may reach `admin/content|events|programs|announcements`. API routes for those features must mirror the same exception.
-2. **JWT contents** (`src/lib/auth.ts`): `role`, `id`, and `serviceTeams` (team `name`s) are embedded **at sign-in only**. Changing a user's role or team membership does not take effect until they sign in again. Sessions are 30 days with rotation deliberately disabled (`updateAge = maxAge`) for iOS/Android PWA cookie persistence — don't change this casually.
+2. **JWT contents** (`src/lib/auth.ts`): `role`, `id`, `serviceTeams` (team `name`s) and `disabled` are re-read from the database every 2 minutes in the `jwt` callback; a deactivated/deleted user gets an empty session (treated as signed out). Sessions are 30 days with rotation deliberately disabled (`updateAge = maxAge`) for iOS/Android PWA cookie persistence — don't change this casually.
 3. **Per-resource helpers** for nested API routes:
    - `groupAuth(groupId)` (`src/lib/group-auth.ts`) for `/api/bus-groups/[groupId]/*` — Guardian, group leader, or group member.
    - `teamAuth(teamId)` (`src/lib/team-auth.ts`) for `/api/teams/[teamId]/*` — Guardian, team leader, or team member.
@@ -61,13 +61,16 @@ Meetings use Jitsi as a Service: `meeting-token` routes sign an RS256 JWT with `
 - `src/lib/webpush.ts`: `sendPushToAll/User/Users/BusGroup` and `sendRefreshPush(topic)`. Dead subscriptions (404/410) are auto-deleted. No-ops gracefully if VAPID keys are missing.
 - `public/sw.js`: payload `type: "refresh"` silently broadcasts `{type:"refresh", topic}` to open clients; otherwise shows a notification, bumps the app-icon badge and navigates to `data.url` on click.
 - Client side: `usePushRefresh(topic, cb)` re-fetches on a matching broadcast; `useRefreshOnFocus` / `RouterRefresher` refresh on app focus; `<PullToRefresh>` wraps some pages. Admin mutation routes should call `sendRefreshPush("<topic>")` so open clients update.
-- Crons are in `vercel.json` (Hobby plan: each runs at most daily).
+- Crons are in `vercel.json` (Hobby plan: each runs at most daily). Event reminders therefore send a "Today" and a "Tomorrow" push from the 08:00 UTC run rather than an hour-before one.
 
 ### Other conventions
+- **Time zone:** the fellowship runs on Warsaw time but servers run in UTC. Use `src/lib/timezone.ts` for everything date-related: `parseWarsawDateTime` for values typed into forms (`datetime-local`/`date`), `toWarsawInputValue` to fill those inputs, `formatWarsaw`/`TIME_ZONE` (also used by the `formatDate*` helpers in `utils.ts`) for display, `warsawDateKey` for "which day is it". Never use bare `toLocale*`, `getHours()` or `getDate()`.
+- **Popups:** use `toast.*` and `await confirmDialog({...})` from `src/components/ui/toaster.tsx`; never `alert()`/`confirm()`.
+- **Rate limiting:** `await checkRateLimit(key, limit, windowMs)` from `src/lib/rate-limit.ts` (Postgres-backed, shared across instances).
+- **Registration** requires a valid invite token server-side; invite links are multi-use until a Guardian disables them or they expire.
 - Request validation with `zod` in route handlers; Prisma singleton from `@/lib/prisma`; `@/` maps to `src/`.
 - Emails: `sendEmail` + HTML templates in `src/lib/email.ts` (Nodemailer SMTP). Escape any user-supplied text interpolated into HTML templates.
 - File uploads go to Vercel Blob (`@vercel/blob`).
-- Rate limiting in `src/lib/rate-limit.ts` is in-memory, so per serverless instance only.
 - Account deletion is a soft delete: PII is scrubbed, email becomes `deleted_<id>@wetcf.deleted`, `isActive=false`. Member listings must filter out inactive/deleted users.
 - Event pages: themes/layouts and video-embed parsing live in `src/lib/event-presets.ts`; social links in `src/lib/social.ts`.
 - Shared UI primitives (Button, Card, Badge, Input…) are in `src/components/ui/index.tsx`. Brand palette: Ethiopian-inspired forest green / gold / crimson, Playfair Display + Lato (see `tailwind.config.ts`).

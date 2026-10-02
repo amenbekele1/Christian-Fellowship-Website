@@ -230,7 +230,7 @@ function ProgramsContent() {
             href="/register"
             className="inline-block bg-gold-500 text-brown-900 font-semibold px-8 py-3.5 rounded-xl hover:bg-gold-400 transition-colors shadow-sm"
           >
-            Create Your Member Account
+            Get Involved
           </a>
         </div>
       </section>

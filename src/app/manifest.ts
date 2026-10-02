@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Warsaw Ethiopian Christian Fellowship",
-    short_name: "WETCF",
+    short_name: "WECF",
     description: "Member portal for Warsaw Ethiopian Christian Fellowship",
     start_url: "/dashboard",
     scope: "/",

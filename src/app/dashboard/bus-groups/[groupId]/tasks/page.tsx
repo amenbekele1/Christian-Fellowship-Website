@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Plus, X, CheckCircle2, Circle, Clock, Trash2, Calendar, User, AlertCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { confirmDialog } from "@/components/ui/toaster";
 
 interface TaskUser { id: string; name: string; }
 interface Task {
@@ -94,7 +95,7 @@ export default function TasksPage({ params }: { params: { groupId: string } }) {
   };
 
   const deleteTask = async (id: string) => {
-    if (!confirm("Delete this task?")) return;
+    if (!(await confirmDialog({ title: "Delete this task?", destructive: true }))) return;
     try {
       await fetch(`/api/bus-groups/${params.groupId}/tasks?taskId=${id}`, { method: "DELETE" });
       setTasks(prev => prev.filter(t => t.id !== id));

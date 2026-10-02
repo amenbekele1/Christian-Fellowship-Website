@@ -1,4 +1,4 @@
-// WETCF Service Worker — handles push notifications
+// WECF Service Worker — handles push notifications
 
 async function updateBadge() {
   try {
@@ -26,7 +26,7 @@ self.addEventListener("push", function (event) {
   if (!event.data) return;
 
   let data = {};
-  try { data = event.data.json(); } catch { data = { title: "WETCF", body: event.data.text() }; }
+  try { data = event.data.json(); } catch { data = { title: "WECF", body: event.data.text() }; }
 
   // Silent refresh — broadcast to open clients, do not show a notification
   if (data.type === "refresh") {
@@ -34,7 +34,7 @@ self.addEventListener("push", function (event) {
     return;
   }
 
-  const title   = data.title || "WETCF";
+  const title   = data.title || "WECF";
   const options = {
     body:               data.body || "",
     icon:               "/icons/icon-192x192.png",

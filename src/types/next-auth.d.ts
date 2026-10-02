@@ -20,5 +20,7 @@ declare module "next-auth/jwt" {
     role: string;
     id: string;
     serviceTeams: string[];
+    disabled?: boolean;
+    checkedAt?: number;
   }
 }

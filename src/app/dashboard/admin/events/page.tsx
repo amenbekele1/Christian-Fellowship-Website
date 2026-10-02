@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { Plus, Calendar, Trash2, X, Globe, Lock, Edit2, ImagePlus, Youtube, ExternalLink, Check } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import { EVENT_THEMES, EVENT_LAYOUTS, parseVideoEmbed, eventPath } from "@/lib/event-presets";
+import { TIME_ZONE, formatWarsaw, toWarsawInputValue } from "@/lib/timezone";
+import { confirmDialog, toast } from "@/components/ui/toaster";
 
 interface Event {
   id: string; title: string; description: string | null; body: string | null;
@@ -94,21 +96,18 @@ export default function AdminEventsPage() {
     e.preventDefault();
     setSaving(true);
 
-    if (editingId) {
-      // Update existing event
-      await fetch(`/api/events?id=${editingId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-    } else {
-      // Create new event
-      await fetch("/api/events", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+    const res = await fetch(editingId ? `/api/events?id=${editingId}` : "/api/events", {
+      method: editingId ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    }).catch(() => null);
+
+    if (!res?.ok) {
+      setSaving(false);
+      toast.error("Couldn't save the event. Check the fields and try again.");
+      return;
     }
+    toast.success(editingId ? "Event updated" : "Event created");
 
     setShowForm(false);
     setEditingId(null);
@@ -123,8 +122,8 @@ export default function AdminEventsPage() {
       description: event.description || "",
       body: event.body || "",
       location: event.location || "",
-      startDate: event.startDate.slice(0, 16),
-      endDate: event.endDate ? event.endDate.slice(0, 16) : "",
+      startDate: toWarsawInputValue(event.startDate),
+      endDate: toWarsawInputValue(event.endDate),
       type: event.type || "Worship",
       imageUrl: event.imageUrl || "",
       gallery: event.gallery ?? [],
@@ -145,7 +144,7 @@ export default function AdminEventsPage() {
   };
 
   const deleteEvent = async (id: string) => {
-    if (!confirm("Delete this event?")) return;
+    if (!(await confirmDialog({ title: "Delete this event?", message: "It will be removed from the website and the portal.", destructive: true }))) return;
     await fetch(`/api/events?id=${id}`, { method: "DELETE" });
     fetchEvents();
   };
@@ -360,8 +359,8 @@ export default function AdminEventsPage() {
           {upcoming.map(event => (
             <div key={event.id} className="bg-white border border-brown-200 rounded-2xl p-5 flex gap-4 items-start shadow-sm">
               <div className="shrink-0 bg-brown-50 rounded-xl px-3 py-2 text-center border border-brown-200 min-w-[52px]">
-                <p className="text-xs font-bold text-gold-600 uppercase">{new Date(event.startDate).toLocaleDateString("en-GB",{month:"short"})}</p>
-                <p className="font-display font-bold text-brown-700 text-xl leading-none">{new Date(event.startDate).getDate()}</p>
+                <p className="text-xs font-bold text-gold-600 uppercase">{new Date(event.startDate).toLocaleDateString("en-GB",{ timeZone: TIME_ZONE, month:"short"})}</p>
+                <p className="font-display font-bold text-brown-700 text-xl leading-none">{formatWarsaw(event.startDate, { day: "numeric" })}</p>
               </div>
               <div className="flex-1">
                 <div className="flex items-start gap-2">

@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { sendPushToAll, sendRefreshPush } from "@/lib/webpush";
+import { parseWarsawDateTime } from "@/lib/timezone";
+import { eventPath } from "@/lib/event-presets";
 
 function canEditContent(session: any): boolean {
   return (
@@ -19,7 +21,7 @@ const eventSchema = z.object({
   body: z.string().max(20000).optional().nullable(),
   location: z.string().optional(),
   startDate: z.string(),
-  endDate: z.string().optional(),
+  endDate: z.string().optional().nullable(),
   type: z.string().optional(),
   imageUrl: z.string().optional(),
   gallery: z.array(z.string().url()).max(24).optional(),
@@ -71,8 +73,8 @@ export async function POST(req: NextRequest) {
   const event = await prisma.event.create({
     data: {
       ...data,
-      startDate: new Date(data.startDate),
-      endDate: data.endDate ? new Date(data.endDate) : null,
+      startDate: parseWarsawDateTime(data.startDate),
+      endDate: data.endDate ? parseWarsawDateTime(data.endDate) : null,
     },
   });
 
@@ -80,7 +82,7 @@ export async function POST(req: NextRequest) {
   sendPushToAll({
     title: "New Event",
     body: event.title,
-    url: "/dashboard",
+    url: eventPath(event),
     topic: "events",
   }).catch(() => {});
 
@@ -104,8 +106,16 @@ export async function PATCH(req: NextRequest) {
     where: { id },
     data: {
       ...data,
-      startDate: data.startDate ? new Date(data.startDate) : undefined,
-      endDate: data.endDate ? new Date(data.endDate) : undefined,
+      startDate: data.startDate ? parseWarsawDateTime(data.startDate) : undefined,
+      // An emptied end-date field clears it; leaving the key out keeps it.
+      endDate:
+        data.endDate === undefined
+          ? undefined
+          : data.endDate
+            ? parseWarsawDateTime(data.endDate)
+            : null,
+      // A moved event should be reminded about again.
+      ...(data.startDate ? { dayReminderSent: false, hourReminderSent: false } : {}),
     },
   });
 
