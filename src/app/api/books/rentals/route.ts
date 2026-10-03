@@ -3,6 +3,68 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { background } from "@/lib/background";
+import { sendEmail, bookReservedEmail } from "@/lib/email";
+import { sendPushToUsers } from "@/lib/webpush";
+import { formatDate } from "@/lib/utils";
+
+/**
+ * Tell the Library team (members of the LIBRARIAN service team and its
+ * leader) about a new reservation — push notification + email. The person
+ * who reserved is left out if they happen to be a librarian themselves.
+ */
+async function notifyLibraryTeam(rental: {
+  pickupDate: Date | null;
+  dueDate: Date | null;
+  book: { title: string; author: string | null };
+  user: { id: string; name: string; email: string; phone: string | null };
+}) {
+  const team = await prisma.serviceTeam.findUnique({
+    where: { name: "LIBRARIAN" },
+    select: {
+      leader: { select: { id: true, name: true, email: true, isActive: true } },
+      members: { select: { user: { select: { id: true, name: true, email: true, isActive: true } } } },
+    },
+  });
+  if (!team) return;
+
+  const people = new Map<string, { id: string; name: string; email: string }>();
+  for (const p of [team.leader, ...team.members.map((m) => m.user)]) {
+    if (p && p.isActive && p.id !== rental.user.id && !p.email.endsWith("@wetcf.deleted")) people.set(p.id, p);
+  }
+  if (people.size === 0) return;
+
+  const pickup = rental.pickupDate ? formatDate(rental.pickupDate) : "—";
+  const due = rental.dueDate ? formatDate(rental.dueDate) : "—";
+  const base = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || "https://wetcf.com";
+
+  await Promise.allSettled([
+    sendPushToUsers([...people.keys()], {
+      title: "📚 Book reserved",
+      body: `${rental.user.name} reserved “${rental.book.title}” · pickup ${pickup}`,
+      url: "/dashboard/admin/books",
+      topic: "rentals",
+    }),
+    ...[...people.values()].map((p) =>
+      sendEmail({
+        to: p.email,
+        replyTo: { name: rental.user.name, address: rental.user.email },
+        subject: `📚 Reserved: "${rental.book.title}" — ${rental.user.name}`,
+        html: bookReservedEmail({
+          librarianName: p.name,
+          memberName: rental.user.name,
+          memberEmail: rental.user.email,
+          memberPhone: rental.user.phone,
+          bookTitle: rental.book.title,
+          bookAuthor: rental.book.author,
+          pickupDate: pickup,
+          returnDate: due,
+          adminUrl: `${base}/dashboard/admin/books`,
+        }),
+      })
+    ),
+  ]);
+}
 
 const createRentalSchema = z.object({
   bookId: z.string().min(1),
@@ -79,7 +141,10 @@ export async function POST(req: NextRequest) {
           dueDate: returnDateObj,
           status: "ACTIVE",
         },
-        include: { book: true, user: true },
+        include: {
+          book: true,
+          user: { select: { id: true, name: true, email: true, phone: true } },
+        },
       });
     });
   } catch (err: any) {
@@ -96,6 +161,8 @@ export async function POST(req: NextRequest) {
     }
     throw err;
   }
+
+  background(notifyLibraryTeam(rental), "library reservation notice");
 
   return NextResponse.json(rental, { status: 201 });
 }

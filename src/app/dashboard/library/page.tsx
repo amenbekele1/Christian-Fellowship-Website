@@ -172,7 +172,7 @@ export default function LibraryPage() {
     <PullToRefresh onRefresh={refreshAll}>
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
-        <h1 className="font-display text-3xl font-bold text-gray-800">E-Library</h1>
+        <h1 className="font-display text-3xl font-bold text-gray-800">Library</h1>
         <p className="text-gray-500 mt-1">Browse and reserve books from our fellowship library. Collect during Saturday service.</p>
       </div>
 

@@ -334,6 +334,78 @@ export function bookReminderEmail(
   `;
 }
 
+/** To Librarian team members when someone reserves a book. */
+export function bookReservedEmail(opts: {
+  librarianName: string;
+  memberName: string;
+  memberEmail: string;
+  memberPhone: string | null;
+  bookTitle: string;
+  bookAuthor: string | null;
+  pickupDate: string;
+  returnDate: string;
+  adminUrl: string;
+}): string {
+  const o = opts;
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Georgia, serif; background: #f9f6f0; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #1C0F07, #2C1A0E); padding: 36px 40px; text-align: center; border-bottom: 3px solid #C9A84C; }
+        .header h1 { color: #FAF7F0; margin: 0; font-size: 21px; }
+        .header p { color: #C9A84C; margin: 8px 0 0; font-size: 14px; }
+        .icon { font-size: 36px; margin-bottom: 10px; display: block; }
+        .body { padding: 36px 40px; }
+        .body h2 { color: #2C1A0E; font-size: 19px; margin-top: 0; }
+        .body p { color: #374151; line-height: 1.7; }
+        .book-card { background: #FAF7F0; border-left: 4px solid #C9A84C; padding: 18px 20px; border-radius: 0 8px 8px 0; margin: 20px 0; }
+        .book-card strong { color: #1C0F07; font-size: 18px; }
+        table { width: 100%; border-collapse: collapse; margin: 8px 0 24px; }
+        td { padding: 9px 0; font-size: 14px; border-top: 1px solid #f0e6d6; vertical-align: top; }
+        td.k { color: #7A5C3E; width: 120px; }
+        td.v { color: #1C0F07; font-weight: 600; }
+        .btn { display: inline-block; background: #C9A84C; color: #1C0F07 !important; font-weight: 700; font-size: 14px; padding: 12px 24px; border-radius: 8px; text-decoration: none; }
+        .footer { background: #FAF7F0; padding: 22px 40px; text-align: center; color: #6b7280; font-size: 13px; border-top: 1px solid #f0e6d6; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <span class="icon">📚</span>
+          <h1>New Book Reservation</h1>
+          <p>Warsaw Ethiopian Christian Fellowship · Library</p>
+        </div>
+        <div class="body">
+          <h2>Dear ${esc(o.librarianName)},</h2>
+          <p>A member has just reserved a book. Please have it ready for pickup.</p>
+          <div class="book-card">
+            <p style="margin:0 0 4px; color:#6b7280; font-size:12px; text-transform:uppercase; letter-spacing:1px;">Book</p>
+            <strong>${esc(o.bookTitle)}</strong>
+            ${o.bookAuthor ? `<p style="margin:4px 0 0; color:#7A5C3E; font-size:14px;">${esc(o.bookAuthor)}</p>` : ""}
+          </div>
+          <table>
+            <tr><td class="k">Reserved by</td><td class="v">${esc(o.memberName)}</td></tr>
+            <tr><td class="k">Email</td><td class="v">${esc(o.memberEmail)}</td></tr>
+            ${o.memberPhone ? `<tr><td class="k">Phone</td><td class="v">${esc(o.memberPhone)}</td></tr>` : ""}
+            <tr><td class="k">Pickup</td><td class="v">${esc(o.pickupDate)}</td></tr>
+            <tr><td class="k">Return by</td><td class="v">${esc(o.returnDate)}</td></tr>
+          </table>
+          <a class="btn" href="${o.adminUrl}">Open Library Books →</a>
+        </div>
+        <div class="footer">
+          <p>You receive this because you are on the Library team.</p>
+          <p><strong>Warsaw Ethiopian Christian Fellowship</strong> · Warsaw, Poland</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
 export function passwordResetEmail(
   name: string,
   resetUrl: string
