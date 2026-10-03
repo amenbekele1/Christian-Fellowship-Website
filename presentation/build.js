@@ -16,8 +16,37 @@ const sharp   = require('sharp');
 const fa      = require('react-icons/fa');
 const fs      = require('fs');
 const path    = require('path');
+const QRCode  = require('qrcode');
 
 const ASSETS = path.join(__dirname, 'assets');
+
+/**
+ * Where the QR code on the "Join Us" slide points.
+ *
+ * Registration is invite-only, so a bare /register URL sends people to a
+ * "membership is by invitation" page instead of a sign-up form. Create a
+ * link under Dashboard -> Invites (they are multi-use, so one link serves
+ * the whole room) and pass it here:
+ *
+ *   node build.js "https://wetcf.com/register?invite=YOUR_TOKEN"
+ *
+ * or set REGISTER_URL in the environment.
+ */
+const REGISTER_URL =
+  process.argv[2] || process.env.REGISTER_URL || 'https://wetcf.com/register';
+
+function warnIfNoInvite(url) {
+  if (!/[?&]invite=/.test(url)) {
+    console.warn(
+      '\n  !  The QR points at %s\n'
+      + '     Registration is invite-only, so scanning this lands on the\n'
+      + '     "membership is by invitation" page, not a sign-up form.\n'
+      + '     Pass a real invite link:\n'
+      + '       node build.js "https://wetcf.com/register?invite=TOKEN"\n',
+      url
+    );
+  }
+}
 
 // ── Brand palette ────────────────────────────────────────────
 const C = {
@@ -115,7 +144,17 @@ async function main() {
   pres.title  = 'WETCF Launch';
 
   const LOGO_LIGHT = b64('logo-transparent.png');
-  const QR_REG     = b64('qr-register.png');
+
+  // Generate the QR fresh each build so it always matches REGISTER_URL.
+  // High error correction keeps it scannable from across a room and at an
+  // angle, which matters more here than a compact code.
+  warnIfNoInvite(REGISTER_URL);
+  const QR_REG = (await QRCode.toDataURL(REGISTER_URL, {
+    errorCorrectionLevel: 'H',
+    margin: 2,
+    width: 900,
+    color: { dark: '#1C0F07', light: '#FFFFFF' },
+  })).replace(/^data:/, '');
 
   console.log('Rendering icons…');
   const ic = {};
@@ -693,7 +732,11 @@ async function main() {
     });
     s.addImage({ data: QR_REG, x: 6.93, y: 1.63, w: 1.76, h: 1.76 });
 
-    s.addText('wetcf.com/register', {
+    // An invite link carries a long token nobody can retype, so in that case
+    // point people at the code rather than showing a URL that will not work
+    // when typed by hand.
+    const hasInvite = /[?&]invite=/.test(REGISTER_URL);
+    s.addText(hasInvite ? 'Use the code above' : 'wetcf.com/register', {
       x: 6.25, y: 3.62, w: 3.12, h: 0.34,
       fontSize: 15, bold: true, color: C.goldLt, align: 'center',
       fontFace: 'Calibri', isTextBox: true, margin: 0,
