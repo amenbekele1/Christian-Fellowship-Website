@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, ChevronLeft, Search, X, BookOpen } from "lucide-react";
 import { BOOKS } from "@/lib/bible-books";
 import { peekCache, rememberCache } from "@/lib/fetch-cache";
@@ -18,8 +19,9 @@ const OT = BOOKS.slice(0, 39);
 const NT = BOOKS.slice(39);
 
 /**
- * Book → chapter → verse picker in a themed sheet (bottom sheet on phones,
- * centred card on larger screens). Picking a chapter can skip the verse step.
+ * Book → chapter → verse picker in a centred card. It is portalled to
+ * <body> so ancestors with transforms/backdrop-filter (e.g. the reader's
+ * sticky toolbar) can't trap it; tapping outside closes it.
  */
 export function PassagePicker({
   value,
@@ -38,6 +40,8 @@ export function PassagePicker({
   const [query, setQuery] = useState("");
   const [verses, setVerses] = useState<number[] | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const current = BOOKS.find((b) => b.id === value.book) ?? BOOKS[0];
   const picked = BOOKS.find((b) => b.id === book) ?? BOOKS[0];
@@ -107,19 +111,21 @@ export function PassagePicker({
         <ChevronDown className="w-4 h-4 ml-auto shrink-0" style={{ color: "#C9A84C" }} aria-hidden="true" />
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/55 backdrop-blur-[2px]" onClick={() => setOpen(false)} />
+      {open && mounted && createPortal(
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+        >
+          <div className="absolute inset-0 bg-black/55" onClick={() => setOpen(false)} />
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Choose a passage"
-            className="relative w-full sm:max-w-xl max-h-[85vh] flex flex-col rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl animate-fade-up"
+            className="relative w-full max-w-xl h-[min(640px,100%)] flex flex-col rounded-3xl overflow-hidden shadow-2xl animate-fade-up"
             style={{ background: "#FAF7F0" }}
           >
             {/* Header */}
-            <div className="px-5 pt-3 pb-4 shrink-0" style={{ background: "linear-gradient(135deg, #1C0F07 0%, #3D2410 100%)" }}>
-              <div className="sm:hidden mx-auto mb-3 w-10 h-1 rounded-full" style={{ background: "rgba(201,168,76,0.4)" }} />
+            <div className="px-5 pt-4 pb-4 shrink-0" style={{ background: "linear-gradient(135deg, #1C0F07 0%, #3D2410 100%)" }}>
               <div className="flex items-center gap-2">
                 {step !== "book" ? (
                   <button onClick={back} className="p-1.5 -ml-1.5 rounded-lg" style={{ color: "#C9A84C" }} aria-label="Back">
@@ -176,7 +182,7 @@ export function PassagePicker({
             </div>
 
             {/* Body */}
-            <div className="overflow-y-auto p-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}>
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4">
               {step === "book" && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {books.map((b) => {
@@ -262,7 +268,8 @@ export function PassagePicker({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
