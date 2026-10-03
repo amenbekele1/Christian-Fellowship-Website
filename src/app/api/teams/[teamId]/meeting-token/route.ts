@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { SignJWT, importPKCS8 } from "jose";
 import { teamAuth, isTeamAuthError } from "@/lib/team-auth";
 import { sendPushToTeam } from "@/lib/webpush";
+import { background } from "@/lib/background";
 
 /**
  * Issues a JaaS token for a team's video room.
@@ -72,7 +73,7 @@ export async function GET(
       .sign(privateKey);
 
     if (shouldNotify(params.teamId)) {
-      sendPushToTeam(
+      background(sendPushToTeam(
         params.teamId,
         {
           title: `${auth.team.label} meeting is live`,
@@ -81,7 +82,7 @@ export async function GET(
           topic: "team-meeting",
         },
         auth.userId
-      ).catch(() => {});
+      ));
     }
 
     return NextResponse.json({ token, roomName, appId });

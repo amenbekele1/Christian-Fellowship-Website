@@ -6,6 +6,7 @@ import { z } from "zod";
 import { sendPushToAll, sendRefreshPush } from "@/lib/webpush";
 import { parseWarsawDateTime } from "@/lib/timezone";
 import { eventPath } from "@/lib/event-presets";
+import { background } from "@/lib/background";
 
 function canEditContent(session: any): boolean {
   return (
@@ -79,12 +80,12 @@ export async function POST(req: NextRequest) {
   });
 
   // Fire push notification + refresh ping (non-blocking)
-  sendPushToAll({
+  background(sendPushToAll({
     title: "New Event",
     body: event.title,
     url: eventPath(event),
     topic: "events",
-  }).catch(() => {});
+  }));
 
   return NextResponse.json(event, { status: 201 });
 }
@@ -119,7 +120,7 @@ export async function PATCH(req: NextRequest) {
     },
   });
 
-  sendRefreshPush("events").catch(() => {});
+  background(sendRefreshPush("events"));
   return NextResponse.json(event);
 }
 
@@ -134,6 +135,6 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "Event ID required" }, { status: 400 });
 
   await prisma.event.update({ where: { id }, data: { isActive: false } });
-  sendRefreshPush("events").catch(() => {});
+  background(sendRefreshPush("events"));
   return NextResponse.json({ message: "Event deleted" });
 }

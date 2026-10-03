@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { sendPushToUser } from "@/lib/webpush";
+import { background } from "@/lib/background";
 
 const DELETED_SUFFIX = "@wetcf.deleted";
 
@@ -70,12 +71,12 @@ export async function PATCH(
   ]);
 
   if (team.leaderId !== userId) {
-    sendPushToUser(userId, {
+    background(sendPushToUser(userId, {
       title: `You now lead the ${team.label} team`,
       body: "You can add members, share files and start meetings.",
       url: `/dashboard/teams/${params.teamId}/members`,
       topic: "teams",
-    }).catch(() => {});
+    }));
   }
 
   return NextResponse.json({ ok: true, leaderId: userId });

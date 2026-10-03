@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { sendRefreshPush } from "@/lib/webpush";
+import { background } from "@/lib/background";
 
 function canEditContent(session: any): boolean {
   return (
@@ -49,6 +50,6 @@ export async function PATCH(req: NextRequest) {
     select: { pageKey: true, fieldKey: true, value: true, updatedAt: true },
   });
 
-  sendRefreshPush("page-content").catch(() => {});
+  background(sendRefreshPush("page-content"));
   return NextResponse.json(row);
 }

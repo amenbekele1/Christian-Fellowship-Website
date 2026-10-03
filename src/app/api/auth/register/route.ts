@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail, welcomeEmail, newMemberNotificationEmail } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { background } from "@/lib/background";
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{10,}$/;
 
@@ -80,11 +81,11 @@ export async function POST(req: NextRequest) {
     ]);
 
     // Send welcome email (non-blocking)
-    sendEmail({
+    background(sendEmail({
       to: email,
       subject: "Welcome to Warsaw Ethiopian Christian Fellowship!",
       html: welcomeEmail(name),
-    }).catch(console.error);
+    }));
 
     // Send notification to all Guardians (non-blocking)
     try {
@@ -97,11 +98,11 @@ export async function POST(req: NextRequest) {
         const registrationDate = formatDate(new Date());
 
         for (const guardian of guardians) {
-          sendEmail({
+          background(sendEmail({
             to: guardian.email,
             subject: `New Member Registration — ${name}`,
             html: newMemberNotificationEmail(guardian.name, name, email, registrationDate),
-          }).catch(console.error);
+          }));
         }
       }
     } catch (err) {

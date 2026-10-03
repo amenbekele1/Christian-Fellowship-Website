@@ -3,12 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { groupAuth, isAuthError } from "@/lib/group-auth";
 import { z } from "zod";
 import { sendPushToBusGroup } from "@/lib/webpush";
+import { background } from "@/lib/background";
 
 const msgSchema = z.object({
   content: z.string().min(1).max(4000).optional(),
   fileUrl: z.string().url().optional(),
   fileName: z.string().optional(),
   fileType: z.string().optional(),
+  // Leaders choose to post a message as an announcement; it is never implied.
+  announce: z.boolean().optional(),
 }).refine((d) => d.content || d.fileUrl, {
   message: "Message must have content or a file attachment",
 });
@@ -37,7 +40,7 @@ export async function GET(
   const serialized = messages.map(serializeMsg);
   const latestSeq = serialized.length > 0 ? serialized[serialized.length - 1].seq : Number(after);
 
-  return NextResponse.json({ messages: serialized, latestSeq });
+  return NextResponse.json({ messages: serialized, latestSeq, canAnnounce: auth.isLeader });
 }
 
 export async function POST(
@@ -58,7 +61,7 @@ export async function POST(
       fileUrl: data.fileUrl,
       fileName: data.fileName,
       fileType: data.fileType,
-      isAnnouncement: auth.isLeader,
+      isAnnouncement: auth.isLeader && data.announce === true,
     },
     include: { sender: { select: { id: true, name: true } } },
   });
@@ -69,16 +72,18 @@ export async function POST(
     : data.fileName
       ? `📎 ${data.fileName}`
       : "Attachment";
-  sendPushToBusGroup(
+  background(sendPushToBusGroup(
     params.groupId,
     {
-      title: `${message.sender.name} · ${auth.group.name}`,
+      title: message.isAnnouncement
+        ? `📢 ${auth.group.name} · Announcement`
+        : `${message.sender.name} · ${auth.group.name}`,
       body:  preview,
       url:   `/dashboard/bus-groups/${params.groupId}/chat`,
       topic: "group-messages",
     },
     auth.userId
-  ).catch(() => {});
+  ));
 
   return NextResponse.json(serializeMsg(message), { status: 201 });
 }

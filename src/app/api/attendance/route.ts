@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { sendEmail, sendBusLeaderAbsenceReport, sendLeaderUnassignedAbsenceReport } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
+import { background } from "@/lib/background";
 
 const recordSchema = z.object({
   records: z.array(
@@ -124,7 +125,7 @@ export async function POST(req: NextRequest) {
   // Send one consolidated email per BUS leader
   for (const { group, members } of absentByGroup.values()) {
     if (group?.leader && members.length > 0) {
-      sendEmail({
+      background(sendEmail({
         to: group.leader.email,
         subject: `Absence Report — ${group.name} (${formatDate(attendanceDate)})`,
         html: sendBusLeaderAbsenceReport(
@@ -133,7 +134,7 @@ export async function POST(req: NextRequest) {
           formatDate(attendanceDate),
           members
         ),
-      }).catch(console.error);
+      }));
     }
   }
 
@@ -144,7 +145,7 @@ export async function POST(req: NextRequest) {
       select: { name: true, email: true },
     });
     for (const leader of leaders) {
-      sendEmail({
+      background(sendEmail({
         to: leader.email,
         subject: `Follow-up Needed — Unassigned Absent Members (${formatDate(attendanceDate)})`,
         html: sendLeaderUnassignedAbsenceReport(
@@ -152,7 +153,7 @@ export async function POST(req: NextRequest) {
           formatDate(attendanceDate),
           unassignedAbsent
         ),
-      }).catch(console.error);
+      }));
     }
   }
 

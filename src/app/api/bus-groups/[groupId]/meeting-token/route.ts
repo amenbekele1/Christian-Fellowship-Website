@@ -3,6 +3,7 @@ import { SignJWT, importPKCS8 } from "jose";
 import { groupAuth, isAuthError } from "@/lib/group-auth";
 import { prisma } from "@/lib/prisma";
 import { sendPushToBusGroup } from "@/lib/webpush";
+import { background } from "@/lib/background";
 
 const MEETING_PING_DEBOUNCE_MS = 15 * 60 * 1000; // don't re-notify within 15 min
 
@@ -93,7 +94,7 @@ export async function GET(
 
     // Fire-and-forget: if this is the first token issued for this group in a while,
     // notify the rest of the group that a meeting has started.
-    notifyMeetingStartedIfFirst(params.groupId, auth.userId).catch(() => {});
+    background(notifyMeetingStartedIfFirst(params.groupId, auth.userId));
 
     return NextResponse.json({ token, roomName, appId });
   } catch (err: any) {

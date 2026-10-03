@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { sendRefreshPush } from "@/lib/webpush";
+import { background } from "@/lib/background";
 
 // GET /api/service-teams — list all teams with their members (Guardian only)
 export async function GET(req: NextRequest) {
@@ -52,13 +53,13 @@ export async function POST(req: NextRequest) {
       update: {},
       create: { userId, teamId: team.id },
     });
-    sendRefreshPush("service-teams").catch(() => {});
+    background(sendRefreshPush("service-teams"));
     return NextResponse.json({ message: "Member assigned to team" });
   } else {
     await prisma.userServiceTeam.deleteMany({
       where: { userId, teamId: team.id },
     });
-    sendRefreshPush("service-teams").catch(() => {});
+    background(sendRefreshPush("service-teams"));
     return NextResponse.json({ message: "Member removed from team" });
   }
 }

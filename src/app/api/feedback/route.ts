@@ -6,6 +6,7 @@ import { z } from "zod";
 import { sendEmail, feedbackReceivedEmail, feedbackResolvedEmail } from "@/lib/email";
 import { sendPushToUser } from "@/lib/webpush";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { background } from "@/lib/background";
 
 const FEEDBACK_INBOX = process.env.FEEDBACK_EMAIL || "info@wetcf.com";
 
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
 
   // Notify the fellowship inbox. Reply-to is the member so a Guardian can
   // simply hit reply. Non-blocking: the member's submission is already saved.
-  sendEmail({
+  background(sendEmail({
     to: FEEDBACK_INBOX,
     replyTo: item.user.email,
     subject: `Portal feedback from ${item.user.name}`,
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
       item.message,
       item.pageUrl
     ),
-  }).catch(() => {});
+  }));
 
   return NextResponse.json({ ok: true, id: item.id }, { status: 201 });
 }
@@ -119,7 +120,7 @@ export async function PATCH(req: NextRequest) {
   });
 
   if (shouldNotify) {
-    sendEmail({
+    background(sendEmail({
       to: existing.user.email,
       subject: "Your feedback has been sorted — thank you",
       html: feedbackResolvedEmail(
@@ -127,14 +128,14 @@ export async function PATCH(req: NextRequest) {
         existing.message,
         data.adminNote ?? existing.adminNote
       ),
-    }).catch(() => {});
+    }));
 
-    sendPushToUser(existing.user.id, {
+    background(sendPushToUser(existing.user.id, {
       title: "Your feedback has been sorted",
       body: "Thank you for helping us improve the portal.",
       url: "/dashboard/profile",
       topic: "feedback",
-    }).catch(() => {});
+    }));
   }
 
   return NextResponse.json({ ok: true, item: updated });

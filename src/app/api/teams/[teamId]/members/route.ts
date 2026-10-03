@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { teamAuth, isTeamAuthError } from "@/lib/team-auth";
 import { z } from "zod";
 import { sendPushToUser } from "@/lib/webpush";
+import { background } from "@/lib/background";
 
 const DELETED_SUFFIX = "@wetcf.deleted";
 
@@ -57,12 +58,12 @@ export async function POST(
     update: {},
   });
 
-  sendPushToUser(userId, {
+  background(sendPushToUser(userId, {
     title: `You joined the ${auth.team.label} team`,
     body: "Open the team to see chat, files and meetings.",
     url: `/dashboard/teams/${params.teamId}`,
     topic: "teams",
-  }).catch(() => {});
+  }));
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

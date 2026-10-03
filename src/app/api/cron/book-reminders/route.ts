@@ -6,6 +6,7 @@ import { sendPushToUser } from "@/lib/webpush";
 import { formatDate } from "@/lib/utils";
 import { addDays } from "date-fns";
 import { pruneRateLimits } from "@/lib/rate-limit";
+import { background } from "@/lib/background";
 
 /**
  * Daily cron. Two passes:
@@ -48,12 +49,12 @@ export async function GET(req: NextRequest) {
       ),
     });
 
-    sendPushToUser(rental.userId, {
+    background(sendPushToUser(rental.userId, {
       title: "📚 Book due soon",
       body:  `"${rental.book.title}" is due on ${formatDate(rental.dueDate!)}.`,
       url:   "/dashboard/library",
       topic: "rentals",
-    }).catch(() => {});
+    }));
 
     if (result.success) {
       await prisma.bookRental.update({
@@ -76,12 +77,12 @@ export async function GET(req: NextRequest) {
   });
 
   for (const r of nowOverdue) {
-    sendPushToUser(r.userId, {
+    background(sendPushToUser(r.userId, {
       title: "📕 Overdue book",
       body:  `"${r.book.title}" is past its due date. Please return it.`,
       url:   "/dashboard/library",
       topic: "rentals",
-    }).catch(() => {});
+    }));
   }
 
   return NextResponse.json({

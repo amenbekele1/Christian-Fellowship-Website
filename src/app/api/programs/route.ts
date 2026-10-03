@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { sendRefreshPush } from "@/lib/webpush";
+import { background } from "@/lib/background";
 
 function canEditContent(session: any): boolean {
   return (
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
     data,
   });
 
-  sendRefreshPush("programs").catch(() => {});
+  background(sendRefreshPush("programs"));
   return NextResponse.json(program, { status: 201 });
 }
 
@@ -69,7 +70,7 @@ export async function PATCH(req: NextRequest) {
     data,
   });
 
-  sendRefreshPush("programs").catch(() => {});
+  background(sendRefreshPush("programs"));
   return NextResponse.json(program);
 }
 
@@ -88,6 +89,6 @@ export async function DELETE(req: NextRequest) {
     data: { isActive: false },
   });
 
-  sendRefreshPush("programs").catch(() => {});
+  background(sendRefreshPush("programs"));
   return NextResponse.json({ message: "Program deleted" });
 }

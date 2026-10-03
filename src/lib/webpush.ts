@@ -32,11 +32,20 @@ async function sendPushToSubs(
 ): Promise<void> {
   if (!VAPID_CONFIGURED || subs.length === 0) return;
 
+  // Visible notifications go out at high urgency so phones deliver them
+  // immediately instead of batching them while idle; they expire after a
+  // day. Silent "refresh" pings are low priority and short-lived.
+  const isRefresh = payload.type === "refresh";
+  const options = isRefresh
+    ? { urgency: "normal" as const, TTL: 60 * 10 }
+    : { urgency: "high" as const, TTL: 60 * 60 * 24 };
+
   const results = await Promise.allSettled(
     subs.map((sub) =>
       webpush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        JSON.stringify(payload)
+        JSON.stringify(payload),
+        options
       )
     )
   );

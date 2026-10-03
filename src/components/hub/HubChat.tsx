@@ -35,6 +35,9 @@ export default function HubChat({
   const [uploadedFile, setUploadedFile] = useState<{ url: string; name: string; type: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  // Leaders may mark a message as an announcement — an explicit choice.
+  const [canAnnounce, setCanAnnounce] = useState(false);
+  const [announce, setAnnounce] = useState(false);
 
   const lastSeqRef = useRef(0);
   const listEndRef = useRef<HTMLDivElement>(null);
@@ -45,7 +48,8 @@ export default function HubChat({
     try {
       const res = await fetch(`${apiBase}/messages?after=${after}`);
       if (!res.ok) return;
-      const { messages: newMsgs, latestSeq } = await res.json();
+      const { messages: newMsgs, latestSeq, canAnnounce: may } = await res.json();
+      if (initial) setCanAnnounce(Boolean(may));
       if (newMsgs.length > 0) {
         setMessages(prev => initial ? newMsgs : [...prev, ...newMsgs]);
         lastSeqRef.current = latestSeq;
@@ -96,6 +100,7 @@ export default function HubChat({
           fileUrl: uploadedFile?.url,
           fileName: uploadedFile?.name,
           fileType: uploadedFile?.type,
+          announce: canAnnounce && announce,
         }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
@@ -104,6 +109,7 @@ export default function HubChat({
       lastSeqRef.current = msg.seq;
       setInput("");
       setUploadedFile(null);
+      setAnnounce(false);
       setTimeout(() => listEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
     } catch (err: any) {
       setError(err.message ?? "Failed to send");
@@ -227,11 +233,22 @@ export default function HubChat({
             ? <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
             : <Paperclip className="w-4 h-4" />}
         </button>
+        {canAnnounce && (
+          <button
+            type="button"
+            onClick={() => setAnnounce(a => !a)}
+            aria-pressed={announce}
+            className={`p-2 rounded-xl transition-colors ${announce ? "bg-amber-100 text-amber-700" : "text-gray-400 hover:text-gold-600"}`}
+            title={announce ? "Will be posted as an announcement" : "Post as an announcement"}
+          >
+            <Megaphone className="w-4 h-4" />
+          </button>
+        )}
         <input
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
-          placeholder="Write a message..."
+          placeholder={announce ? "Write an announcement..." : "Write a message..."}
           className="flex-1 text-sm focus:outline-none bg-transparent"
         />
         <button

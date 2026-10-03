@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { sendRefreshPush } from "@/lib/webpush";
+import { background } from "@/lib/background";
 
 const bookSchema = z.object({
   title: z.string().min(1),
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
     data: { ...data, availableQty: data.totalQuantity },
   });
 
-  sendRefreshPush("books").catch(() => {});
+  background(sendRefreshPush("books"));
   return NextResponse.json(book, { status: 201 });
 }
 
@@ -83,7 +84,7 @@ export async function PATCH(req: NextRequest) {
   const data = bookSchema.partial().parse(body);
 
   const book = await prisma.book.update({ where: { id }, data });
-  sendRefreshPush("books").catch(() => {});
+  background(sendRefreshPush("books"));
   return NextResponse.json(book);
 }
 
@@ -98,6 +99,6 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "Book ID required" }, { status: 400 });
 
   await prisma.book.update({ where: { id }, data: { isActive: false } });
-  sendRefreshPush("books").catch(() => {});
+  background(sendRefreshPush("books"));
   return NextResponse.json({ message: "Book removed from library" });
 }

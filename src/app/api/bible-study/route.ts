@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { getBook } from "@/lib/bible";
 import { sendRefreshPush } from "@/lib/webpush";
+import { background } from "@/lib/background";
 
 const sessionSchema = z
   .object({
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
   const created = await prisma.studySession.create({
     data: { ...rest, date: toDate(date), createdById: session.user.id },
   });
-  sendRefreshPush("bible-study").catch(() => {});
+  background(sendRefreshPush("bible-study"));
   return NextResponse.json(created, { status: 201 });
 }
 
@@ -82,7 +83,7 @@ export async function PATCH(req: NextRequest) {
       ...(existing.date.getTime() !== newDate.getTime() ? { reminderSent: false } : {}),
     },
   });
-  sendRefreshPush("bible-study").catch(() => {});
+  background(sendRefreshPush("bible-study"));
   return NextResponse.json(updated);
 }
 
@@ -92,6 +93,6 @@ export async function DELETE(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
   await prisma.studySession.delete({ where: { id } });
-  sendRefreshPush("bible-study").catch(() => {});
+  background(sendRefreshPush("bible-study"));
   return NextResponse.json({ ok: true });
 }

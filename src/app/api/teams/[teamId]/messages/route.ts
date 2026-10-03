@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { teamAuth, isTeamAuthError } from "@/lib/team-auth";
 import { z } from "zod";
 import { sendPushToTeam } from "@/lib/webpush";
+import { background } from "@/lib/background";
 
 const msgSchema = z
   .object({
@@ -10,6 +11,8 @@ const msgSchema = z
     fileUrl: z.string().url().optional(),
     fileName: z.string().optional(),
     fileType: z.string().optional(),
+    // Leaders choose to post a message as an announcement; it is never implied.
+    announce: z.boolean().optional(),
   })
   .refine((d) => d.content || d.fileUrl, {
     message: "Message must have content or a file attachment",
@@ -40,7 +43,7 @@ export async function GET(
   const latestSeq =
     serialized.length > 0 ? serialized[serialized.length - 1].seq : Number(after);
 
-  return NextResponse.json({ messages: serialized, latestSeq });
+  return NextResponse.json({ messages: serialized, latestSeq, canAnnounce: auth.isLeader });
 }
 
 export async function POST(
@@ -61,7 +64,7 @@ export async function POST(
       fileUrl: data.fileUrl,
       fileName: data.fileName,
       fileType: data.fileType,
-      isAnnouncement: auth.isLeader,
+      isAnnouncement: auth.isLeader && data.announce === true,
     },
     include: { sender: { select: { id: true, name: true } } },
   });
@@ -72,16 +75,18 @@ export async function POST(
       ? `Attachment: ${data.fileName}`
       : "Attachment";
 
-  sendPushToTeam(
+  background(sendPushToTeam(
     params.teamId,
     {
-      title: `${message.sender.name} · ${auth.team.label}`,
+      title: message.isAnnouncement
+        ? `📢 ${auth.team.label} · Announcement`
+        : `${message.sender.name} · ${auth.team.label}`,
       body: preview,
       url: `/dashboard/teams/${params.teamId}/chat`,
       topic: "team-messages",
     },
     auth.userId
-  ).catch(() => {});
+  ));
 
   return NextResponse.json(serializeMsg(message), { status: 201 });
 }
