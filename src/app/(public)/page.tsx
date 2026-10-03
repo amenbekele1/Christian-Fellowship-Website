@@ -154,9 +154,7 @@ export default async function HomePage() {
             <div className="grid grid-cols-2 gap-5">
               {[
                 { value: "5+",       label: "Years of Ministry",    icon: "🙏" },
-                { value: "BUS",      label: "Small Group System",   icon: "👥" },
                 { value: "Saturdays",label: "Service at 18:00",     icon: "⛪" },
-                { value: "E-Library",label: "Digital Book Access",  icon: "📚" },
               ].map((stat, i) => (
                 <div
                   key={stat.label}

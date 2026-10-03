@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +19,25 @@ export function PublicHeader() {
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled,   setScrolled]   = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+
+  // The mobile menu closes when tapping anywhere outside the header, on
+  // Escape, and whenever the page changes (incl. back/forward).
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onPointer = (e: PointerEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) setMobileOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMobileOpen(false);
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [mobileOpen]);
+
+  useEffect(() => setMobileOpen(false), [pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -28,6 +47,7 @@ export function PublicHeader() {
 
   return (
     <header
+      ref={headerRef}
       className={cn(
         "sticky top-0 z-50 transition-all duration-300",
         scrolled
@@ -126,7 +146,8 @@ export function PublicHeader() {
             className="md:hidden p-2 rounded-lg transition-colors"
             style={{ color: "#C4A882" }}
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Toggle menu"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>

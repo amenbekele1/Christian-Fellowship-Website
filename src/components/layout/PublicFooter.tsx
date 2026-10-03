@@ -1,11 +1,7 @@
 import Link from "next/link";
-import { MapPin, Clock, Mail, Heart, Youtube, Instagram } from "lucide-react";
+import { MapPin, Clock, Mail, Heart } from "lucide-react";
 import { SOCIAL_LINKS } from "@/lib/social";
-
-const SOCIAL_ICONS: Record<string, typeof Youtube> = {
-  youtube: Youtube,
-  instagram: Instagram,
-};
+import { SocialIcon } from "@/components/public/SocialIcon";
 
 export function PublicFooter() {
   return (
@@ -43,7 +39,6 @@ export function PublicFooter() {
               </h3>
               <div className="flex items-center gap-3">
                 {SOCIAL_LINKS.map((s) => {
-                  const Icon = SOCIAL_ICONS[s.key];
                   return (
                     <a
                       key={s.key}
@@ -58,7 +53,7 @@ export function PublicFooter() {
                         color: "#C9A84C",
                       }}
                     >
-                      {Icon && <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />}
+                      <SocialIcon name={s.key} className="w-[18px] h-[18px]" />
                     </a>
                   );
                 })}

@@ -1,7 +1,9 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import { Heart, BookOpen, Users, Star } from "lucide-react";
+import { getPageContent } from "@/lib/page-content";
+
+// Built on the server with the admin-edited copy, so visitors never see the
+// original placeholder text first. Refreshed at most once a minute.
+export const revalidate = 60;
 
 const valueIcons = [BookOpen, Heart, Users, Star];
 
@@ -14,19 +16,8 @@ const DEFAULT_VALUES = [
 
 type ContentMap = Record<string, string>;
 
-export default function AboutContent() {
-  const [content, setContent] = useState<ContentMap>({});
-
-  useEffect(() => {
-    fetch("/api/page-content?page=about")
-      .then(r => r.json())
-      .then((rows: { fieldKey: string; value: string }[]) => {
-        const map: ContentMap = {};
-        for (const row of rows) map[row.fieldKey] = row.value;
-        setContent(map);
-      })
-      .catch(() => {});
-  }, []);
+export default async function AboutContent() {
+  const content: ContentMap = await getPageContent("about").catch(() => ({}));
 
   return (
     <>

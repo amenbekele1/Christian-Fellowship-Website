@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Clock, Phone, Mail, Bus, Send, CheckCircle, AlertCircle, Youtube, Instagram } from "lucide-react";
+import { MapPin, Clock, Phone, Mail, Bus, Send, CheckCircle, AlertCircle } from "lucide-react";
+import { SocialIcon } from "@/components/public/SocialIcon";
 import { SOCIAL_LINKS } from "@/lib/social";
 
 export default function VisitPage() {
@@ -118,7 +119,6 @@ export default function VisitPage() {
                   </p>
                   <div className="space-y-2">
                     {SOCIAL_LINKS.map((s) => {
-                      const Icon = s.key === "youtube" ? Youtube : Instagram;
                       return (
                         <a
                           key={s.key}
@@ -127,7 +127,7 @@ export default function VisitPage() {
                           rel="noopener noreferrer"
                           className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-gold-600 transition-colors group"
                         >
-                          <Icon className="w-4 h-4 text-gray-400 group-hover:text-gold-500 transition-colors" />
+                          <SocialIcon name={s.key} className="w-4 h-4 text-gray-400 group-hover:text-gold-500 transition-colors" />
                           <span>{s.handle}</span>
                         </a>
                       );

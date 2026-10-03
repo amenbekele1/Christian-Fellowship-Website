@@ -27,4 +27,10 @@ export const SOCIAL_LINKS: SocialLink[] = [
     handle: "@warsaw_fellowship",
     url: "https://www.instagram.com/warsaw_fellowship/",
   },
+  {
+    key: "tiktok",
+    label: "TikTok",
+    handle: "@wecf_poland",
+    url: "https://www.tiktok.com/@wecf_poland",
+  },
 ];
