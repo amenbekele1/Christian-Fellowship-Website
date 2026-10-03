@@ -6,11 +6,11 @@ import { ExternalLink } from "lucide-react";
 import { peekCache, rememberCache } from "@/lib/fetch-cache";
 import { AMHARIC_VERSIONS, bibleComUrl, type PassageRange } from "@/lib/bible-books";
 
-/** Amharic versions open the same passage on Bible.com / the YouVersion app. */
+/** The Amharic 1962 isn't available to apps, so it opens on Bible.com / the YouVersion app. */
 export function AmharicLinks({ range }: { range: PassageRange }) {
   return (
     <div className="flex flex-wrap items-center gap-2 mt-4 pt-4" style={{ borderTop: "1px solid #F0E6D3" }}>
-      <span lang="am" className="text-sm font-semibold mr-1" style={{ color: "#5C3D20" }}>በአማርኛ ያንብቡ</span>
+      <span lang="am" className="text-sm font-semibold mr-1" style={{ color: "#5C3D20" }}>አማርኛ 1954 (1962):</span>
       {AMHARIC_VERSIONS.map((v) => (
         <a
           key={v.key}
@@ -21,7 +21,7 @@ export function AmharicLinks({ range }: { range: PassageRange }) {
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold"
           style={{ background: "#F0E6D3", color: "#3D2410" }}
         >
-          {v.label} <ExternalLink className="w-3 h-3" aria-hidden="true" />
+          Open on Bible.com <ExternalLink className="w-3 h-3" aria-hidden="true" />
         </a>
       ))}
     </div>
@@ -29,8 +29,9 @@ export function AmharicLinks({ range }: { range: PassageRange }) {
 }
 
 export const VERSION_TABS = [
-  { key: "KJV", label: "KJV" },
-  { key: "NIV", label: "NIV" },
+  { key: "KJV", label: "KJV", lang: "en" },
+  { key: "NIV", label: "NIV", lang: "en" },
+  { key: "NASV", label: "NASV", lang: "am" },
 ] as const;
 export type VersionKey = (typeof VERSION_TABS)[number]["key"];
 
@@ -169,6 +170,7 @@ export function ScriptureView({
   const [text, setText] = useState<ScriptureText | null>(() => peekCache<ScriptureText>(url) ?? null);
   const [error, setError] = useState<string | null>(null);
   const [highlight, setHighlight] = useState<number | null>(null);
+  const lang = VERSION_TABS.find((t) => t.key === version)?.lang ?? "en";
 
   // Glide to the requested verse once its text is on screen.
   useEffect(() => {
@@ -220,7 +222,11 @@ export function ScriptureView({
           <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "#8A6A1F" }}>
             {text.reference}
           </p>
-          <div className="font-scripture text-[17px] leading-[1.8]" style={{ color: "#2C1A0E" }}>
+          <div
+            lang={lang}
+            className={lang === "am" ? "text-[17px] leading-[1.95]" : "font-scripture text-[17px] leading-[1.8]"}
+            style={{ color: "#2C1A0E" }}
+          >
             <Verses content={text.content} highlight={highlight} />
           </div>
           {onNavigate && (text.previous || text.next) && (
@@ -243,7 +249,7 @@ export function ScriptureView({
               </button>
             </div>
           )}
-          <p className="text-[11px] mt-5 leading-snug" style={{ color: "#9A7B5C" }}>{text.copyright}</p>
+          <p className="text-[11px] mt-5 leading-snug whitespace-pre-line" style={{ color: "#9A7B5C" }}>{text.copyright}</p>
         </>
       )}
     </div>

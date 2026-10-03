@@ -1,9 +1,12 @@
 /**
  * Bible text via API.Bible (https://api.bible), non-commercial Starter plan.
  *
- * Versions shown in the app: KJV (public domain) and NIV (licensed on the
- * Starter plan). API.Bible has no Amharic Bibles, so the Amharic 1962 and
- * NASV open on Bible.com instead (see AMHARIC_VERSIONS and bibleComUrl in bible-books.ts).
+ * Versions shown in the app come from two services:
+ *   • API.Bible  — KJV (public domain; YouVersion's developer catalog has no KJV)
+ *   • YouVersion Platform — NIV (id 111) and the New Amharic Standard Version
+ *     (NASV, id 1260), licensed for our non-commercial app (env YOUVERSION_APP_KEY)
+ * The Amharic 1962 is not offered by either, so it opens on Bible.com
+ * (AMHARIC_VERSIONS / bibleComUrl in bible-books.ts).
  * Only the 66 books of the Protestant canon are offered.
  *
  * Fair-use rules we follow: cached text is refreshed within 30 days (we
@@ -18,7 +21,7 @@
 const BASE = "https://rest.api.bible/v1";
 const WEEK = 60 * 60 * 24 * 7;
 
-export type VersionKey = "KJV" | "NIV";
+export type VersionKey = "KJV" | "NIV" | "NASV";
 
 interface VersionDef {
   key: VersionKey;
@@ -46,14 +49,12 @@ export const VERSIONS: VersionDef[] = [
     key: "KJV", label: "KJV", name: "King James Version", apiLanguage: "eng",
     match: (b) => (has(b.abbreviation, "kjv") || has(b.abbreviationLocal, "kjv")) && !has(b.name, "apocrypha", "deutero"),
   },
-  {
-    key: "NIV", label: "NIV", name: "New International Version", apiLanguage: "eng",
-    match: (b) => b.id === "78a9f6124f344018-01" || has(b.abbreviation, "niv") || has(b.abbreviationLocal, "niv"),
-  },
 ];
 
+const ALL_VERSIONS: VersionKey[] = ["KJV", "NIV", "NASV"];
+
 export function isVersionKey(v: unknown): v is VersionKey {
-  return VERSIONS.some((x) => x.key === v);
+  return ALL_VERSIONS.includes(v as VersionKey);
 }
 
 export { BOOKS, getBook, formatReference, passageId } from "./bible-books";
@@ -61,6 +62,9 @@ export type { PassageRange } from "./bible-books";
 import { BOOKS } from "./bible-books";
 
 const BOOK_IDS = new Set(BOOKS.map((b) => b.id));
+
+/** Versions served by YouVersion Platform, by their YouVersion Bible id. */
+const YOUVERSION_IDS: Partial<Record<VersionKey, number>> = { NIV: 111, NASV: 1260 };
 
 /** Validate a passage/chapter id before it is sent to the API. */
 export function isSafeScriptureId(id: string): boolean {
@@ -118,6 +122,8 @@ const TEXT_PARAMS =
 
 async function fetchScripture(version: VersionKey, kind: "passages" | "chapters", id: string): Promise<ScriptureText> {
   if (!isSafeScriptureId(id)) throw new Error("Invalid reference");
+  const yvId = YOUVERSION_IDS[version];
+  if (yvId) return fetchYouVersion(yvId, id);
   const ids = await resolveBibleIds();
   const bibleId = ids[version];
   if (!bibleId) throw new Error(`${version} is not available for this API key`);
@@ -138,3 +144,132 @@ async function fetchScripture(version: VersionKey, kind: "passages" | "chapters"
 
 export const getPassage = (version: VersionKey, id: string) => fetchScripture(version, "passages", id);
 export const getChapter = (version: VersionKey, id: string) => fetchScripture(version, "chapters", id);
+
+// ── YouVersion Platform ───────────────────────────────────────────
+
+const YV_BASE = "https://api.youversion.com/v1";
+
+async function yv<T>(path: string): Promise<T> {
+  const key = process.env.YOUVERSION_APP_KEY;
+  if (!key) throw new BibleNotConfigured("YOUVERSION_APP_KEY is not set");
+  const res = await fetch(`${YV_BASE}${path}`, {
+    headers: { "X-YVP-App-Key": key },
+    next: { revalidate: WEEK },
+  });
+  if (!res.ok) throw new Error(`YouVersion ${res.status} for ${path.split("?")[0]}`);
+  return res.json() as Promise<T>;
+}
+
+const decodeEntities = (s: string) =>
+  s
+    .replace(/&nbsp;/g, " ")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&amp;/g, "&");
+
+/**
+ * YouVersion HTML → the "[n]"-marked plain text the app renders.
+ * Each <div> is a paragraph/poetry line; a line without its own verse
+ * marker continues the previous one (so it is not mistaken for a heading).
+ */
+export function youVersionHtmlToText(html: string): string {
+  const lines: string[] = [];
+  for (const block of html.split(/<\/div>/)) {
+    let t = block
+      .replace(/<span class="yv-vlbl">[^<]*<\/span>/g, "")
+      .replace(/<span class="yv-v" v="(\d+)(?:-\d+)?"><\/span>/g, " [$1] ")
+      .replace(/<[^>]+>/g, "");
+    t = decodeEntities(t).replace(/\s+/g, " ").trim();
+    if (!t) continue;
+    if (/^\[\d+\]/.test(t) || lines.length === 0) lines.push(t);
+    else lines[lines.length - 1] += " " + t;
+  }
+  return lines.join("\n");
+}
+
+/** Keep only verses lo..hi from "[n]"-marked text. */
+function sliceVerses(text: string, lo: number, hi: number): string {
+  const out: string[] = [];
+  for (const line of text.split("\n")) {
+    const parts = line.split(/(?=\[\d+\])/);
+    const kept = parts.filter((p) => {
+      const m = p.match(/^\[(\d+)\]/);
+      return m ? Number(m[1]) >= lo && Number(m[1]) <= hi : false;
+    });
+    if (kept.length) out.push(kept.join("").trim());
+  }
+  return out.join("\n");
+}
+
+const copyrightCache = new Map<number, string>();
+async function yvCopyright(bibleId: number): Promise<string> {
+  if (!copyrightCache.has(bibleId)) {
+    const b = await yv<{ copyright?: string | null; title?: string }>(`/bibles/${bibleId}`);
+    copyrightCache.set(bibleId, (b.copyright ?? b.title ?? "").trim());
+  }
+  return copyrightCache.get(bibleId)!;
+}
+
+/** Neighbouring chapters in the Protestant canon, for previous/next buttons. */
+function chapterNav(bookId: string, chapter: number) {
+  const i = BOOKS.findIndex((b) => b.id === bookId);
+  const prev =
+    chapter > 1 ? { book: bookId, ch: chapter - 1 } : i > 0 ? { book: BOOKS[i - 1].id, ch: BOOKS[i - 1].chapters } : null;
+  const next =
+    chapter < (BOOKS[i]?.chapters ?? 0) ? { book: bookId, ch: chapter + 1 } : BOOKS[i + 1] ? { book: BOOKS[i + 1].id, ch: 1 } : null;
+  const nav = (n: { book: string; ch: number } | null) => (n ? { id: `${n.book}.${n.ch}`, number: String(n.ch) } : null);
+  return { previous: nav(prev), next: nav(next) };
+}
+
+/**
+ * Fetch from YouVersion. Whole chapters are fetched (and cached) and verse
+ * ranges are cut out locally, which also handles passages that cross a
+ * chapter boundary (YouVersion's passage endpoint does not).
+ */
+async function fetchYouVersion(bibleId: number, id: string): Promise<ScriptureText> {
+  const m = id.match(/^([1-3A-Z]{3})\.(\d+)(?:\.(\d+))?(?:-[1-3A-Z]{3}\.(\d+)(?:\.(\d+))?)?$/)!;
+  const [, book, c1s, v1s, c2s, v2s] = m;
+  const c1 = Number(c1s);
+  const c2 = c2s ? Number(c2s) : c1;
+  const v1 = v1s ? Number(v1s) : null;
+  const v2 = v2s ? Number(v2s) : v1;
+
+  const chapters = await Promise.all(
+    Array.from({ length: c2 - c1 + 1 }, (_, k) => c1 + k).map((ch) =>
+      yv<{ content: string; reference: string }>(`/bibles/${bibleId}/passages/${book}.${ch}?format=html`)
+    )
+  );
+
+  const parts = chapters.map((res, k) => {
+    const ch = c1 + k;
+    let text = youVersionHtmlToText(res.content);
+    if (v1 !== null) {
+      const lo = ch === c1 ? v1 : 1;
+      const hi = ch === c2 ? (v2 ?? 999) : 999;
+      text = sliceVerses(text, lo, hi);
+    }
+    // A chapter heading line between chapters of a multi-chapter passage.
+    return c2 > c1 ? `${res.reference}\n${text}` : text;
+  });
+
+  // Localized book name from the chapter reference, e.g. "ዮሐንስ 3" -> "ዮሐንስ".
+  const bookName = chapters[0].reference.replace(/\s*\d+$/, "");
+  const reference =
+    v1 === null
+      ? c2 > c1 ? `${bookName} ${c1}–${c2}` : chapters[0].reference
+      : c2 > c1
+        ? `${bookName} ${c1}:${v1}–${c2}:${v2}`
+        : v2 && v2 !== v1 ? `${bookName} ${c1}:${v1}–${v2}` : `${bookName} ${c1}:${v1}`;
+
+  return {
+    reference,
+    content: parts.join("\n"),
+    copyright: await yvCopyright(bibleId),
+    fumsToken: null,
+    ...chapterNav(book, c1),
+  };
+}
+

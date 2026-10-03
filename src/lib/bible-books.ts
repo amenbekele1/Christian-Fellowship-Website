@@ -58,11 +58,12 @@ export function passageId(r: PassageRange): string {
 }
 
 // ── Amharic on Bible.com ─────────────────────────────────────────
-// API.Bible carries no Amharic Bible, so these open the passage on
-// Bible.com (or the YouVersion app, if installed). Linking needs no licence.
+// Opens the passage on Bible.com (or the YouVersion app, if installed).
+// Linking needs no licence.
+// The NASV is now shown in the app (via YouVersion Platform); only the
+// 1962, which isn't licensed to apps, still opens on Bible.com.
 export const AMHARIC_VERSIONS = [
   { key: "AM1962", label: "1962", title: "አማርኛ 1954 (1962)", youVersionId: 3867 },
-  { key: "NASV", label: "NASV", title: "አዲሱ መደበኛ ትርጒም", youVersionId: 1260 },
 ] as const;
 
 /**
