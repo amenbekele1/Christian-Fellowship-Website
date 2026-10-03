@@ -38,7 +38,9 @@ self.addEventListener("push", function (event) {
   const options = {
     body:               data.body || "",
     icon:               "/icons/icon-192x192.png",
-    badge:              "/icons/icon-96x96.png",
+    // Android status-bar icon: white silhouette on transparent. A full-colour
+    // icon here shows up as a plain white square.
+    badge:              "/icons/badge-96x96.png",
     data:               { url: data.url || "/dashboard" },
     vibrate:            [200, 100, 200],
     requireInteraction: false,
