@@ -29,9 +29,9 @@ export function AmharicLinks({ range }: { range: PassageRange }) {
 }
 
 export const VERSION_TABS = [
+  { key: "NASV", label: "አማርኛ", lang: "am" },
   { key: "KJV", label: "KJV", lang: "en" },
   { key: "NIV", label: "NIV", lang: "en" },
-  { key: "NASV", label: "NASV", lang: "am" },
 ] as const;
 export type VersionKey = (typeof VERSION_TABS)[number]["key"];
 
@@ -39,7 +39,8 @@ const STORAGE_KEY = "wecf.bibleVersion";
 
 /** The member's preferred version, remembered on this device. */
 export function useBibleVersion(): [VersionKey, (v: VersionKey) => void] {
-  const [version, setVersion] = useState<VersionKey>("KJV");
+  // First visit opens the Amharic NASV; afterwards the member's last choice.
+  const [version, setVersion] = useState<VersionKey>("NASV");
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);

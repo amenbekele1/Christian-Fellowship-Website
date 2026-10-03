@@ -45,7 +45,7 @@ export function PassagePicker({
 
   const current = BOOKS.find((b) => b.id === value.book) ?? BOOKS[0];
   const picked = BOOKS.find((b) => b.id === book) ?? BOOKS[0];
-  const label = `${current.name} ${value.chapter}${value.verse ? `:${value.verse}` : ""}`;
+  const label = `${current.am} ${value.chapter}${value.verse ? `:${value.verse}` : ""}`;
 
   const openPicker = () => {
     setBook(value.book);
@@ -86,7 +86,7 @@ export function PassagePicker({
 
   const books = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (q) return BOOKS.filter((b) => b.name.toLowerCase().includes(q) || b.id.toLowerCase().startsWith(q));
+    if (q) return BOOKS.filter((b) => b.am.includes(query.trim()) || b.name.toLowerCase().includes(q) || b.id.toLowerCase().startsWith(q));
     return testament === "OT" ? OT : NT;
   }, [query, testament]);
 
@@ -107,7 +107,7 @@ export function PassagePicker({
         aria-haspopup="dialog"
       >
         <BookOpen className="w-4 h-4 shrink-0" style={{ color: "#C9A84C" }} aria-hidden="true" />
-        <span className="font-display font-bold text-lg truncate">{label}</span>
+        <span lang="am" className="font-bold text-lg truncate">{label}</span>
         <ChevronDown className="w-4 h-4 ml-auto shrink-0" style={{ color: "#C9A84C" }} aria-hidden="true" />
       </button>
 
@@ -132,8 +132,12 @@ export function PassagePicker({
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                 ) : null}
-                <h2 className="font-display font-bold text-xl flex-1 truncate" style={{ color: "#FAF7F0" }}>
-                  {step === "book" ? "Choose a book" : step === "chapter" ? picked.name : `${picked.name} ${chapter}`}
+                <h2 className="font-bold text-xl flex-1 truncate" style={{ color: "#FAF7F0" }}>
+                  {step === "book" ? (
+                    <span className="font-display">Choose a book</span>
+                  ) : (
+                    <span lang="am">{step === "chapter" ? picked.am : `${picked.am} ${chapter}`}</span>
+                  )}
                 </h2>
                 <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg" style={{ color: "#C9A84C" }} aria-label="Close">
                   <X className="w-5 h-5" />
@@ -158,7 +162,7 @@ export function PassagePicker({
                       ref={searchRef}
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Search books"
+                      placeholder="Search · መጽሐፍ ፈልግ"
                       className="w-full h-10 pl-9 pr-3 rounded-xl text-sm outline-none"
                       style={{ background: "rgba(250,247,240,0.1)", color: "#FAF7F0", border: "1px solid rgba(201,168,76,0.25)" }}
                     />
@@ -172,7 +176,7 @@ export function PassagePicker({
                           className="py-2 rounded-lg text-sm font-semibold transition-colors"
                           style={testament === t ? { background: "#C9A84C", color: "#1C0F07" } : { color: "#C4A882" }}
                         >
-                          {t === "OT" ? "Old Testament" : "New Testament"}
+                          <span lang="am">{t === "OT" ? "ብሉይ ኪዳን" : "አዲስ ኪዳን"}</span>
                         </button>
                       ))}
                     </div>
@@ -196,14 +200,15 @@ export function PassagePicker({
                           if (b.chapters === 1) { setChapter(1); setStep("verse"); }
                           else setStep("chapter");
                         }}
-                        className="h-12 px-3 rounded-xl text-sm font-semibold text-left truncate transition-colors"
+                        className="h-14 px-3 rounded-xl text-left transition-colors flex flex-col justify-center min-w-0"
                         style={
                           active
                             ? { background: "#3D2410", color: "#FAF7F0" }
                             : { background: "#fff", color: "#2C1A0E", border: "1px solid #E0CBB0" }
                         }
                       >
-                        {b.name}
+                        <span lang="am" className="text-[15px] font-bold truncate leading-tight">{b.am}</span>
+                        <span className="text-[11px] truncate leading-tight mt-0.5" style={{ opacity: 0.6 }}>{b.name}</span>
                       </button>
                     );
                   })}
@@ -242,7 +247,7 @@ export function PassagePicker({
                     className="w-full h-12 mb-3 rounded-xl text-sm font-bold"
                     style={{ background: "#C9A84C", color: "#1C0F07" }}
                   >
-                    Read {picked.name} {chapter} from the start
+                    Read <span lang="am">{picked.am} {chapter}</span> from the start
                   </button>
                   {verses === null ? (
                     <div className="grid grid-cols-6 sm:grid-cols-10 gap-2" aria-busy="true">
