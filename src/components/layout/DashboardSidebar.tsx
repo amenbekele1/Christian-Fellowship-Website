@@ -51,6 +51,7 @@ const adminLinks = [
   { href: "/dashboard/admin/announcements",label: "Announcements",     icon: Bell },
   { href: "/dashboard/admin/programs",     label: "Programs",          icon: BookOpen },
   { href: "/dashboard/admin/bible-study",  label: "Bible Study",       icon: ScrollText },
+  { href: "/dashboard/admin/teams",        label: "Serving Teams",     icon: HeartHandshake },
   { href: "/dashboard/admin/leaders",      label: "Leadership",        icon: Shield },
   { href: "/dashboard/admin/books",        label: "Library Books",     icon: BookMarked },
   { href: "/dashboard/admin/invites",      label: "Invites",           icon: Link2 },

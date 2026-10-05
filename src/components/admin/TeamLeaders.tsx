@@ -204,10 +204,12 @@ export default function TeamLeaders() {
     <div className="mb-10">
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <h2 className="font-display text-xl font-bold text-gray-800">Serving Teams</h2>
-          <p className="text-gray-500 text-sm mt-0.5">
-            Create teams and assign who leads each one. Leading a team does not
-            change someone&apos;s account role.
+          <h1 className="font-display text-3xl font-bold text-gray-800">Serving Teams</h1>
+          <p className="text-gray-500 mt-1">
+            Create, rename or remove teams and choose who leads each one. Leading a
+            team does not change someone&apos;s account role. Add members from{" "}
+            <a href="/dashboard/admin/members" className="underline">Members → Teams</a>, or team
+            leaders can add them from their team page.
           </p>
         </div>
         <button
