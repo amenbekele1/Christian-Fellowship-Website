@@ -95,15 +95,19 @@ export default async function BusGroupsPage() {
               {/* Leader */}
               <div className="px-6 py-4 bg-brown-50 border-b border-brown-200">
                 <p className="text-xs text-gold-600 font-bold uppercase tracking-wider mb-2">Group Leader</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-brown-100 flex items-center justify-center text-brown-700 font-bold text-sm">
-                    {group.leader.name.charAt(0)}
+                {group.leader ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-brown-100 flex items-center justify-center text-brown-700 font-bold text-sm">
+                      {group.leader.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-800 text-sm">{group.leader.name}</p>
+                      <p className="text-xs text-gray-500">{group.leader.email}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-800 text-sm">{group.leader.name}</p>
-                    <p className="text-xs text-gray-500">{group.leader.email}</p>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No leader assigned yet.</p>
+                )}
               </div>
 
               {/* Members */}

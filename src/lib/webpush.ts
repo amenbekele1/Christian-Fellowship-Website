@@ -107,7 +107,7 @@ export async function sendPushToBusGroup(
   if (!group) return;
 
   const userIds = [group.leaderId, ...group.members.map((m) => m.id)].filter(
-    (id) => id !== excludeUserId
+    (id): id is string => Boolean(id) && id !== excludeUserId
   );
 
   await sendPushToUsers(userIds, payload);

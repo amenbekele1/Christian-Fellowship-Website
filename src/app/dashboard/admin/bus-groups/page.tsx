@@ -8,7 +8,7 @@ import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface BUSGroup {
   id: string; name: string; description: string | null;
-  leader: { id: string; name: string; email: string };
+  leader: { id: string; name: string; email: string } | null;
   members: { id: string; name: string; email: string }[];
   _count: { members: number };
 }
@@ -31,7 +31,7 @@ export default function AdminBusGroupsPage() {
 
   const openEdit = (group: BUSGroup) => {
     setEditGroup(group);
-    setEditForm({ name: group.name, description: group.description ?? "", leaderId: group.leader.id });
+    setEditForm({ name: group.name, description: group.description ?? "", leaderId: group.leader?.id ?? "" });
     setError("");
   };
 
@@ -61,7 +61,7 @@ export default function AdminBusGroupsPage() {
       const res = await fetch("/api/bus-groups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, leaderId: form.leaderId || null }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
       setShowForm(false);
@@ -92,7 +92,7 @@ export default function AdminBusGroupsPage() {
         body: JSON.stringify({
           name: editForm.name,
           description: editForm.description.trim() || null,
-          leaderId: editForm.leaderId,
+          leaderId: editForm.leaderId || null,
         }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
@@ -158,10 +158,10 @@ export default function AdminBusGroupsPage() {
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none"/>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Group Leader *</label>
-                <select required value={form.leaderId} onChange={e => setForm({...form, leaderId: e.target.value})}
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Group Leader</label>
+                <select value={form.leaderId} onChange={e => setForm({...form, leaderId: e.target.value})}
                   className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500">
-                  <option value="">Select a leader...</option>
+                  <option value="">No leader for now</option>
                   {users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
                 </select>
               </div>
@@ -202,8 +202,14 @@ export default function AdminBusGroupsPage() {
             <div className="px-5 py-3 bg-brown-50 border-b border-brown-200 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-xs text-gold-600 font-bold shrink-0">Leader:</span>
-                <span className="text-sm text-gray-700 truncate">{group.leader.name}</span>
-                <span className="text-xs text-gray-400 truncate hidden sm:inline">· {group.leader.email}</span>
+                {group.leader ? (
+                  <>
+                    <span className="text-sm text-gray-700 truncate">{group.leader.name}</span>
+                    <span className="text-xs text-gray-400 truncate hidden sm:inline">· {group.leader.email}</span>
+                  </>
+                ) : (
+                  <span className="text-sm text-gray-400 italic">Not assigned</span>
+                )}
               </div>
               <button
                 onClick={() => openEdit(group)}
@@ -274,17 +280,18 @@ export default function AdminBusGroupsPage() {
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none"/>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Group Leader *</label>
-                <select required value={editForm.leaderId}
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Group Leader</label>
+                <select value={editForm.leaderId}
                   onChange={e => setEditForm({ ...editForm, leaderId: e.target.value })}
                   className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500">
+                  <option value="">No leader</option>
                   {users.map(u => (
                     <option key={u.id} value={u.id}>
-                      {u.name} ({u.email}){u.id === editGroup.leader.id ? " — current" : ""}
+                      {u.name} ({u.email}){u.id === editGroup.leader?.id ? " — current" : ""}
                     </option>
                   ))}
                 </select>
-                {editForm.leaderId !== editGroup.leader.id && (
+                {editGroup.leader && editForm.leaderId !== editGroup.leader.id && (
                   <p className="text-xs text-gray-500 mt-1.5">
                     The previous leader goes back to a regular member (Guardians keep their role).
                   </p>

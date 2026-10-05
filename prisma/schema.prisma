@@ -190,12 +190,12 @@ model BUSGroup {
   id                String    @id @default(cuid())
   name              String    @unique
   description       String?
-  leaderId          String    @unique
+  leaderId          String?   @unique   // optional: a group may exist before it has a leader
   lastMeetingPingAt DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  leader      User           @relation("GroupLeader", fields: [leaderId], references: [id])
+  leader      User?          @relation("GroupLeader", fields: [leaderId], references: [id], onDelete: SetNull)
   members     User[]         @relation("GroupMembers")
   attendances Attendance[]
   messages    GroupMessage[] @relation("GroupMessages")

@@ -6,7 +6,7 @@ import type { Session } from "next-auth";
 
 export interface GroupAuthResult {
   session: Session;
-  group: { id: string; name: string; leaderId: string };
+  group: { id: string; name: string; leaderId: string | null };
   isLeader: boolean;
   userId: string;
 }
