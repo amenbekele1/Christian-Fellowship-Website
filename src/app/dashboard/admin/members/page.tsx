@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Search, Users, ChevronLeft, ChevronRight, AlertCircle, X, Trash2 } from "lucide-react";
+import { Search, Users, ChevronLeft, ChevronRight, AlertCircle, X, Trash2, Mail } from "lucide-react";
 import { getRoleLabel, getRoleBadgeColor, formatDate } from "@/lib/utils";
 import { confirmDialog, toast } from "@/components/ui/toaster";
 import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
@@ -23,11 +23,17 @@ interface ServiceTeam {
 
 const PAGE_SIZE = 20;
 
-function membersUrl(page: number, search: string): string {
+type Sort = "newest" | "name";
+
+function membersUrl(page: number, search: string, sort: Sort): string {
   const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
   if (search) params.set("search", search);
+  if (sort === "newest") params.set("sort", "newest");
   return `/api/members?${params}`;
 }
+
+/** The public launch — default start date for catching up on welcome emails. */
+const LAUNCH_DATE = "2026-10-03";
 
 /** Flatten serviceTeams relation: [{team:{name}}] -> ["LIBRARIAN",...] */
 function normaliseMembers(json: any): { members: any[]; total: number } {
@@ -44,7 +50,7 @@ function normaliseMembers(json: any): { members: any[]; total: number } {
 export default function AdminMembersPage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const firstPage = peekCache(membersUrl(1, ""));
+  const firstPage = peekCache(membersUrl(1, "", "newest"));
   const [members, setMembers] = useState<Member[]>(() => (firstPage ? normaliseMembers(firstPage).members : []));
   const [busGroups, setBusGroups] = useState<BUSGroup[]>(() => peekCache<BUSGroup[]>("/api/bus-groups") ?? []);
   const [serviceTeams, setServiceTeams] = useState<ServiceTeam[]>(() => peekCache<ServiceTeam[]>("/api/service-teams") ?? []);
@@ -52,6 +58,13 @@ export default function AdminMembersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [sort, setSort] = useState<Sort>("newest");
+  // "Send welcome emails" window
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeSince, setWelcomeSince] = useState(LAUNCH_DATE);
+  const [welcomePreview, setWelcomePreview] = useState<{ count: number; names: string[] } | null>(null);
+  const [welcomeSending, setWelcomeSending] = useState(false);
+  const [welcomeProgress, setWelcomeProgress] = useState(0);
   const [loading, setLoading] = useState(() => firstPage === undefined);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -71,7 +84,62 @@ export default function AdminMembersPage() {
   useEffect(() => {
     if (session?.user.role !== "GUARDIAN") return;
     fetchMembers();
-  }, [page, search, session]);
+  }, [page, search, sort, session]);
+
+  // Who would receive a welcome email for the chosen date.
+  useEffect(() => {
+    if (!welcomeOpen) return;
+    setWelcomePreview(null);
+    let cancelled = false;
+    fetch("/api/members/welcome", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ since: welcomeSince, preview: true }),
+    })
+      .then((r) => r.json())
+      .then((d) => !cancelled && setWelcomePreview({ count: d.count ?? 0, names: d.names ?? [] }))
+      .catch(() => !cancelled && setWelcomePreview({ count: 0, names: [] }));
+    return () => { cancelled = true; };
+  }, [welcomeOpen, welcomeSince]);
+
+  const sendWelcomeEmails = async () => {
+    if (!welcomePreview?.count) return;
+    if (!(await confirmDialog({
+      title: `Send ${welcomePreview.count} welcome email${welcomePreview.count === 1 ? "" : "s"}?`,
+      message: "Each member who joined since the chosen date gets the standard welcome email. Anyone who already received it will get it again.",
+      confirmLabel: "Send",
+    }))) return;
+    setWelcomeSending(true);
+    setWelcomeProgress(0);
+    let offset = 0, sent = 0, count = welcomePreview.count;
+    const failed: string[] = [];
+    try {
+      // The server sends in batches (time-limited); keep going until done.
+      for (;;) {
+        const res = await fetch("/api/members/welcome", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ since: welcomeSince, offset }),
+        });
+        const d = await res.json();
+        if (!res.ok) throw new Error(d.error ?? "Sending failed");
+        sent += d.sent;
+        failed.push(...(d.failed ?? []));
+        count = d.count;
+        const progressed = d.processed > offset;
+        offset = d.processed;
+        setWelcomeProgress(offset);
+        if (d.done || !progressed) break;
+      }
+      if (failed.length) toast.error(`Sent ${sent} of ${count}. Not delivered: ${failed.join(", ")}`);
+      else toast.success(`Sent ${sent} welcome email${sent === 1 ? "" : "s"}`);
+      setWelcomeOpen(false);
+    } catch (err: any) {
+      toast.error(err.message ?? "Sending failed");
+    } finally {
+      setWelcomeSending(false);
+    }
+  };
 
   const fetchBusGroups = async () => {
     try {
@@ -123,7 +191,7 @@ export default function AdminMembersPage() {
   };
 
   const fetchMembers = async () => {
-    const url = membersUrl(page, search);
+    const url = membersUrl(page, search, sort);
     const cached = peekCache(url);
     if (cached) {
       const c = normaliseMembers(cached);
@@ -226,7 +294,13 @@ export default function AdminMembersPage() {
           <h1 className="font-display text-3xl font-bold text-gray-800">Members</h1>
           <p className="text-gray-500 mt-1">{total} total members registered</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3 justify-end">
+          <button
+            onClick={() => setWelcomeOpen(true)}
+            className="flex items-center gap-2 bg-white border border-brown-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-brown-800 hover:bg-brown-50"
+          >
+            <Mail className="w-4 h-4 text-gold-600" /> Send welcome emails
+          </button>
           <div className="bg-white border border-brown-200 rounded-xl px-4 py-2.5 text-center">
             <p className="font-display font-bold text-gold-500 text-xl">{members.filter(m => m.isActive).length}</p>
             <p className="text-xs text-gray-400">Active (this page)</p>
@@ -267,7 +341,61 @@ export default function AdminMembersPage() {
             Clear
           </button>
         )}
+        <div className="flex rounded-xl border border-gray-200 bg-white p-1 shrink-0" role="group" aria-label="Sort members">
+          {([["newest", "Newest first"], ["name", "A–Z"]] as const).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => { setSort(key); setPage(1); }}
+              aria-pressed={sort === key}
+              className={`px-3 h-8 rounded-lg text-xs font-semibold transition-colors ${sort === key ? "bg-brown-800 text-white" : "text-gray-500 hover:bg-gray-50"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </form>
+
+      {welcomeOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => !welcomeSending && setWelcomeOpen(false)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display font-bold text-gray-800 text-xl">Send welcome emails</h2>
+              <button onClick={() => setWelcomeOpen(false)} disabled={welcomeSending} aria-label="Close"><X className="w-5 h-5 text-gray-400" /></button>
+            </div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Members who joined since</label>
+            <input
+              type="date"
+              value={welcomeSince}
+              onChange={(e) => setWelcomeSince(e.target.value)}
+              className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+            />
+            <div className="mt-4 flex-1 min-h-0 overflow-y-auto rounded-xl bg-brown-50 border border-brown-200 p-3">
+              {welcomePreview === null ? (
+                <p className="text-sm text-gray-500">Checking…</p>
+              ) : welcomePreview.count === 0 ? (
+                <p className="text-sm text-gray-500">Nobody joined on or after this date.</p>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-brown-800 mb-2">
+                    {welcomePreview.count} member{welcomePreview.count === 1 ? "" : "s"} will get the welcome email:
+                  </p>
+                  <p className="text-sm text-gray-600 leading-relaxed">{welcomePreview.names.join(", ")}</p>
+                </>
+              )}
+            </div>
+            <button
+              onClick={sendWelcomeEmails}
+              disabled={welcomeSending || !welcomePreview?.count}
+              className="mt-4 w-full bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium disabled:opacity-50"
+            >
+              {welcomeSending
+                ? `Sending… ${welcomeProgress} of ${welcomePreview?.count ?? 0}`
+                : `Send ${welcomePreview?.count ?? ""} welcome emails`}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-brown-200 shadow-sm overflow-hidden">
