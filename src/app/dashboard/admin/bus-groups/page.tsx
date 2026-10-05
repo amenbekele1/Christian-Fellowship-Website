@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Plus, Trash2, Users, Edit2, X } from "lucide-react";
-import { confirmDialog } from "@/components/ui/toaster";
+import { confirmDialog, toast } from "@/components/ui/toaster";
 import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
 
 interface BUSGroup {
@@ -25,8 +25,15 @@ export default function AdminBusGroupsPage() {
   const [loading, setLoading] = useState(() => peekCache("/api/bus-groups") === undefined);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [editLeaderGroup, setEditLeaderGroup] = useState<BUSGroup | null>(null);
-  const [newLeaderId, setNewLeaderId] = useState("");
+  // Edit group: rename, describe, change leader
+  const [editGroup, setEditGroup] = useState<BUSGroup | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", description: "", leaderId: "" });
+
+  const openEdit = (group: BUSGroup) => {
+    setEditGroup(group);
+    setEditForm({ name: group.name, description: group.description ?? "", leaderId: group.leader.id });
+    setError("");
+  };
 
   useEffect(() => { fetchData(); }, []);
 
@@ -73,22 +80,27 @@ export default function AdminBusGroupsPage() {
     fetchData();
   };
 
-  const changeLeader = async (e: React.FormEvent) => {
+  const saveGroup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editLeaderGroup || !newLeaderId) return;
+    if (!editGroup) return;
     setSaving(true);
+    setError("");
     try {
-      const res = await fetch(`/api/bus-groups?id=${editLeaderGroup.id}`, {
+      const res = await fetch(`/api/bus-groups?id=${editGroup.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ leaderId: newLeaderId }),
+        body: JSON.stringify({
+          name: editForm.name,
+          description: editForm.description.trim() || null,
+          leaderId: editForm.leaderId,
+        }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
-      setEditLeaderGroup(null);
-      setNewLeaderId("");
+      toast.success("Group updated");
+      setEditGroup(null);
       fetchData();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message ?? "Couldn't save the group");
     } finally {
       setSaving(false);
     }
@@ -177,7 +189,10 @@ export default function AdminBusGroupsPage() {
                 <span className="bg-white/20 text-white text-xs px-2.5 py-1 rounded-full font-medium">
                   {group._count.members} members
                 </span>
-                <button onClick={() => deleteGroup(group.id)} className="text-white/50 hover:text-red-300 transition-colors p-1">
+                <button onClick={() => openEdit(group)} className="text-white/60 hover:text-white transition-colors p-1" title="Edit group" aria-label={`Edit ${group.name}`}>
+                  <Edit2 className="w-4 h-4"/>
+                </button>
+                <button onClick={() => deleteGroup(group.id)} className="text-white/50 hover:text-red-300 transition-colors p-1" title="Delete group" aria-label={`Delete ${group.name}`}>
                   <Trash2 className="w-4 h-4"/>
                 </button>
               </div>
@@ -191,7 +206,7 @@ export default function AdminBusGroupsPage() {
                 <span className="text-xs text-gray-400 truncate hidden sm:inline">· {group.leader.email}</span>
               </div>
               <button
-                onClick={() => { setEditLeaderGroup(group); setNewLeaderId(group.leader.id); setError(""); }}
+                onClick={() => openEdit(group)}
                 className="text-gray-400 hover:text-gold-600 transition-colors shrink-0 p-1"
                 title="Change leader"
               >
@@ -233,48 +248,56 @@ export default function AdminBusGroupsPage() {
         )}
       </div>
 
-      {/* Change Leader modal */}
-      {editLeaderGroup && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+      {/* Edit group modal */}
+      {editGroup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => !saving && setEditGroup(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="font-display font-bold text-gray-800 text-xl">Change Leader</h2>
-                <p className="text-sm text-gray-500 mt-0.5">{editLeaderGroup.name}</p>
-              </div>
-              <button onClick={() => { setEditLeaderGroup(null); setError(""); }} className="text-gray-400 hover:text-gray-600">
+              <h2 className="font-display font-bold text-gray-800 text-xl">Edit Group</h2>
+              <button onClick={() => setEditGroup(null)} className="text-gray-400 hover:text-gray-600" aria-label="Close">
                 <X className="w-5 h-5"/>
               </button>
             </div>
             {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm mb-4">{error}</div>}
-            <form onSubmit={changeLeader} className="space-y-4">
+            <form onSubmit={saveGroup} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">New Group Leader *</label>
-                <select
-                  required
-                  value={newLeaderId}
-                  onChange={e => setNewLeaderId(e.target.value)}
-                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
-                >
-                  <option value="">Select a leader...</option>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Group Name *</label>
+                <input type="text" required minLength={2} maxLength={80} value={editForm.name}
+                  onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"/>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+                <textarea value={editForm.description} rows={3} maxLength={500}
+                  onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                  placeholder="Brief description of the group..."
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none"/>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Group Leader *</label>
+                <select required value={editForm.leaderId}
+                  onChange={e => setEditForm({ ...editForm, leaderId: e.target.value })}
+                  className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500">
                   {users.map(u => (
                     <option key={u.id} value={u.id}>
-                      {u.name} ({u.email}){u.id === editLeaderGroup.leader.id ? " — current" : ""}
+                      {u.name} ({u.email}){u.id === editGroup.leader.id ? " — current" : ""}
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-400 mt-1.5">
-                  The previous leader will be reverted to a regular member automatically.
-                </p>
+                {editForm.leaderId !== editGroup.leader.id && (
+                  <p className="text-xs text-gray-500 mt-1.5">
+                    The previous leader goes back to a regular member (Guardians keep their role).
+                  </p>
+                )}
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => { setEditLeaderGroup(null); setError(""); }}
+                <button type="button" onClick={() => setEditGroup(null)}
                   className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50">
                   Cancel
                 </button>
-                <button type="submit" disabled={saving || newLeaderId === editLeaderGroup.leader.id}
+                <button type="submit" disabled={saving}
                   className="flex-1 bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-900 disabled:opacity-50">
-                  {saving ? "Saving..." : "Update Leader"}
+                  {saving ? "Saving..." : "Save"}
                 </button>
               </div>
             </form>

@@ -7,10 +7,31 @@ import { sendRefreshPush } from "@/lib/webpush";
 import { background } from "@/lib/background";
 
 const busGroupSchema = z.object({
-  name: z.string().min(2),
-  description: z.string().optional(),
-  leaderId: z.string(),
+  name: z.string().trim().min(2, "Group name must be at least 2 characters").max(80),
+  description: z.string().trim().max(500).optional().nullable(),
+  leaderId: z.string().min(1, "Choose a leader"),
 });
+
+/**
+ * Leading a group makes a regular member a BUS leader; losing it reverts a
+ * BUS leader to member. Guardians keep their role either way — otherwise
+ * assigning a Guardian to lead a group silently removed their admin access.
+ */
+async function promoteToLeader(userId: string) {
+  await prisma.user.updateMany({ where: { id: userId, role: "MEMBER" }, data: { role: "BUS_LEADER" } });
+}
+async function demoteFromLeader(userId: string) {
+  await prisma.user.updateMany({ where: { id: userId, role: "BUS_LEADER" }, data: { role: "MEMBER" } });
+}
+
+/** A person can lead only one group; explain clashes instead of a 500. */
+async function leadershipClash(leaderId: string, exceptGroupId?: string): Promise<string | null> {
+  const other = await prisma.bUSGroup.findFirst({
+    where: { leaderId, ...(exceptGroupId ? { NOT: { id: exceptGroupId } } : {}) },
+    select: { name: true, leader: { select: { name: true } } },
+  });
+  return other ? `${other.leader.name} already leads ${other.name}. Choose someone else, or change that group's leader first.` : null;
+}
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -51,14 +72,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = await req.json();
-  const data = busGroupSchema.parse(body);
+  const parsed = busGroupSchema.safeParse(await req.json());
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
+  const data = parsed.data;
 
-  // Ensure leader exists and update their role
-  await prisma.user.update({
-    where: { id: data.leaderId },
-    data: { role: "BUS_LEADER" },
-  });
+  const clash = await leadershipClash(data.leaderId);
+  if (clash) return NextResponse.json({ error: clash }, { status: 400 });
+
+  await promoteToLeader(data.leaderId);
 
   const group = await prisma.bUSGroup.create({
     data,
@@ -103,27 +124,19 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(updated);
   }
 
-  const data = busGroupSchema.partial().parse(body);
+  const parsed = busGroupSchema.partial().safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
+  const data = parsed.data;
 
-  // When changing the leader, demote the old one and promote the new one
+  // Changing the leader: hand the role over (Guardians keep theirs).
   if (data.leaderId) {
-    const current = await prisma.bUSGroup.findUnique({
-      where: { id },
-      select: { leaderId: true },
-    });
-    if (current && current.leaderId !== data.leaderId) {
-      await prisma.$transaction([
-        // Demote old leader back to MEMBER
-        prisma.user.update({
-          where: { id: current.leaderId },
-          data: { role: "MEMBER" },
-        }),
-        // Promote new leader to BUS_LEADER
-        prisma.user.update({
-          where: { id: data.leaderId },
-          data: { role: "BUS_LEADER" },
-        }),
-      ]);
+    const current = await prisma.bUSGroup.findUnique({ where: { id }, select: { leaderId: true } });
+    if (!current) return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    if (current.leaderId !== data.leaderId) {
+      const clash = await leadershipClash(data.leaderId, id);
+      if (clash) return NextResponse.json({ error: clash }, { status: 400 });
+      await demoteFromLeader(current.leaderId);
+      await promoteToLeader(data.leaderId);
     }
   }
 
