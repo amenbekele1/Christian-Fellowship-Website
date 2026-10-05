@@ -10,9 +10,15 @@ export function esc(str: string): string {
     .replace(/'/g, "&#039;");
 }
 
+// Pooled: messages share at most two SMTP connections instead of opening one
+// each. Gmail refuses bursts of parallel connections ("421 Try again later"),
+// which silently dropped emails when many people registered at once.
+const POOL = { pool: true as const, maxConnections: 2, maxMessages: 100 };
+
 const transporter = nodemailer.createTransport(
   process.env.EMAIL_SERVER_HOST
     ? {
+        ...POOL,
         host: process.env.EMAIL_SERVER_HOST,
         port: Number(process.env.EMAIL_SERVER_PORT) || 587,
         secure: Number(process.env.EMAIL_SERVER_PORT) === 465,
@@ -22,6 +28,7 @@ const transporter = nodemailer.createTransport(
         },
       }
     : {
+        ...POOL,
         service: "gmail",
         auth: {
           user: process.env.EMAIL_SERVER_USER,
@@ -37,19 +44,36 @@ interface EmailOptions {
   replyTo?: string | { name: string; address: string };
 }
 
+/** Temporary SMTP refusals worth retrying (rate limits, busy server, dropped connection). */
+function isTransient(err: any): boolean {
+  const code = Number(err?.responseCode);
+  if ([421, 450, 451, 452, 454].includes(code)) return true;
+  return ["ECONNECTION", "ETIMEDOUT", "ESOCKET", "ECONNRESET"].includes(err?.code);
+}
+
+const RETRY_DELAYS_MS = [1500, 4000];
+
 export async function sendEmail({ to, subject, html, replyTo }: EmailOptions) {
-  try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM || `Warsaw Ethiopian Christian Fellowship <${process.env.EMAIL_SERVER_USER}>`,
-      to: Array.isArray(to) ? to.join(",") : to,
-      ...(replyTo ? { replyTo } : {}),
-      subject,
-      html,
-    });
-    return { success: true };
-  } catch (error) {
-    console.error("Email send error:", error);
-    return { success: false, error };
+  const message = {
+    from: process.env.EMAIL_FROM || `Warsaw Ethiopian Christian Fellowship <${process.env.EMAIL_SERVER_USER}>`,
+    to: Array.isArray(to) ? to.join(",") : to,
+    ...(replyTo ? { replyTo } : {}),
+    subject,
+    html,
+  };
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await transporter.sendMail(message);
+      return { success: true };
+    } catch (error: any) {
+      if (attempt < RETRY_DELAYS_MS.length && isTransient(error)) {
+        console.warn(`Email retry ${attempt + 1} for "${subject}":`, error?.responseCode ?? error?.code);
+        await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
+        continue;
+      }
+      console.error(`Email send error for "${subject}":`, error);
+      return { success: false, error };
+    }
   }
 }
 
@@ -461,10 +485,11 @@ export function passwordResetEmail(
 }
 
 export function newMemberNotificationEmail(
-  guardianName: string,
+  guardianName: string, // e.g. "Leaders" when sent to all Guardians at once
   memberName: string,
   memberEmail: string,
-  registrationDate: string
+  registrationDate: string,
+  memberPhone?: string | null
 ): string {
   return `
     <!DOCTYPE html>
@@ -501,6 +526,7 @@ export function newMemberNotificationEmail(
             <strong>${esc(memberName)}</strong>
             <div class="member-detail">
               <p style="margin:0"><strong>Email:</strong> ${esc(memberEmail)}</p>
+              ${memberPhone ? `<p style="margin:8px 0 0"><strong>Phone:</strong> ${esc(memberPhone)}</p>` : ""}
               <p style="margin:8px 0 0"><strong>Registered:</strong> ${esc(registrationDate)}</p>
             </div>
           </div>

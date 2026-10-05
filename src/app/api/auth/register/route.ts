@@ -7,6 +7,9 @@ import { formatDate } from "@/lib/utils";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { background } from "@/lib/background";
 
+// Room for the background welcome/leader emails, including SMTP retries.
+export const maxDuration = 30;
+
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{10,}$/;
 
 const registerSchema = z.object({
@@ -91,19 +94,20 @@ export async function POST(req: NextRequest) {
     try {
       const guardians = await prisma.user.findMany({
         where: { role: "GUARDIAN", isActive: true },
-        select: { id: true, name: true, email: true },
+        select: { email: true },
       });
 
       if (guardians.length > 0) {
         const registrationDate = formatDate(new Date());
 
-        for (const guardian of guardians) {
-          background(sendEmail({
-            to: guardian.email,
-            subject: `New Member Registration — ${name}`,
-            html: newMemberNotificationEmail(guardian.name, name, email, registrationDate),
-          }));
-        }
+        // One email to all leaders (not one per leader): fewer SMTP
+        // connections, so a rush of registrations doesn't hit Gmail's limits.
+        background(sendEmail({
+          to: guardians.map((g) => g.email),
+          replyTo: { name, address: email },
+          subject: `New Member Registration — ${name}`,
+          html: newMemberNotificationEmail("Leaders", name, email, registrationDate, phone),
+        }), "new member notice");
       }
     } catch (err) {
       console.error("Failed to send guardian notifications:", err);
