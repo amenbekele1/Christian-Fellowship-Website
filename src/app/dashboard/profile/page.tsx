@@ -7,6 +7,7 @@ import FeedbackCard from "@/components/feedback/FeedbackCard";
 import {
   subscribeToPush,
   unsubscribeFromPush,
+  syncPushSubscription,
   getPermissionState,
   isSubscribed,
   registerSW,
@@ -74,8 +75,9 @@ export default function ProfilePage() {
     const permission = getPermissionState();
     setPushPermission(permission as NotificationPermission | "unsupported");
     if (permission === "granted") {
-      const subbed = await isSubscribed();
-      setPushSubscribed(subbed);
+      // Repair a dropped/rotated subscription first, so the switch shows the truth.
+      await syncPushSubscription();
+      setPushSubscribed(await isSubscribed());
     }
   };
 
@@ -440,7 +442,9 @@ export default function ProfilePage() {
 
       {/* Feedback */}
       <div className="mt-8">
-        <FeedbackCard />
+        <div id="feedback" className="scroll-mt-4">
+          <FeedbackCard />
+        </div>
       </div>
 
       {/* Danger Zone */}

@@ -137,7 +137,7 @@ export async function PATCH(req: NextRequest) {
     background(sendPushToUser(existing.user.id, {
       title: "Your feedback has been sorted",
       body: "Thank you for helping us improve the portal.",
-      url: "/dashboard/profile",
+      url: "/dashboard/profile#feedback",
       topic: "feedback",
     }));
   }

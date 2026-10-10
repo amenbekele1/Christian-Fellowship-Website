@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Bell, X } from "lucide-react";
-import { subscribeToPush, getPermissionState, isSubscribed, registerSW } from "@/lib/push-client";
+import { subscribeToPush, getPermissionState, isSubscribed, registerSW, pushSupported, syncPushSubscription } from "@/lib/push-client";
+import { toast } from "@/components/ui/toaster";
 
 export function PushPrompt() {
   const [show, setShow] = useState(false);
@@ -13,11 +14,17 @@ export function PushPrompt() {
     registerSW();
 
     const init = async () => {
-      if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
+      // No push here (e.g. iPhone Safari outside the installed app) — don't offer it.
+      if (!pushSupported()) return;
 
       const permission = getPermissionState();
       if (permission === "denied") return;      // Can't ask again
-      if (permission === "granted") return;     // Already allowed — no need to prompt
+      if (permission === "granted") {
+        // Already allowed: keep this device registered with our server
+        // (browsers rotate subscriptions; expired ones get removed).
+        syncPushSubscription();
+        return;
+      }
 
       // Don't re-show if dismissed recently
       const dismissed = localStorage.getItem("push-prompt-dismissed");
@@ -39,9 +46,14 @@ export function PushPrompt() {
     setLoading(false);
     if (sub) {
       setShow(false);
-    } else {
-      // Permission denied or failed — dismiss for now
+      toast.success("Notifications are on");
+      return;
+    }
+    if (getPermissionState() === "denied") {
+      toast.error("Notifications are blocked. You can allow them in your phone's settings for this app.");
       handleDismiss();
+    } else {
+      toast.error("Couldn't turn notifications on just now. Please try again, or use Profile → Push Notifications.");
     }
   };
 

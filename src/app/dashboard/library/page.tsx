@@ -60,6 +60,8 @@ export default function LibraryPage() {
   useEffect(() => {
     fetchBooks();
     fetchMyRentals();
+    // Book reminders link to ?tab=my-books
+    if (new URLSearchParams(window.location.search).get("tab") === "my-books") setActiveTab("my-books");
   }, []);
 
   const refreshAll = useCallback(async () => {

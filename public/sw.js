@@ -57,17 +57,46 @@ self.addEventListener("push", function (event) {
 
 self.addEventListener("notificationclick", function (event) {
   event.notification.close();
-  const url = event.notification.data?.url || "/dashboard";
+  // Absolute URL of the thing this notification is about.
+  const target = new URL(event.notification.data?.url || "/dashboard", self.location.origin).href;
 
   event.waitUntil(
     (async () => {
       await updateBadge();
       const clientList = await clients.matchAll({ type: "window", includeUncontrolled: true });
       for (const client of clientList) {
-        if ("navigate" in client) await client.navigate(url);
-        if ("focus" in client) return client.focus();
+        if (new URL(client.url).origin !== self.location.origin) continue;
+        try { await client.focus(); } catch (e) {}
+        try {
+          await client.navigate(target);
+          return;
+        } catch (e) {
+          // Window not controlled by this worker — ask the page to go there itself.
+          client.postMessage({ type: "navigate", url: target });
+          return;
+        }
       }
-      if (clients.openWindow) return clients.openWindow(url);
+      if (clients.openWindow) return clients.openWindow(target);
+    })()
+  );
+});
+
+// Browsers renew push subscriptions from time to time. Send the new one to
+// our server straight away, or notifications silently stop arriving.
+self.addEventListener("pushsubscriptionchange", function (event) {
+  event.waitUntil(
+    (async () => {
+      let sub = event.newSubscription;
+      if (!sub && event.oldSubscription && event.oldSubscription.options) {
+        sub = await self.registration.pushManager.subscribe(event.oldSubscription.options);
+      }
+      if (!sub) return;
+      await fetch("/api/push", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sub.toJSON()),
+      });
     })()
   );
 });

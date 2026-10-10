@@ -8,6 +8,7 @@ import { InstallPrompt } from "@/components/ui/InstallPrompt";
 import { PushPrompt } from "@/components/ui/PushPrompt";
 import { BadgeClearer } from "@/components/ui/BadgeClearer";
 import { RouterRefresher } from "@/components/ui/RouterRefresher";
+import { HashScroller } from "@/components/ui/HashScroller";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
@@ -62,6 +63,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* Auto-refresh server-rendered pages on focus / push */}
       <RouterRefresher />
+
+      {/* Scroll to #section links, e.g. from a notification */}
+      <HashScroller />
     </div>
   );
 }

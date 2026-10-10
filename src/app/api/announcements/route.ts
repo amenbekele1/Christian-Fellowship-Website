@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   background(sendPushToAll({
     title: "New Announcement",
     body: announcement.title,
-    url: "/dashboard",
+    url: "/dashboard#announcements",
     topic: "announcements",
   }));
 

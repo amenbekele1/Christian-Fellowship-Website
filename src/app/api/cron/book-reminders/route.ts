@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
     background(sendPushToUser(rental.userId, {
       title: "📚 Book due soon",
       body:  `"${rental.book.title}" is due on ${formatDate(rental.dueDate!)}.`,
-      url:   "/dashboard/library",
+      url:   "/dashboard/library?tab=my-books",
       topic: "rentals",
     }));
 
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
     background(sendPushToUser(r.userId, {
       title: "📕 Overdue book",
       body:  `"${r.book.title}" is past its due date. Please return it.`,
-      url:   "/dashboard/library",
+      url:   "/dashboard/library?tab=my-books",
       topic: "rentals",
     }));
   }
