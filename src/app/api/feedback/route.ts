@@ -16,12 +16,16 @@ const createSchema = z.object({
   pageUrl: z.string().max(500).optional(),
 });
 
-/** GET — Guardians read the inbox; everyone else gets their own submissions. */
+/**
+ * GET — Guardians read the whole inbox (admin Feedback page); everyone else,
+ * and anyone asking with ?mine=1 (the profile card), gets only their own.
+ */
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const isGuardian = session.user.role === "GUARDIAN";
+  const mine = req.nextUrl.searchParams.get("mine") === "1";
+  const isGuardian = session.user.role === "GUARDIAN" && !mine;
   const status = req.nextUrl.searchParams.get("status");
 
   const items = await prisma.feedback.findMany({

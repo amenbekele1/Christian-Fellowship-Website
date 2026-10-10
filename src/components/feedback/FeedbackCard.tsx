@@ -37,7 +37,8 @@ export default function FeedbackCard() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/feedback");
+      // Only this person's own notes, even for Guardians (whose default is the inbox).
+      const res = await fetch("/api/feedback?mine=1");
       if (!res.ok) return;
       const { items } = await res.json();
       setMine(Array.isArray(items) ? items : []);
