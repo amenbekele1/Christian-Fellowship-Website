@@ -27,11 +27,14 @@ export async function GET(req: NextRequest) {
   const busGroupId = searchParams.get("busGroupId");
   const userId = searchParams.get("userId");
   const month = searchParams.get("month"); // YYYY-MM
+  const date = searchParams.get("date");   // YYYY-MM-DD — one session
 
   const where: any = {};
   if (busGroupId) where.busGroupId = busGroupId;
   if (userId) where.userId = userId;
-  if (month) {
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    where.date = new Date(`${date}T00:00:00.000Z`);
+  } else if (month) {
     const [year, m] = month.split("-").map(Number);
     where.date = {
       gte: new Date(year, m - 1, 1),
@@ -78,6 +81,14 @@ export async function POST(req: NextRequest) {
   // is always identical for the same calendar day regardless of submission time.
   const attendanceDate = new Date(date.split("T")[0] + "T00:00:00.000Z");
 
+  // Who was already absent on this date — editing a recorded session must
+  // not re-send absence reports for people leaders already heard about.
+  const previous = await prisma.attendance.findMany({
+    where: { date: attendanceDate, userId: { in: records.map((r) => r.userId) } },
+    select: { userId: true, status: true },
+  });
+  const wasAbsent = new Set(previous.filter((p) => p.status === "ABSENT").map((p) => p.userId));
+
   const results = [];
   // Map: busGroupId -> { group, absentMembers[] }
   const absentByGroup = new Map<string, { group: any; members: Array<{ name: string; phone?: string }> }>();
@@ -99,7 +110,7 @@ export async function POST(req: NextRequest) {
     });
     results.push(attendance);
 
-    if (record.status === "ABSENT") {
+    if (record.status === "ABSENT" && !wasAbsent.has(record.userId)) {
       if (record.busGroupId) {
         if (!absentByGroup.has(record.busGroupId)) {
           const grp = await prisma.bUSGroup.findUnique({

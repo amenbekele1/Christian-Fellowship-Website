@@ -44,7 +44,7 @@ const leaderLinks = [
 ];
 
 const adminLinks = [
-  { href: "/dashboard/attendance",         label: "Record Attendance", icon: ClipboardList },
+  { href: "/dashboard/attendance",         label: "Attendance",        icon: ClipboardList },
   { href: "/dashboard/admin/members",      label: "Members",           icon: UserCog },
   { href: "/dashboard/admin/bus-groups",   label: "BUS Groups",        icon: Users },
   { href: "/dashboard/admin/events",       label: "Events",            icon: Calendar },

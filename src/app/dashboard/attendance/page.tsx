@@ -1,216 +1,469 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { ClipboardList, CheckCircle, XCircle, MinusCircle, Save } from "lucide-react";
-import { warsawDateKey } from "@/lib/timezone";
+import {
+  ClipboardList, CheckCircle, XCircle, MinusCircle, Save, Search, Download, ChevronRight, CalendarDays, Users,
+} from "lucide-react";
+import { formatWarsaw, warsawDateKey } from "@/lib/timezone";
 import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
+import { toast } from "@/components/ui/toaster";
+
+type Status = "PRESENT" | "ABSENT" | "EXCUSED";
+type Tab = "record" | "sessions" | "members";
 
 interface Member {
   id: string;
   name: string;
   email: string;
-  phone?: string | null;
+  isActive?: boolean;
   busGroup?: { id: string; name: string } | null;
 }
-
-interface MemberRecord {
+interface Group { id: string; name: string }
+interface SessionRow { date: string; present: number; absent: number; excused: number }
+interface MemberStat {
   userId: string;
-  status: "PRESENT" | "ABSENT" | "EXCUSED";
-  busGroupId: string | null;
+  name: string;
+  phone: string | null;
+  busGroup: Group | null;
+  present: number;
+  absent: number;
+  excused: number;
+  lastPresent: string | null;
+  rate: number | null;
 }
 
-const MEMBERS_URL = "/api/members?limit=200";
+const MEMBERS_URL = "/api/members?limit=500";
+const GROUPS_URL = "/api/bus-groups";
+
+const STATUS: Record<Status, { label: string; short: string; icon: typeof CheckCircle; on: string }> = {
+  PRESENT: { label: "Present", short: "P", icon: CheckCircle, on: "bg-green-600 text-white border-green-600" },
+  ABSENT: { label: "Absent", short: "A", icon: XCircle, on: "bg-red-600 text-white border-red-600" },
+  EXCUSED: { label: "Excused", short: "E", icon: MinusCircle, on: "bg-amber-500 text-white border-amber-500" },
+};
+
+const longDate = (key: string) =>
+  formatWarsaw(`${key}T12:00:00Z`, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+const shortDate = (key: string) =>
+  formatWarsaw(`${key}T12:00:00Z`, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+const daysAgo = (n: number) => warsawDateKey(new Date(Date.now() - n * 86_400_000));
+
+const PERIODS = [
+  { key: "1m", label: "Last month", from: () => daysAgo(31) },
+  { key: "3m", label: "Last 3 months", from: () => daysAgo(91) },
+  { key: "6m", label: "Last 6 months", from: () => daysAgo(183) },
+  { key: "1y", label: "Last 12 months", from: () => daysAgo(365) },
+] as const;
 
 function membersFrom(json: any): Member[] {
-  if (!json) return [];
-  const raw = Array.isArray(json) ? json : (json.data ?? []);
-  return raw.filter((m: Member) => m);
+  const raw = Array.isArray(json) ? json : (json?.data ?? []);
+  return raw.filter((m: Member) => m && m.isActive !== false);
 }
 
-function allPresent(members: Member[]): Record<string, "PRESENT" | "ABSENT" | "EXCUSED"> {
-  const init: Record<string, "PRESENT" | "ABSENT" | "EXCUSED"> = {};
-  members.forEach((m) => { init[m.id] = "PRESENT"; });
-  return init;
-}
-
+/**
+ * Attendance tracker (Guardians): record a session, browse every recorded
+ * session, and see each member's attendance over a period.
+ */
 export default function AttendancePage() {
   const { data: session } = useSession();
-  const cachedMembers = membersFrom(peekCache(MEMBERS_URL));
-  const [members, setMembers] = useState<Member[]>(cachedMembers);
-  // Today on the Warsaw calendar (toISOString would give the UTC day, which is
-  // yesterday between midnight and 01:00/02:00 in Warsaw).
-  const [date, setDate] = useState(() => warsawDateKey());
-  const [attendance, setAttendance] = useState<Record<string, "PRESENT" | "ABSENT" | "EXCUSED">>(() => allPresent(cachedMembers));
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [loading, setLoading] = useState(cachedMembers.length === 0);
+  const isGuardian = session?.user.role === "GUARDIAN";
+  const [tab, setTab] = useState<Tab>("record");
 
-  if (session && session.user.role !== "GUARDIAN") {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <ClipboardList className="w-12 h-12 text-gray-300 mb-4" />
-        <h2 className="text-xl font-semibold text-gray-700 mb-2">Access Restricted</h2>
-        <p className="text-gray-400 text-sm">Only Guardians can record attendance.</p>
-      </div>
-    );
-  }
+  // Shared data
+  const [members, setMembers] = useState<Member[]>(() => membersFrom(peekCache(MEMBERS_URL)));
+  const [groups, setGroups] = useState<Group[]>(() => peekCache<Group[]>(GROUPS_URL) ?? []);
+  const [groupFilter, setGroupFilter] = useState("");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
-    fetchJsonCached<any>(MEMBERS_URL)
-      .then((json: any) => {
-        const active = membersFrom(json);
-        setMembers(active);
-        // Keep marks already made; new members default to present.
-        setAttendance(prev => ({ ...allPresent(active), ...prev }));
-      })
-      .catch(() => setMembers([]))
-      .finally(() => setLoading(false));
+    if (!isGuardian) return;
+    fetchJsonCached<any>(MEMBERS_URL).then((j) => setMembers(membersFrom(j))).catch(() => {});
+    fetchJsonCached<Group[]>(GROUPS_URL).then((g) => setGroups(Array.isArray(g) ? g : [])).catch(() => {});
+  }, [isGuardian]);
+
+  // ── Record ───────────────────────────────────────────────────
+  const [date, setDate] = useState(() => warsawDateKey());
+  const [marks, setMarks] = useState<Record<string, Status | null>>({});
+  const [recordedCount, setRecordedCount] = useState(0);
+  const [loadingDate, setLoadingDate] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const loadDate = useCallback(async (key: string, list: Member[]) => {
+    setLoadingDate(true);
+    try {
+      const res = await fetch(`/api/attendance?date=${key}`);
+      const rows: { userId: string; status: Status }[] = res.ok ? await res.json() : [];
+      const existing = new Map(rows.map((r) => [r.userId, r.status]));
+      setRecordedCount(rows.length);
+      // A recorded session shows what was saved; a new one starts all-present.
+      setMarks(Object.fromEntries(list.map((m) => [m.id, existing.get(m.id) ?? (rows.length ? null : "PRESENT")])));
+    } finally {
+      setLoadingDate(false);
+    }
   }, []);
 
-  const toggle = (id: string) => {
-    setAttendance(prev => ({
-      ...prev,
-      [id]: prev[id] === "PRESENT" ? "ABSENT" : prev[id] === "ABSENT" ? "EXCUSED" : "PRESENT",
-    }));
-  };
+  useEffect(() => {
+    if (isGuardian && members.length) loadDate(date, members);
+  }, [isGuardian, date, members, loadDate]);
 
-  const saveAttendance = async () => {
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return members.filter(
+      (m) =>
+        (!groupFilter || (groupFilter === "none" ? !m.busGroup : m.busGroup?.id === groupFilter)) &&
+        (!q || m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q))
+    );
+  }, [members, groupFilter, query]);
+
+  const counts = useMemo(() => {
+    const c = { PRESENT: 0, ABSENT: 0, EXCUSED: 0, none: 0 };
+    for (const m of members) {
+      const s = marks[m.id];
+      if (s) c[s]++;
+      else c.none++;
+    }
+    return c;
+  }, [members, marks]);
+
+  // ── Sessions & Members (summary) ─────────────────────────────
+  const [period, setPeriod] = useState<(typeof PERIODS)[number]["key"]>("3m");
+  const [summary, setSummary] = useState<{ sessions: SessionRow[]; members: MemberStat[] } | null>(null);
+  const [sortBy, setSortBy] = useState<"rate" | "name">("rate");
+  const [openMember, setOpenMember] = useState<string | null>(null);
+  const [history, setHistory] = useState<{ date: string; status: Status }[]>([]);
+
+  const save = async () => {
+    const records = members
+      .filter((m) => marks[m.id])
+      .map((m) => ({ userId: m.id, status: marks[m.id] as Status, busGroupId: m.busGroup?.id ?? null }));
+    if (!records.length) return toast.error("Mark at least one member first.");
     setSaving(true);
-    setSaved(false);
     try {
-      const records: MemberRecord[] = members.map(m => ({
-        userId: m.id,
-        status: attendance[m.id] || "PRESENT",
-        busGroupId: m.busGroup?.id || null,
-      }));
-      await fetch("/api/attendance", {
+      const res = await fetch("/api/attendance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ records, date }),
       });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Saving failed");
+      toast.success(`Attendance saved for ${shortDate(date)}`);
+      setRecordedCount(records.length);
+      setSummary(null); // the other tabs reload with the new numbers
+    } catch (e: any) {
+      toast.error(e.message);
     } finally {
       setSaving(false);
     }
   };
 
-  // Group members by BUS group
-  const grouped = members.reduce<Record<string, { name: string; members: Member[] }>>((acc, m) => {
-    const key = m.busGroup?.id || "__none__";
-    const label = m.busGroup?.name || "No BUS Group";
-    if (!acc[key]) acc[key] = { name: label, members: [] };
-    acc[key].members.push(m);
-    return acc;
-  }, {});
+  useEffect(() => {
+    if (!isGuardian || tab === "record") return;
+    const from = PERIODS.find((p) => p.key === period)!.from();
+    const params = new URLSearchParams({ from, to: warsawDateKey() });
+    if (groupFilter && groupFilter !== "none") params.set("busGroupId", groupFilter);
+    let cancelled = false;
+    fetch(`/api/attendance/summary?${params}`)
+      .then((r) => r.json())
+      .then((d) => !cancelled && setSummary({ sessions: d.sessions ?? [], members: d.members ?? [] }))
+      .catch(() => !cancelled && setSummary({ sessions: [], members: [] }));
+    return () => { cancelled = true; };
+  }, [isGuardian, tab, period, groupFilter, recordedCount]);
 
-  // Sort: named groups first, unassigned last
-  const groupEntries = Object.entries(grouped).sort(([a], [b]) => {
-    if (a === "__none__") return 1;
-    if (b === "__none__") return -1;
-    return 0;
-  });
+  const memberRows = useMemo(() => {
+    if (!summary) return [];
+    const q = query.trim().toLowerCase();
+    const rows = summary.members.filter(
+      (m) => (groupFilter !== "none" || !m.busGroup) && (!q || m.name.toLowerCase().includes(q))
+    );
+    return rows.sort((a, b) =>
+      sortBy === "name" ? a.name.localeCompare(b.name) : (a.rate ?? 101) - (b.rate ?? 101) || a.name.localeCompare(b.name)
+    );
+  }, [summary, query, sortBy, groupFilter]);
 
-  const present = Object.values(attendance).filter(s => s === "PRESENT").length;
-  const absent = Object.values(attendance).filter(s => s === "ABSENT").length;
-  const excused = Object.values(attendance).filter(s => s === "EXCUSED").length;
+  const openHistory = async (userId: string) => {
+    if (openMember === userId) return setOpenMember(null);
+    setOpenMember(userId);
+    setHistory([]);
+    const res = await fetch(`/api/attendance?userId=${userId}`);
+    const rows = res.ok ? await res.json() : [];
+    setHistory(rows.map((r: any) => ({ date: String(r.date).slice(0, 10), status: r.status })));
+  };
 
-  if (loading) return (
-    <div className="flex items-center justify-center py-20">
-      <svg className="animate-spin w-8 h-8 text-gold-600" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-      </svg>
+  const downloadCsv = () => {
+    const header = ["Member", "BUS group", "Present", "Absent", "Excused", "Rate %", "Last present"];
+    const lines = memberRows.map((m) =>
+      [m.name, m.busGroup?.name ?? "", m.present, m.absent, m.excused, m.rate ?? "", m.lastPresent ?? ""]
+        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .join(",")
+    );
+    const blob = new Blob([[header.join(","), ...lines].join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `attendance-${period}-${warsawDateKey()}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+
+  if (session && !isGuardian) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <ClipboardList className="w-12 h-12 text-gray-300 mb-4" />
+        <h2 className="text-xl font-semibold text-gray-700 mb-2">Access Restricted</h2>
+        <p className="text-gray-400 text-sm">Only Guardians can manage attendance.</p>
+      </div>
+    );
+  }
+
+  const filterBar = (
+    <div className="flex flex-wrap gap-2 mb-4">
+      <div className="relative flex-1 min-w-[180px]">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search members…"
+          className="w-full pl-9 pr-3 h-10 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+        />
+      </div>
+      <select
+        value={groupFilter}
+        onChange={(e) => setGroupFilter(e.target.value)}
+        className="h-10 rounded-xl border border-gray-200 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+      >
+        <option value="">All BUS groups</option>
+        {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+        <option value="none">No BUS group</option>
+      </select>
     </div>
   );
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display text-3xl font-bold text-gray-800">Record Attendance</h1>
-          <p className="text-gray-500 mt-1">{members.length} members · click to toggle status</p>
-        </div>
-        <input
-          type="date"
-          value={date}
-          onChange={e => setDate(e.target.value)}
-          className="h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
-        />
+    <div className="max-w-5xl mx-auto">
+      <div className="mb-5">
+        <h1 className="font-display text-3xl font-bold text-gray-800">Attendance</h1>
+        <p className="text-gray-500 mt-1">Record each gathering and follow how members are attending.</p>
       </div>
 
-      {/* Legend */}
-      <div className="flex gap-4 text-xs text-gray-500 mb-4">
-        <span className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-gold-500"/>Present</span>
-        <span className="flex items-center gap-1"><XCircle className="w-3.5 h-3.5 text-red-400"/>Absent</span>
-        <span className="flex items-center gap-1"><MinusCircle className="w-3.5 h-3.5 text-amber-400"/>Excused</span>
-        <span className="text-gray-400">· Click name to toggle</span>
-      </div>
-
-      <div className="space-y-4">
-        {groupEntries.map(([groupId, { name: groupName, members: groupMembers }]) => (
-          <div key={groupId} className="bg-white rounded-2xl border border-brown-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-3 bg-brown-50 border-b border-brown-200 flex items-center justify-between">
-              <p className="text-sm font-semibold text-brown-700">{groupName}</p>
-              <span className="text-xs text-gray-400">{groupMembers.length} members</span>
-            </div>
-            <div className="divide-y divide-brown-100">
-              {groupMembers.map(member => {
-                const status = attendance[member.id] || "PRESENT";
-                return (
-                  <button
-                    key={member.id}
-                    onClick={() => toggle(member.id)}
-                    className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors text-left"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-brown-100 flex items-center justify-center text-gold-500 font-bold text-sm shrink-0">
-                        {member.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">{member.name}</p>
-                        <p className="text-xs text-gray-400">{member.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {status === "PRESENT" && <CheckCircle className="w-5 h-5 text-gold-500"/>}
-                      {status === "ABSENT" && <XCircle className="w-5 h-5 text-red-400"/>}
-                      {status === "EXCUSED" && <MinusCircle className="w-5 h-5 text-amber-400"/>}
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        status === "PRESENT" ? "text-gold-500 bg-brown-100" :
-                        status === "ABSENT" ? "text-red-700 bg-red-100" :
-                        "text-amber-700 bg-amber-100"
-                      }`}>{status}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+      {/* Tabs */}
+      <div className="flex rounded-xl border border-gray-200 bg-white p-1 mb-5 w-fit" role="tablist">
+        {([
+          ["record", "Record", ClipboardList],
+          ["sessions", "Sessions", CalendarDays],
+          ["members", "Members", Users],
+        ] as const).map(([key, label, Icon]) => (
+          <button
+            key={key}
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            className={`flex items-center gap-1.5 px-4 h-9 rounded-lg text-sm font-semibold transition-colors ${
+              tab === key ? "bg-brown-800 text-white" : "text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <Icon className="w-4 h-4" /> {label}
+          </button>
         ))}
       </div>
 
-      {/* Footer save bar */}
-      <div className="sticky bottom-4 mt-6">
-        <div className="bg-white border border-brown-200 rounded-2xl shadow-lg px-5 py-4 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            <span className="text-gold-500 font-semibold">{present}</span> present ·{" "}
-            <span className="text-red-600 font-semibold">{absent}</span> absent ·{" "}
-            <span className="text-amber-600 font-semibold">{excused}</span> excused
+      {/* ── Record ── */}
+      {tab === "record" && (
+        <>
+          <div className="bg-white rounded-2xl border border-brown-200 p-4 mb-4 flex flex-wrap items-end gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Date</label>
+              <input
+                type="date"
+                value={date}
+                max={warsawDateKey()}
+                onChange={(e) => e.target.value && setDate(e.target.value)}
+                className="h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+              />
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <p className="font-semibold text-gray-800">{longDate(date)}</p>
+              <p className="text-xs mt-0.5 text-gray-500">
+                {loadingDate
+                  ? "Loading…"
+                  : recordedCount
+                    ? `Already recorded (${recordedCount} marked) — changes update this session.`
+                    : "Not recorded yet — everyone starts as present; mark who was absent."}
+              </p>
+            </div>
+            <div className="flex gap-3 text-xs font-semibold">
+              <span className="text-green-700">{counts.PRESENT} present</span>
+              <span className="text-red-700">{counts.ABSENT} absent</span>
+              <span className="text-amber-700">{counts.EXCUSED} excused</span>
+              {counts.none > 0 && <span className="text-gray-400">{counts.none} not marked</span>}
+            </div>
           </div>
-          <button
-            onClick={saveAttendance}
-            disabled={saving}
-            className="flex items-center gap-2 bg-brown-800 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 transition-colors disabled:opacity-50"
-          >
-            {saving
-              ? <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-              : <Save className="w-4 h-4"/>}
-            {saved ? "Saved! ✓" : saving ? "Saving..." : "Save Attendance"}
-          </button>
+
+          {filterBar}
+
+          <div className="bg-white rounded-2xl border border-brown-200 overflow-hidden divide-y divide-gray-100">
+            {visible.length === 0 && <p className="text-center text-sm text-gray-400 py-10">No members match.</p>}
+            {visible.map((m) => (
+              <div key={m.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="w-9 h-9 rounded-full bg-brown-100 flex items-center justify-center text-gold-600 font-bold text-sm shrink-0">
+                  {m.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{m.name}</p>
+                  <p className="text-xs text-gray-400 truncate">{m.busGroup?.name ?? "No BUS group"}</p>
+                </div>
+                <div className="flex gap-1.5 shrink-0" role="radiogroup" aria-label={`Attendance for ${m.name}`}>
+                  {(Object.keys(STATUS) as Status[]).map((s) => (
+                    <button
+                      key={s}
+                      role="radio"
+                      aria-checked={marks[m.id] === s}
+                      title={STATUS[s].label}
+                      onClick={() => setMarks((prev) => ({ ...prev, [m.id]: s }))}
+                      className={`w-9 h-9 rounded-lg border text-xs font-bold transition-colors ${
+                        marks[m.id] === s ? STATUS[s].on : "bg-white text-gray-400 border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      {STATUS[s].short}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="sticky bottom-0 mt-4 py-3 bg-gray-50/95 backdrop-blur flex flex-wrap gap-2 justify-end">
+            <button
+              onClick={() => setMarks((prev) => ({ ...prev, ...Object.fromEntries(visible.map((m) => [m.id, "PRESENT" as Status])) }))}
+              className="px-4 h-11 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-600"
+            >
+              Mark shown as present
+            </button>
+            <button
+              onClick={save}
+              disabled={saving || loadingDate}
+              className="flex items-center gap-2 px-6 h-11 rounded-xl bg-brown-800 text-white text-sm font-semibold disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" /> {saving ? "Saving…" : recordedCount ? "Update attendance" : "Save attendance"}
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Period picker for summaries */}
+      {tab !== "record" && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {PERIODS.map((p) => (
+            <button
+              key={p.key}
+              onClick={() => setPeriod(p.key)}
+              className={`px-3 h-8 rounded-lg text-xs font-semibold border ${
+                period === p.key ? "bg-brown-800 text-white border-brown-800" : "bg-white text-gray-500 border-gray-200"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
         </div>
-      </div>
+      )}
+
+      {/* ── Sessions ── */}
+      {tab === "sessions" && (
+        <>
+          {filterBar}
+          <div className="bg-white rounded-2xl border border-brown-200 overflow-hidden divide-y divide-gray-100">
+            {!summary && <p className="text-center text-sm text-gray-400 py-10">Loading…</p>}
+            {summary?.sessions.length === 0 && <p className="text-center text-sm text-gray-400 py-10">No attendance recorded in this period.</p>}
+            {summary?.sessions.map((s) => {
+              const marked = s.present + s.absent;
+              const rate = marked ? Math.round((s.present / marked) * 100) : 0;
+              return (
+                <button
+                  key={s.date}
+                  onClick={() => { setDate(s.date); setTab("record"); }}
+                  className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-gray-50"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800">{shortDate(s.date)}</p>
+                    <p className="text-xs text-gray-500">
+                      <span className="text-green-700">{s.present} present</span> · <span className="text-red-700">{s.absent} absent</span>
+                      {s.excused > 0 && <> · <span className="text-amber-700">{s.excused} excused</span></>}
+                    </p>
+                  </div>
+                  <div className="w-28 hidden sm:block">
+                    <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                      <div className="h-full bg-green-600" style={{ width: `${rate}%` }} />
+                    </div>
+                  </div>
+                  <span className="text-sm font-bold text-gray-700 w-12 text-right">{rate}%</span>
+                  <ChevronRight className="w-4 h-4 text-gray-300" />
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-gray-400 mt-2">Tap a session to view or correct it. Rate = present ÷ (present + absent); excused doesn&apos;t count against it.</p>
+        </>
+      )}
+
+      {/* ── Members ── */}
+      {tab === "members" && (
+        <>
+          {filterBar}
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <div className="flex rounded-lg border border-gray-200 bg-white p-0.5 text-xs font-semibold">
+              {([["rate", "Lowest attendance first"], ["name", "A–Z"]] as const).map(([k, l]) => (
+                <button key={k} onClick={() => setSortBy(k)} className={`px-3 h-7 rounded-md ${sortBy === k ? "bg-brown-800 text-white" : "text-gray-500"}`}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            <button onClick={downloadCsv} disabled={!memberRows.length} className="flex items-center gap-1.5 text-xs font-semibold text-brown-700 px-3 h-8 rounded-lg border border-gray-200 bg-white disabled:opacity-40">
+              <Download className="w-3.5 h-3.5" /> CSV
+            </button>
+          </div>
+          <div className="bg-white rounded-2xl border border-brown-200 overflow-hidden divide-y divide-gray-100">
+            {!summary && <p className="text-center text-sm text-gray-400 py-10">Loading…</p>}
+            {summary && memberRows.length === 0 && <p className="text-center text-sm text-gray-400 py-10">No members match.</p>}
+            {memberRows.map((m) => (
+              <div key={m.userId}>
+                <button onClick={() => openHistory(m.userId)} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{m.name}</p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {m.busGroup?.name ?? "No BUS group"} · {m.present}P {m.absent}A {m.excused}E
+                      {m.lastPresent ? ` · last present ${shortDate(m.lastPresent)}` : " · not present in this period"}
+                    </p>
+                  </div>
+                  <span
+                    className={`text-sm font-bold w-14 text-right ${
+                      m.rate === null ? "text-gray-300" : m.rate < 50 ? "text-red-600" : m.rate < 75 ? "text-amber-600" : "text-green-700"
+                    }`}
+                  >
+                    {m.rate === null ? "—" : `${m.rate}%`}
+                  </span>
+                  <ChevronRight className={`w-4 h-4 text-gray-300 transition-transform ${openMember === m.userId ? "rotate-90" : ""}`} />
+                </button>
+                {openMember === m.userId && (
+                  <div className="px-4 pb-4">
+                    {m.phone && <p className="text-xs text-gray-500 mb-2">Phone: <a className="underline" href={`tel:${m.phone}`}>{m.phone}</a></p>}
+                    {history.length === 0 ? (
+                      <p className="text-xs text-gray-400">No attendance recorded yet.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {history.slice(0, 30).map((h) => (
+                          <span key={h.date} className={`text-[11px] font-semibold px-2 py-1 rounded-md ${
+                            h.status === "PRESENT" ? "bg-green-50 text-green-700" : h.status === "ABSENT" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"
+                          }`}>
+                            {shortDate(h.date)} · {STATUS[h.status].label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-2">“—” means the member hasn&apos;t been marked present or absent in this period.</p>
+        </>
+      )}
     </div>
   );
 }
