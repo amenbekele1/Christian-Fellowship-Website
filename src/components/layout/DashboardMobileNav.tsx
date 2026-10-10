@@ -1,19 +1,59 @@
 "use client";
 
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X, ChevronLeft } from "lucide-react";
 import { DashboardSidebar, type SidebarUser, type MyTeam } from "./DashboardSidebar";
+
+/** Section pages that exist on their own (others fall back to the dashboard). */
+const NO_INDEX = new Set(["/dashboard/admin", "/dashboard/teams"]);
+
+function parentPath(path: string): string {
+  const parent = path.replace(/\/[^/]+\/?$/, "") || "/dashboard";
+  return NO_INDEX.has(parent) || !parent.startsWith("/dashboard") ? "/dashboard" : parent;
+}
 
 export function DashboardMobileNav({ user, teams }: { user: SidebarUser; teams: MyTeam[] }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // The installed app has no browser back button, so keep our own trail of
+  // pages visited in this session: going back pops it; with nothing to go
+  // back to (e.g. opened from a notification) we go up to the parent page.
+  const trail = useRef<string[]>([]);
+  useEffect(() => {
+    const t = trail.current;
+    if (t.length >= 2 && t[t.length - 2] === pathname) t.pop();
+    else if (t[t.length - 1] !== pathname) t.push(pathname);
+  }, [pathname]);
+
+  const goBack = () => {
+    if (trail.current.length > 1) router.back();
+    else router.push(parentPath(pathname));
+  };
+  const showBack = pathname !== "/dashboard";
 
   return (
     <>
       {/* Mobile top bar — dark brown, no white space */}
       <div className="lg:hidden flex items-center justify-between px-4 py-3" style={{ background: "#1C0F07", borderBottom: "1px solid rgba(201,168,76,0.12)" }}>
-        <div className="flex items-center gap-2">
-          <img src="/logo.svg" alt="WECF" className="h-9 w-auto" />
-          <span className="font-display font-bold text-sm" style={{ color: "#FAF7F0" }}>WECF</span>
+        <div className="flex items-center gap-1 min-w-0">
+          {showBack && (
+            <button
+              onClick={goBack}
+              className="p-2 -ml-2 rounded-lg shrink-0"
+              style={{ color: "#C9A84C" }}
+              aria-label="Back"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+          )}
+          <Link href="/dashboard" className="flex items-center gap-2 min-w-0" aria-label="Dashboard">
+            <img src="/logo.svg" alt="" className="h-9 w-auto shrink-0" />
+            <span className="font-display font-bold text-sm" style={{ color: "#FAF7F0" }}>WECF</span>
+          </Link>
         </div>
         <button
           onClick={() => setOpen(true)}

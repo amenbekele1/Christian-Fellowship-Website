@@ -98,7 +98,8 @@ export function DashboardSidebar({
     >
       {/* Logo */}
       <div className="px-5 py-5" style={{ borderBottom: "1px solid rgba(201,168,76,0.12)" }}>
-        <Link href="/" className="flex items-center gap-3 group">
+        {/* In the app, "home" is the dashboard; the public site has its own link below. */}
+        <Link href="/dashboard" onClick={onClose} className="flex items-center gap-3 group">
           <img src="/logo.svg" alt="WECF" className="h-10 w-auto transition-transform duration-200 group-hover:scale-105" />
           <div>
             <p className="font-display font-bold text-xs leading-tight" style={{ color: "#FAF7F0" }}>

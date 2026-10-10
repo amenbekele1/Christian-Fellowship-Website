@@ -64,8 +64,9 @@ export default async function EventDetailPage({
 
   // Members-only gate. Enforced here on the server, so the content is never
   // sent to a signed-out visitor regardless of what the UI does.
+  // Members get sent back to their Events page in the app, not the public list.
+  const session = await getServerSession(authOptions);
   if (!event.isPublic) {
-    const session = await getServerSession(authOptions);
     if (!session) {
       return (
         <div className="min-h-[70vh] bg-brown-50 flex items-center justify-center px-6 py-20">
@@ -169,10 +170,10 @@ export default async function EventDetailPage({
       {/* ── Body ───────────────────────────────────────────── */}
       <div className="max-w-3xl mx-auto px-6 py-12">
         <Link
-          href="/events"
+          href={session ? "/dashboard/events" : "/events"}
           className="inline-flex items-center gap-1.5 text-sm text-brown-500 hover:text-gold-600 mb-8 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> All events
+          <ArrowLeft className="w-4 h-4" /> {session ? "Back to events" : "All events"}
         </Link>
 
         {event.description && (

@@ -137,9 +137,15 @@ export default function FeedbackCard() {
           className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none"
         />
 
-        <div className="flex items-center justify-between mt-3">
+        <div className="flex items-center justify-between gap-3 mt-3">
           <p className="text-xs text-gray-400">
-            Your name and email are included so we can reply.
+            {message.trim().length > 0 && message.trim().length < 5 ? (
+              <span className="text-amber-700">
+                Please write at least 5 characters ({5 - message.trim().length} more).
+              </span>
+            ) : (
+              <>At least 5 characters. Your name and email are included so we can reply.</>
+            )}
           </p>
           <button
             type="submit"

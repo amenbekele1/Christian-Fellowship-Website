@@ -132,21 +132,36 @@ export default function LibraryPage() {
     setShowDatePicker(null);
     setPickupDate("");
     setReturnDate("");
+    setModalError(null);
   };
 
+  // ── Reservation date rules (checked live, shown next to the button) ──
+  const MAX_LOAN_DAYS = 30;
+  const dayMs = 86_400_000;
+  const toUtc = (d: string) => Date.parse(`${d}T00:00:00Z`);
+  const keyFromUtc = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+  const shortDate = (d: string) =>
+    new Date(`${d}T12:00:00Z`).toLocaleDateString("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" });
+  const latestReturn = pickupDate ? keyFromUtc(toUtc(pickupDate) + MAX_LOAN_DAYS * dayMs) : "";
+  const loanDays = pickupDate && returnDate ? Math.round((toUtc(returnDate) - toUtc(pickupDate)) / dayMs) : 0;
+  const dateError = (() => {
+    if (!pickupDate) return null;
+    if (pickupDate < warsawDateKey()) return "The pickup date can't be in the past.";
+    if (!isSaturday(pickupDate)) return "Books are collected on Saturdays — please pick a Saturday.";
+    if (!returnDate) return null;
+    if (loanDays < 1) return "The return date must be after the pickup date.";
+    if (loanDays > MAX_LOAN_DAYS)
+      return `Books can be borrowed for up to ${MAX_LOAN_DAYS} days. Choose a return date on or before ${shortDate(latestReturn)}.`;
+    return null;
+  })();
+  const [modalError, setModalError] = useState<string | null>(null);
+
   const reserveBook = async () => {
-    if (!showDatePicker) return;
-    if (!pickupDate || !returnDate) {
-      setMessage({ type: "error", text: "Please select both pickup and return dates" });
-      return;
-    }
-    if (!isSaturday(pickupDate)) {
-      setMessage({ type: "error", text: "Pickup date must be a Saturday" });
-      return;
-    }
+    if (!showDatePicker || !pickupDate || !returnDate || dateError) return;
 
     setReserving(showDatePicker);
     setMessage(null);
+    setModalError(null);
     try {
       const res = await fetch("/api/books/rentals", {
         method: "POST",
@@ -154,13 +169,14 @@ export default function LibraryPage() {
         body: JSON.stringify({ bookId: showDatePicker, pickupDate, returnDate }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) throw new Error(data.error ?? "Couldn't reserve this book.");
       setMessage({ type: "success", text: "Book reserved! Collect it on the selected date." });
       closeDatePicker();
       fetchBooks(search);
       fetchMyRentals();
     } catch (err: any) {
-      setMessage({ type: "error", text: err.message });
+      // Shown inside the dialog — the page-level banner is hidden behind it.
+      setModalError(err.message);
     } finally {
       setReserving(null);
     }
@@ -369,30 +385,40 @@ export default function LibraryPage() {
                     <input
                       type="date"
                       value={pickupDate}
-                      onChange={(e) => setPickupDate(e.target.value)}
+                      min={warsawDateKey()}
+                      onChange={(e) => { setPickupDate(e.target.value); setModalError(null); }}
                       className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
                     />
-                    {pickupDate && !isSaturday(pickupDate) && (
-                      <p className="text-xs text-red-500 mt-1">Please select a Saturday</p>
-                    )}
+
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Return Date</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Return Date <span className="font-normal text-gray-400">(up to {MAX_LOAN_DAYS} days)</span>
+                    </label>
                     <input
                       type="date"
                       value={returnDate}
-                      onChange={(e) => setReturnDate(e.target.value)}
-                      min={pickupDate ? new Date(new Date(pickupDate).getTime() + 86400000).toISOString().split("T")[0] : ""}
-                      max={pickupDate ? new Date(new Date(pickupDate).getTime() + 30 * 86400000).toISOString().split("T")[0] : ""}
+                      onChange={(e) => { setReturnDate(e.target.value); setModalError(null); }}
+                      min={pickupDate ? keyFromUtc(toUtc(pickupDate) + dayMs) : ""}
+                      max={latestReturn}
                       className="w-full h-10 rounded-lg border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
                     />
-                    {pickupDate && returnDate && (
+                    {pickupDate && isSaturday(pickupDate) && (
                       <p className="text-xs text-gray-500 mt-1">
-                        {Math.floor((new Date(returnDate).getTime() - new Date(pickupDate).getTime()) / 86400000)} days
+                        {returnDate && loanDays >= 1 && loanDays <= MAX_LOAN_DAYS
+                          ? `${loanDays} day${loanDays === 1 ? "" : "s"} — return by ${shortDate(returnDate)}`
+                          : `Return on or before ${shortDate(latestReturn)}`}
                       </p>
                     )}
                   </div>
+
+                  {(dateError || modalError) && (
+                    <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm" role="alert">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <p>{dateError ?? modalError}</p>
+                    </div>
+                  )}
 
                   <div className="flex gap-3 pt-4">
                     <button onClick={closeDatePicker} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium">
@@ -400,7 +426,7 @@ export default function LibraryPage() {
                     </button>
                     <button
                       onClick={reserveBook}
-                      disabled={!pickupDate || !returnDate || !isSaturday(pickupDate) || reserving === showDatePicker}
+                      disabled={!pickupDate || !returnDate || Boolean(dateError) || reserving === showDatePicker}
                       className="flex-1 bg-brown-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-brown-800 disabled:opacity-50 transition-colors"
                     >
                       {reserving === showDatePicker ? "Reserving..." : "Reserve Book"}

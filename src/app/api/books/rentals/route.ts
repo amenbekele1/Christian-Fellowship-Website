@@ -7,6 +7,7 @@ import { background } from "@/lib/background";
 import { sendEmail, bookReservedEmail } from "@/lib/email";
 import { sendPushToUsers } from "@/lib/webpush";
 import { formatDate } from "@/lib/utils";
+import { warsawDateKey } from "@/lib/timezone";
 
 /**
  * Tell the Library team (members of the LIBRARIAN service team and its
@@ -106,6 +107,9 @@ export async function POST(req: NextRequest) {
   const pickupDateObj = new Date(pickupDate);
   const returnDateObj = new Date(returnDate);
 
+  if (pickupDate.slice(0, 10) < warsawDateKey()) {
+    return NextResponse.json({ error: "The pickup date can't be in the past" }, { status: 400 });
+  }
   if (returnDateObj <= pickupDateObj) {
     return NextResponse.json({ error: "Return date must be after pickup date" }, { status: 400 });
   }
@@ -113,7 +117,7 @@ export async function POST(req: NextRequest) {
     (returnDateObj.getTime() - pickupDateObj.getTime()) / (1000 * 60 * 60 * 24)
   );
   if (daysDifference > 30) {
-    return NextResponse.json({ error: "Rental period cannot exceed 30 days" }, { status: 400 });
+    return NextResponse.json({ error: "Books can be borrowed for up to 30 days — choose an earlier return date" }, { status: 400 });
   }
 
   // Atomic transaction: check availability, claim copy, create rental
