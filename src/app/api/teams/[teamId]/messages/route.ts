@@ -56,6 +56,19 @@ export async function POST(
   const body = await req.json();
   const data = msgSchema.parse(body);
 
+  // A double tap can send the same message twice; return the first instead.
+  const duplicate = await prisma.groupMessage.findFirst({
+    where: {
+      teamId: params.teamId,
+      senderId: auth.userId,
+      content: data.content ?? null,
+      fileUrl: data.fileUrl ?? null,
+      createdAt: { gte: new Date(Date.now() - 10_000) },
+    },
+    include: { sender: { select: { id: true, name: true } } },
+  });
+  if (duplicate) return NextResponse.json(serializeMsg(duplicate), { status: 200 });
+
   const message = await prisma.groupMessage.create({
     data: {
       teamId: params.teamId,

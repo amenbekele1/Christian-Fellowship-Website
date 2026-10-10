@@ -11,6 +11,14 @@ interface Message {
   id: string; seq: number; senderId: string; content?: string | null;
   fileUrl?: string | null; fileName?: string | null; fileType?: string | null;
   isAnnouncement: boolean; createdAt: string; sender: Sender;
+  /** Local-only: shown immediately while the server saves it. */
+  pending?: boolean;
+}
+
+/** Merge new messages in, never showing the same message twice. */
+function mergeMessages(prev: Message[], incoming: Message[]): Message[] {
+  const seen = new Set(prev.map((m) => m.id));
+  return [...prev, ...incoming.filter((m) => !seen.has(m.id))];
 }
 
 /**
@@ -43,6 +51,8 @@ export default function HubChat({
   const listEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Guards against double taps: state updates too late to stop a second tap.
+  const sendingRef = useRef(false);
 
   const fetchMessages = useCallback(async (after: number, initial = false) => {
     try {
@@ -51,7 +61,7 @@ export default function HubChat({
       const { messages: newMsgs, latestSeq, canAnnounce: may } = await res.json();
       if (initial) setCanAnnounce(Boolean(may));
       if (newMsgs.length > 0) {
-        setMessages(prev => initial ? newMsgs : [...prev, ...newMsgs]);
+        setMessages(prev => initial ? newMsgs : mergeMessages(prev, newMsgs));
         lastSeqRef.current = latestSeq;
         setTimeout(() => listEndRef.current?.scrollIntoView({ behavior: initial ? "auto" : "smooth" }), 50);
       }
@@ -88,32 +98,65 @@ export default function HubChat({
 
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() && !uploadedFile) return;
+    if (sendingRef.current) return;
+    const text = input.trim();
+    const file = uploadedFile;
+    if (!text && !file) return;
+    sendingRef.current = true;
     setSending(true);
     setError(null);
+
+    // Show it straight away and clear the box, so it's obvious it went.
+    const tempId = `pending-${Date.now()}`;
+    const optimistic: Message = {
+      id: tempId,
+      seq: Number.MAX_SAFE_INTEGER,
+      senderId: session?.user.id ?? "",
+      content: text || null,
+      fileUrl: file?.url ?? null,
+      fileName: file?.name ?? null,
+      fileType: file?.type ?? null,
+      isAnnouncement: canAnnounce && announce,
+      createdAt: new Date().toISOString(),
+      sender: { id: session?.user.id ?? "", name: session?.user.name ?? "" },
+      pending: true,
+    };
+    setMessages(prev => [...prev, optimistic]);
+    setInput("");
+    setUploadedFile(null);
+    const wasAnnouncement = announce;
+    setAnnounce(false);
+    setTimeout(() => listEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+
     try {
       const res = await fetch(`${apiBase}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          content: input.trim() || undefined,
-          fileUrl: uploadedFile?.url,
-          fileName: uploadedFile?.name,
-          fileType: uploadedFile?.type,
-          announce: canAnnounce && announce,
+          content: text || undefined,
+          fileUrl: file?.url,
+          fileName: file?.name,
+          fileType: file?.type,
+          announce: canAnnounce && wasAnnouncement,
         }),
       });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
-      const msg = await res.json();
-      setMessages(prev => [...prev, msg]);
-      lastSeqRef.current = msg.seq;
-      setInput("");
-      setUploadedFile(null);
-      setAnnounce(false);
-      setTimeout(() => listEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error ?? "Failed to send"); }
+      const msg: Message = await res.json();
+      // Swap the placeholder for the saved message (unless polling already added it).
+      setMessages(prev => {
+        const without = prev.filter(m => m.id !== tempId);
+        return without.some(m => m.id === msg.id) ? without : [...without, msg];
+      });
+      lastSeqRef.current = Math.max(lastSeqRef.current, msg.seq);
     } catch (err: any) {
-      setError(err.message ?? "Failed to send");
+      // Put it back so nothing typed is lost.
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setInput(text);
+      setUploadedFile(file);
+      setAnnounce(wasAnnouncement);
+      setError(`${err.message ?? "Failed to send"} — your message is back in the box, try again.`);
     } finally {
+      sendingRef.current = false;
       setSending(false);
     }
   };
@@ -166,7 +209,7 @@ export default function HubChat({
             );
           }
           return (
-            <div key={msg.id} className={`flex gap-2.5 group ${isMe ? "flex-row-reverse" : ""}`}>
+            <div key={msg.id} className={`flex gap-2.5 group ${isMe ? "flex-row-reverse" : ""} ${msg.pending ? "opacity-60" : ""}`}>
               <div className="w-8 h-8 rounded-full bg-brown-100 flex items-center justify-center text-gold-500 font-bold text-xs shrink-0 mt-1">
                 {msg.sender.name.charAt(0).toUpperCase()}
               </div>
@@ -174,9 +217,9 @@ export default function HubChat({
                 <div className="flex items-center gap-2">
                   {!isMe && <span className="text-xs font-medium text-gray-600">{msg.sender.name}</span>}
                   <span className="text-xs text-gray-400">
-                    {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                    {msg.pending ? "Sending…" : formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
                   </span>
-                  {isMe && (
+                  {isMe && !msg.pending && (
                     <button onClick={() => deleteMsg(msg.id)} className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 text-gray-300 hover:text-red-400">
                       <Trash2 className="w-3 h-3" />
                     </button>
