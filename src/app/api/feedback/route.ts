@@ -119,12 +119,16 @@ export async function PATCH(req: NextRequest) {
       status: data.status,
       adminNote: data.adminNote ?? existing.adminNote,
       resolvedAt: nowFixed ? existing.resolvedAt ?? new Date() : null,
-      notified: shouldNotify ? true : existing.notified,
     },
   });
 
+  // Send the email while the Guardian waits, so the page can say whether it
+  // actually went out. `notified` is only set when it did — a failed email
+  // can be retried with "Resend email".
+  let emailSent: boolean | null = null;
+  let emailError: string | null = null;
   if (shouldNotify) {
-    background(sendEmail({
+    const result = await sendEmail({
       to: existing.user.email,
       subject: "Your feedback has been sorted — thank you",
       html: feedbackResolvedEmail(
@@ -132,7 +136,15 @@ export async function PATCH(req: NextRequest) {
         existing.message,
         data.adminNote ?? existing.adminNote
       ),
-    }));
+    });
+    emailSent = result.success;
+    if (result.success) {
+      await prisma.feedback.update({ where: { id }, data: { notified: true } });
+      updated.notified = true;
+    } else {
+      const err = (result as any).error;
+      emailError = String(err?.response ?? err?.message ?? "unknown error").slice(0, 200);
+    }
 
     background(sendPushToUser(existing.user.id, {
       title: "Your feedback has been sorted",
@@ -142,5 +154,5 @@ export async function PATCH(req: NextRequest) {
     }));
   }
 
-  return NextResponse.json({ ok: true, item: updated });
+  return NextResponse.json({ ok: true, item: updated, emailSent, emailError, emailTo: existing.user.email });
 }

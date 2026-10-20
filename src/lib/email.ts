@@ -64,6 +64,9 @@ export async function sendEmail({ to, subject, html, replyTo }: EmailOptions) {
   for (let attempt = 0; ; attempt++) {
     try {
       await transporter.sendMail(message);
+      // Traceable in the logs without exposing full addresses.
+      const masked = String(message.to).replace(/(^|,)\s*([^@,]{0,2})[^@,]*@/g, "$1$2…@");
+      console.log(`Email sent: "${subject}" → ${masked}`);
       return { success: true };
     } catch (error: any) {
       if (attempt < RETRY_DELAYS_MS.length && isTransient(error)) {

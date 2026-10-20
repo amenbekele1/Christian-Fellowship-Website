@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Bug, Lightbulb, MessageCircle, AlertCircle, X, Mail, Check } from "lucide-react";
 import { peekCache, fetchJsonCached } from "@/lib/fetch-cache";
+import { toast } from "@/components/ui/toaster";
 
 type Status = "OPEN" | "IN_PROGRESS" | "FIXED" | "DECLINED";
 
@@ -77,7 +78,12 @@ export default function AdminFeedbackPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status, adminNote: adminNote ?? item.adminNote }),
       });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error);
+      // Say plainly whether the member's email went out.
+      if (d.emailSent === true) toast.success(`Marked as sorted — email sent to ${d.emailTo}`);
+      else if (d.emailSent === false)
+        toast.error(`Marked as sorted, but the email to ${d.emailTo} couldn't be sent (${d.emailError}). Use “Resend email” to try again.`);
       setNoteFor(null);
       setNote("");
       load();
@@ -154,11 +160,20 @@ export default function AdminFeedbackPage() {
                           : item.status === "FIXED" ? "Sorted"
                           : item.status === "DECLINED" ? "Not planned" : "Open"}
                       </span>
-                      {item.notified && (
-                        <span className="inline-flex items-center gap-1 text-xs text-green-600">
-                          <Mail className="w-3 h-3" /> notified
+                      {item.notified ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600" title="The member was emailed that this is sorted">
+                          <Mail className="w-3 h-3" /> email sent
                         </span>
-                      )}
+                      ) : item.status === "FIXED" ? (
+                        <button
+                          onClick={() => update(item, "FIXED")}
+                          disabled={saving}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 disabled:opacity-50"
+                          title="The 'sorted' email didn't go out — try again"
+                        >
+                          <Mail className="w-3 h-3" /> Email not sent · Resend email
+                        </button>
+                      ) : null}
                       <span className="text-xs text-gray-400 ml-auto">
                         {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
                       </span>
