@@ -53,6 +53,16 @@ export default function HubChat({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   // Guards against double taps: state updates too late to stop a second tap.
   const sendingRef = useRef(false);
+  const textRef = useRef<HTMLTextAreaElement>(null);
+
+  // The message box grows with what's typed (up to ~6 lines, then scrolls),
+  // so a longer message can be read and edited before sending.
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  }, [input]);
 
   const fetchMessages = useCallback(async (after: number, initial = false) => {
     try {
@@ -202,7 +212,7 @@ export default function HubChat({
                     </button>
                   )}
                 </div>
-                {msg.content && <p className="text-sm text-gray-800 leading-relaxed">{msg.content}</p>}
+                {msg.content && <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>}
                 {msg.fileUrl && <FileAttachment url={msg.fileUrl} name={msg.fileName} type={msg.fileType} />}
                 <p className="text-xs text-amber-600 mt-2 font-medium">{msg.sender.name}</p>
               </div>
@@ -228,7 +238,7 @@ export default function HubChat({
                 <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                   isMe ? "bg-brown-800 text-white rounded-tr-sm" : "bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm"
                 }`}>
-                  {msg.content && <p>{msg.content}</p>}
+                  {msg.content && <p className="whitespace-pre-wrap break-words">{msg.content}</p>}
                   {msg.fileUrl && <FileAttachment url={msg.fileUrl} name={msg.fileName} type={msg.fileType} dark={isMe} />}
                 </div>
               </div>
@@ -257,7 +267,7 @@ export default function HubChat({
       )}
 
       {/* Input */}
-      <form onSubmit={send} className="flex gap-2 mt-3 bg-white border border-gray-200 rounded-2xl p-2 shadow-sm">
+      <form onSubmit={send} className="flex items-end gap-2 mt-3 bg-white border border-gray-200 rounded-2xl p-2 shadow-sm">
         <input
           type="file"
           ref={fileInputRef}
@@ -287,12 +297,25 @@ export default function HubChat({
             <Megaphone className="w-4 h-4" />
           </button>
         )}
-        <input
-          type="text"
+        <textarea
+          ref={textRef}
+          rows={1}
           value={input}
           onChange={e => setInput(e.target.value)}
+          onKeyDown={e => {
+            // Computers: Enter sends, Shift+Enter adds a line. Phones: Enter
+            // adds a line and the Send button sends.
+            const touch = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+            if (e.key === "Enter" && !e.shiftKey && !touch && !e.nativeEvent.isComposing) {
+              e.preventDefault();
+              e.currentTarget.form?.requestSubmit();
+            }
+          }}
+          maxLength={4000}
           placeholder={announce ? "Write an announcement..." : "Write a message..."}
-          className="flex-1 text-sm focus:outline-none bg-transparent"
+          aria-label="Message"
+          // 16px on phones stops iOS zooming in when the box is tapped
+          className="flex-1 min-w-0 resize-none max-h-40 overflow-y-auto py-2 px-1 text-base sm:text-sm leading-snug focus:outline-none bg-transparent"
         />
         <button
           type="submit"
